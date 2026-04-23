@@ -14,8 +14,8 @@ const TEAL = "#0ea5e9"
 const PURPLE = "#8b5cf6"
 const GREEN = "#10b981"
 const PINK = "#f43f5e"
-const BGSOFT = "#f8f7ff"
-const BORDER = "#e8e6f0"
+const BGSOFT = "#ffffff"
+const BORDER = "#ffffff"
 const MUTED = "#6b7280"
 const GRAD = `linear-gradient(135deg, ${GOLD} 0%, #ff8c00 100%)`
 const GRAD2 = `linear-gradient(135deg, #8b5cf6 0%, #0ea5e9 100%)`
@@ -152,144 +152,262 @@ function Nav({ onCTA }) {
 }
 
 function HeroIllustration() {
-  const { isMobile, isTablet } = useBreakpoint()
-  const cardWidth = isMobile ? 300 : isTablet ? 340 : 388
-  const wrapHeight = isMobile ? 360 : isTablet ? 420 : 500
+  const { isMobile, isTablet, width } = useBreakpoint();
+
+  const maxW = isMobile ? 320 : isTablet ? 460 : width > 1600 ? 720 : 580;
 
   return (
-    <div style={{ position: "relative", width: "100%", maxWidth: isMobile ? 360 : isTablet ? 460 : 560, height: wrapHeight, margin: "0 auto" }}>
-      <div style={{ position: "absolute", top: 20, left: isMobile ? 10 : 16, width: isMobile ? 150 : 220, height: isMobile ? 150 : 220, borderRadius: "50%", background: "radial-gradient(circle, rgba(139,92,246,.16), transparent 72%)", filter: "blur(34px)" }} />
-      <div style={{ position: "absolute", bottom: 20, right: 20, width: isMobile ? 160 : 240, height: isMobile ? 160 : 240, borderRadius: "50%", background: "radial-gradient(circle, rgba(240,165,0,.12), transparent 72%)", filter: "blur(34px)" }} />
-
-      <div
+    <div
+      style={{
+        width: "100%",
+        maxWidth: maxW,
+        margin: "0 auto",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+      }}
+    >
+      <img
+        src="/hero-image.png"
+        alt="LetterForge hero illustration"
         style={{
-          position: "absolute",
-          top: isMobile ? 58 : 72,
-          left: isMobile ? 28 : isTablet ? 54 : 82,
-          width: cardWidth,
-          borderRadius: isMobile ? 24 : 30,
-          padding: isMobile ? 20 : 30,
-          background: "linear-gradient(180deg, rgba(255,255,255,.96) 0%, rgba(255,255,255,.88) 100%)",
-          border: "1px solid rgba(255,255,255,.95)",
-          boxShadow: "0 30px 80px rgba(17,24,39,.14), 0 10px 24px rgba(17,24,39,.06)",
-          backdropFilter: "blur(14px)",
-          zIndex: 2,
-          animation: "lf-bob 5.5s ease-in-out infinite",
+          width: "100%",
+          height: "auto",
+          display: "block",
+          objectFit: "contain",
+          background: "transparent",
         }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-          <div style={{ width: isMobile ? 36 : 44, height: isMobile ? 36 : 44, borderRadius: 12, background: "linear-gradient(135deg,#f6a400,#ff7f11)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: isMobile ? 16 : 20, color: "white", flexShrink: 0 }}>✍</div>
-          <div>
-            <div style={{ fontSize: isMobile ? 13 : 14, fontWeight: 800, color: NAVY }}>Cover Letter Generated</div>
-            <div style={{ fontSize: isMobile ? 10.5 : 11.5, color: MUTED, marginTop: 2 }}>Product Manager · Google Zurich</div>
-          </div>
-          <div style={{ marginLeft: "auto", padding: isMobile ? "6px 10px" : "8px 14px", borderRadius: 999, fontSize: isMobile ? 10.5 : 11.5, fontWeight: 800, color: "#059669", background: "rgba(16,185,129,.12)", border: "1px solid rgba(16,185,129,.18)" }}>Done ✓</div>
-        </div>
-
-        <div style={{ height: isMobile ? 10 : 12, width: "88%", borderRadius: 999, background: "linear-gradient(90deg,#f0a500,#ff8c00)", marginBottom: 12 }} />
-        <div style={{ height: 9, width: "72%", borderRadius: 999, background: "rgba(99,102,241,.07)", marginBottom: 9 }} />
-        <div style={{ height: 9, width: "84%", borderRadius: 999, background: "rgba(99,102,241,.07)", marginBottom: 9 }} />
-        <div style={{ height: 9, width: "58%", borderRadius: 999, background: "rgba(99,102,241,.07)", marginBottom: 9 }} />
-        <div style={{ height: 9, width: "76%", borderRadius: 999, background: "rgba(99,102,241,.07)", marginBottom: 18 }} />
-
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <div style={{ padding: isMobile ? "12px 18px" : "14px 24px", borderRadius: 16, background: "rgba(240,165,0,.08)", color: GOLDDP, border: "1px solid rgba(240,165,0,.16)", fontWeight: 800, fontSize: isMobile ? 12.5 : 13.5 }}>Copy Letter</div>
-          <div style={{ padding: isMobile ? "12px 18px" : "14px 24px", borderRadius: 16, background: "rgba(99,102,241,.05)", color: "#737b8c", border: "1px solid rgba(120,130,160,.12)", fontWeight: 700, fontSize: isMobile ? 12.5 : 13.5 }}>Regenerate</div>
-        </div>
-      </div>
-
-      <div style={{ position: "absolute", top: isMobile ? 10 : 20, left: isMobile ? 4 : 16, zIndex: 3, display: "flex", alignItems: "center", gap: 10, padding: isMobile ? "12px 14px" : "18px 22px", borderRadius: 24, background: "rgba(255,255,255,.95)", boxShadow: "0 22px 48px rgba(139,92,246,.10)", animation: "lf-float 5.2s ease-in-out infinite" }}>
-        <div style={{ width: isMobile ? 34 : 42, height: isMobile ? 34 : 42, borderRadius: 14, background: "linear-gradient(135deg,#8b5cf6,#a855f7)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: isMobile ? 14 : 17, color: "white" }}>🎯</div>
-        <div>
-          <div style={{ fontWeight: 800, fontSize: isMobile ? 12 : 13.5, color: NAVY }}>Interview Rate</div>
-          <div style={{ fontWeight: 900, fontSize: isMobile ? 17 : 20, color: PURPLE, lineHeight: 1.05 }}>89%</div>
-        </div>
-      </div>
-
-      <div style={{ position: "absolute", left: isMobile ? 10 : 52, bottom: isMobile ? 12 : 42, zIndex: 3, display: "flex", alignItems: "center", gap: 10, padding: isMobile ? "12px 14px" : "18px 22px", borderRadius: 24, background: "rgba(255,255,255,.95)", boxShadow: "0 22px 48px rgba(16,185,129,.10)", animation: "lf-float 5.8s ease-in-out infinite" }}>
-        <div style={{ width: isMobile ? 34 : 42, height: isMobile ? 34 : 42, borderRadius: 14, background: "linear-gradient(135deg,#10b981,#34d399)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: isMobile ? 14 : 17, color: "white" }}>⚡</div>
-        <div>
-          <div style={{ fontWeight: 800, fontSize: isMobile ? 12 : 13.5, color: NAVY }}>Generated in</div>
-          <div style={{ fontWeight: 900, fontSize: isMobile ? 17 : 20, color: GREEN, lineHeight: 1.05 }}>5 sec</div>
-        </div>
-      </div>
-
-      <div style={{ position: "absolute", right: isMobile ? 8 : 18, bottom: isMobile ? 10 : 36, zIndex: 3, display: "flex", alignItems: "center", gap: 10, padding: isMobile ? "12px 14px" : "18px 22px", borderRadius: 24, background: "rgba(255,255,255,.95)", boxShadow: "0 22px 48px rgba(14,165,233,.10)", animation: "lf-float 6.1s ease-in-out infinite" }}>
-        <div style={{ width: isMobile ? 34 : 42, height: isMobile ? 34 : 42, borderRadius: 14, background: "linear-gradient(135deg,#0ea5e9,#38bdf8)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: isMobile ? 14 : 17, color: "white" }}>🌍</div>
-        <div>
-          <div style={{ fontWeight: 800, fontSize: isMobile ? 12 : 13.5, color: NAVY }}>Countries</div>
-          <div style={{ fontWeight: 900, fontSize: isMobile ? 17 : 20, color: TEAL, lineHeight: 1.05 }}>34+</div>
-        </div>
-      </div>
+      />
     </div>
-  )
+  );
 }
 
 function Hero({ onCTA }) {
-  const { isMobile, isTablet } = useBreakpoint()
+  const { isMobile, isTablet } = useBreakpoint();
+  const stacked = isMobile || isTablet;
 
   return (
     <section
       style={{
-        background: `linear-gradient(160deg, #fefefe 0%, #f8f5ff 40%, #fff8ec 100%)`,
-        padding: isMobile ? "104px 20px 56px" : isTablet ? "112px 28px 64px" : "120px 48px 80px",
+        background: "rgb(246, 244, 253)",
+        padding: isMobile ? "92px 16px 48px" : isTablet ? "104px 24px 56px" : "120px 48px 80px",
         position: "relative",
         overflow: "hidden",
-        minHeight: isMobile ? "auto" : "100vh",
+        minHeight: stacked ? "auto" : "100vh",
         display: "flex",
         alignItems: "center",
       }}
     >
-      <div style={{ position: "absolute", top: 80, right: "8%", width: isMobile ? 180 : 400, height: isMobile ? 180 : 400, borderRadius: "50%", background: "radial-gradient(circle,rgba(240,165,0,.07) 0%,transparent 70%)", pointerEvents: "none" }} />
-      <div style={{ position: "absolute", bottom: 0, left: "5%", width: isMobile ? 160 : 300, height: isMobile ? 160 : 300, borderRadius: "50%", background: "radial-gradient(circle,rgba(139,92,246,.07) 0%,transparent 70%)", pointerEvents: "none" }} />
+      <div
+        style={{
+          position: "absolute",
+          top: 60,
+          right: "6%",
+          width: isMobile ? 140 : isTablet ? 220 : 360,
+          height: isMobile ? 140 : isTablet ? 220 : 360,
+          borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(240,165,0,.08) 0%, transparent 70%)",
+          pointerEvents: "none",
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          bottom: 0,
+          left: "4%",
+          width: isMobile ? 120 : isTablet ? 180 : 280,
+          height: isMobile ? 120 : isTablet ? 180 : 280,
+          borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(139,92,246,.08) 0%, transparent 70%)",
+          pointerEvents: "none",
+        }}
+      />
 
       <div
         style={{
-          maxWidth: 1160,
+          maxWidth: 1180,
           margin: "0 auto",
           width: "100%",
           display: "flex",
-          flexDirection: isTablet || isMobile ? "column" : "row",
-          alignItems: isTablet || isMobile ? "stretch" : "center",
+          flexDirection: stacked ? "column" : "row",
+          alignItems: stacked ? "stretch" : "center",
           justifyContent: "space-between",
-          gap: isMobile ? 32 : isTablet ? 40 : 60,
+          gap: isMobile ? 20 : isTablet ? 32 : 56,
         }}
       >
-        <div style={{ maxWidth: isTablet || isMobile ? "100%" : 540, width: "100%" }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: GOLDBG, border: `1px solid rgba(240,165,0,.25)`, borderRadius: 40, padding: isMobile ? "6px 12px" : "6px 16px", marginBottom: 24 }}>
-            <span style={{ fontSize: 16 }}>✨</span>
-            <span style={{ fontSize: isMobile ? 11.5 : 12.5, fontWeight: 700, color: GOLDDP, letterSpacing: .3 }}>AI-Trained on 10,000+ Winning Letters</span>
+        {stacked && (
+          <div
+            style={{
+              width: "100%",
+              maxWidth: isMobile ? 320 : 460,
+              margin: "0 auto 8px",
+              order: 1,
+            }}
+          >
+            <HeroIllustration />
+          </div>
+        )}
+
+        <div
+          style={{
+            width: "100%",
+            maxWidth: stacked ? "100%" : 560,
+            order: stacked ? 2 : 1,
+          }}
+        >
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              background: GOLDBG,
+              border: "1px solid rgba(240,165,0,.25)",
+              borderRadius: 999,
+              padding: isMobile ? "6px 12px" : "7px 16px",
+              marginBottom: isMobile ? 18 : 24,
+              maxWidth: "100%",
+            }}
+          >
+            <span style={{ fontSize: 15 }}>✨</span>
+            <span
+              style={{
+                fontFamily: SANS,
+                fontSize: isMobile ? 11 : 12.5,
+                fontWeight: 700,
+                color: GOLDDP,
+                letterSpacing: 0.2,
+                lineHeight: 1.2,
+              }}
+            >
+              AI-Trained on 10,000+ Winning Letters
+            </span>
           </div>
 
-          <h1 style={{ fontWeight: 800, fontSize: isMobile ? "42px" : isTablet ? "52px" : "clamp(38px, 4.5vw, 58px)", lineHeight: isMobile ? 1.05 : 1.12, letterSpacing: "-1.2px", color: NAVY, marginBottom: 20, opacity: 1 }}>
+          <h1
+            style={{
+              fontFamily: SANS,
+              fontWeight: 800,
+              fontSize: isMobile ? "clamp(34px, 12vw, 48px)" : isTablet ? "clamp(46px, 8vw, 58px)" : "clamp(42px, 5vw, 68px)",
+              lineHeight: isMobile ? 1.02 : 1.08,
+              letterSpacing: "-1.4px",
+              color: NAVY,
+              marginBottom: 18,
+              wordBreak: "break-word",
+            }}
+          >
             Write Cover Letters
             <br />
             That Actually
             <br />
-            <span style={{ background: GRAD, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>Get Interviews</span>
+            <span
+              style={{
+                background: GRAD,
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+              }}
+            >
+              Get Interviews
+            </span>
           </h1>
 
-          <p style={{ fontSize: isMobile ? 15 : 17, color: MUTED, lineHeight: 1.8, maxWidth: isTablet || isMobile ? "100%" : 460, marginBottom: 28, opacity: 1 }}>
-            Paste any job description and your background. LetterForge generates a tailored, compelling cover letter in <strong style={{ color: NAVY }}>5 seconds flat</strong> — no blank page, no generic output.
+          <p
+            style={{
+              fontSize: isMobile ? 15 : isTablet ? 16 : 18,
+              color: MUTED,
+              lineHeight: 1.8,
+              maxWidth: stacked ? "100%" : 470,
+              marginBottom: isMobile ? 22 : 28,
+            }}
+          >
+            Paste any job description and your background. LetterForge generates a tailored, compelling cover letter in{" "}
+            <strong style={{ color: NAVY }}>5 seconds flat</strong> — no blank page, no generic output.
           </p>
 
-          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 28, opacity: 1 }}>
-            <button onClick={onCTA} style={{ background: GRAD, color: "white", border: "none", borderRadius: 12, padding: isMobile ? "14px 20px" : "15px 34px", fontSize: isMobile ? 15 : 16, fontWeight: 700, cursor: "pointer", boxShadow: "0 8px 28px rgba(240,165,0,.4)" }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: isMobile ? "column" : "row",
+              alignItems: isMobile ? "stretch" : "center",
+              gap: 12,
+              marginBottom: isMobile ? 22 : 28,
+              width: "100%",
+            }}
+          >
+            <button
+              onClick={onCTA}
+              style={{
+                background: GRAD,
+                color: "white",
+                border: "none",
+                borderRadius: 14,
+                padding: isMobile ? "15px 18px" : "15px 30px",
+                fontSize: isMobile ? 16 : 16,
+                fontWeight: 700,
+                fontFamily: SANS,
+                cursor: "pointer",
+                boxShadow: "0 8px 28px rgba(240,165,0,.35)",
+                width: isMobile ? "100%" : "auto",
+              }}
+            >
               Get Started — Free
             </button>
-            <a href="#examples" style={{ background: "white", color: NAVY, textDecoration: "none", border: `2px solid ${BORDER}`, borderRadius: 12, padding: isMobile ? "14px 18px" : "15px 24px", fontSize: isMobile ? 15 : 16, fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 8 }}>
+
+            <a
+              href="#examples"
+              style={{
+                background: "white",
+                color: NAVY,
+                textDecoration: "none",
+                border: `2px solid ${BORDER}`,
+                borderRadius: 14,
+                padding: isMobile ? "15px 18px" : "15px 24px",
+                fontSize: 16,
+                fontWeight: 600,
+                fontFamily: SANS,
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
+                width: isMobile ? "100%" : "auto",
+              }}
+            >
               ▶ See Examples
             </a>
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap", opacity: 1 }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: stacked ? "flex-start" : "center",
+              gap: 12,
+              flexWrap: "wrap",
+              flexDirection: isMobile ? "column" : "row",
+            }}
+          >
             <div style={{ display: "flex" }}>
               {["🧑", "👩", "👨", "🧑", "👩"].map((e, i) => (
-                <div key={i} style={{ width: isMobile ? 30 : 34, height: isMobile ? 30 : 34, borderRadius: "50%", background: `hsl(${i * 50 + 200},60%,65%)`, border: "2px solid white", marginLeft: i > 0 ? -8 : 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: isMobile ? 14 : 16, zIndex: 5 - i }}>
+                <div
+                  key={i}
+                  style={{
+                    width: isMobile ? 30 : 34,
+                    height: isMobile ? 30 : 34,
+                    borderRadius: "50%",
+                    background: `hsl(${i * 50 + 200},60%,65%)`,
+                    border: "2px solid white",
+                    marginLeft: i > 0 ? -8 : 0,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: isMobile ? 14 : 16,
+                    zIndex: 5 - i,
+                  }}
+                >
                   {e}
                 </div>
               ))}
             </div>
+
             <div>
               <div style={{ fontWeight: 700, fontSize: 14, color: NAVY }}>14,000+ job seekers</div>
               <div style={{ fontSize: 12, color: MUTED }}>already using LetterForge to get hired</div>
@@ -297,12 +415,21 @@ function Hero({ onCTA }) {
           </div>
         </div>
 
-        <div style={{ width: "100%", maxWidth: isMobile ? 420 : 560, margin: "0 auto" }}>
-          <HeroIllustration />
-        </div>
+        {!stacked && (
+          <div
+            style={{
+              width: "100%",
+              maxWidth: 660,
+              margin: "0 auto",
+              order: 2,
+            }}
+          >
+            <HeroIllustration />
+          </div>
+        )}
       </div>
     </section>
-  )
+  );
 }
 
 function TrustBar() {
