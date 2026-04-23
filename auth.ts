@@ -56,10 +56,9 @@ if (process.env.FACEBOOK_CLIENT_ID && process.env.FACEBOOK_CLIENT_SECRET) {
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  trustHost: true,
   session: { strategy: "jwt" },
-
   providers,
-
   callbacks: {
     async signIn({ user, account }) {
       if (account?.provider === "google" || account?.provider === "facebook") {
@@ -100,7 +99,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return session
     },
   },
-
   pages: {
     signIn: "/auth/login",
     error: "/auth/error",
