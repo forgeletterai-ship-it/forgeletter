@@ -112,7 +112,8 @@ function Nav({ onCTA }) {
       )}
 
       <div style={{ display: "flex", gap: isMobile ? 8 : 12, alignItems: "center" }}>
-        <button
+        <a
+          href="/auth/login"
           style={{
             background: "transparent",
             border: "none",
@@ -123,13 +124,16 @@ function Nav({ onCTA }) {
             cursor: "pointer",
             padding: isMobile ? "8px 8px" : "8px 16px",
             whiteSpace: "nowrap",
+            textDecoration: "none",
+            display: "inline-flex",
+            alignItems: "center",
           }}
         >
           Login
-        </button>
+        </a>
 
-        <button
-          onClick={onCTA}
+        <a
+          href="/auth/signup"
           style={{
             background: GRAD,
             color: "white",
@@ -142,10 +146,14 @@ function Nav({ onCTA }) {
             cursor: "pointer",
             boxShadow: "0 4px 16px rgba(240,165,0,.35)",
             whiteSpace: "nowrap",
+            textDecoration: "none",
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
           }}
         >
           {isMobile ? "Start Free" : "Start Free Trial →"}
-        </button>
+        </a>
       </div>
     </nav>
   );
