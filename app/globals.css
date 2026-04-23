@@ -2,23 +2,6 @@
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }
-body { background: #ffffff; color: #1a1a2e; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
-::selection { background: #f0a500; color: white; }
-
-@keyframes lf-up    { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:none; } }
-@keyframes lf-in    { from { opacity:0; }                              to { opacity:1; } }
-@keyframes lf-spin  { to { transform:rotate(360deg); } }
-@keyframes lf-float { 0%,100% { transform:translateY(0) rotate(-1deg); } 50% { transform:translateY(-14px) rotate(1deg); } }
-@keyframes lf-bob   { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-8px); } }
-@keyframes lf-shimmer { 0%,100%{opacity:.35} 50%{opacity:.7} }
-@keyframes lf-marquee { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
-@keyframes lf-pulse { 0%,100%{box-shadow:0 0 0 0 rgba(240,165,0,.5)} 70%{box-shadow:0 0 0 14px rgba(240,165,0,0)} }
-@keyframes lf-slide-in { from{opacity:0;transform:translateX(20px)} to{opacity:1;transform:none} }
-/* ===== exact-style isometric AI illustration ===== */
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap');
-
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
 body {
   background: #ffffff;
   color: #1a1a2e;
@@ -28,6 +11,18 @@ body {
 }
 ::selection { background: #f0a500; color: white; }
 
+@keyframes lf-up    { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:none; } }
+@keyframes lf-in    { from { opacity:0; } to { opacity:1; } }
+@keyframes lf-spin  { to { transform:rotate(360deg); } }
+@keyframes lf-float { 0%,100% { transform:translateY(0) rotate(-1deg); } 50% { transform:translateY(-14px) rotate(1deg); } }
+@keyframes lf-bob   { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-8px); } }
+@keyframes lf-shimmer { 0%,100%{opacity:.35} 50%{opacity:.7} }
+@keyframes lf-marquee { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+@keyframes lf-pulse { 0%,100%{box-shadow:0 0 0 0 rgba(240,165,0,.5)} 70%{box-shadow:0 0 0 14px rgba(240,165,0,0)} }
+@keyframes lf-slide-in { from{opacity:0;transform:translateX(20px)} to{opacity:1;transform:none} }
+
+/* paste the rest of your custom CSS below this line */
+/* do not add another @import anywhere else in this file */
 @keyframes lf-up {
   from { opacity: 0; transform: translateY(24px); }
   to { opacity: 1; transform: none; }
