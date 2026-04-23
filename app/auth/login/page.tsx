@@ -1,10 +1,8 @@
 "use client"
 
-export const dynamic = "force-dynamic"
-
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { FormEvent, useState } from "react"
+import { FormEvent, useMemo, useState } from "react"
 import { signIn } from "next-auth/react"
 
 function GoogleIcon() {
@@ -38,6 +36,9 @@ export default function LoginPage() {
   const [error, setError] = useState("")
   const [loadingProvider, setLoadingProvider] = useState<"" | "google" | "facebook">("")
   const [loadingCredentials, setLoadingCredentials] = useState(false)
+
+  const hasGoogle = useMemo(() => !!process.env.NEXT_PUBLIC_GOOGLE_ENABLED, [])
+  const hasFacebook = useMemo(() => !!process.env.NEXT_PUBLIC_FACEBOOK_ENABLED, [])
 
   async function handleSocialLogin(provider: "google" | "facebook") {
     try {
@@ -145,76 +146,82 @@ export default function LoginPage() {
               gap: 14,
             }}
           >
-            <button
-              type="button"
-              onClick={() => handleSocialLogin("google")}
-              disabled={loadingProvider !== "" || loadingCredentials}
-              style={{
-                width: "100%",
-                minHeight: 54,
-                borderRadius: 14,
-                border: "1px solid #d9d9e8",
-                background: "#ffffff",
-                color: "#111633",
-                fontSize: 15,
-                fontWeight: 700,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "flex-start",
-                gap: 12,
-                padding: "0 18px",
-                cursor: "pointer",
-              }}
-            >
-              <GoogleIcon />
-              <span>{loadingProvider === "google" ? "Connecting..." : "Continue with Google"}</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleSocialLogin("facebook")}
-              disabled={loadingProvider !== "" || loadingCredentials}
-              style={{
-                width: "100%",
-                minHeight: 54,
-                borderRadius: 14,
-                border: "none",
-                background: "#1877F2",
-                color: "#ffffff",
-                fontSize: 15,
-                fontWeight: 700,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "flex-start",
-                gap: 12,
-                padding: "0 18px",
-                cursor: "pointer",
-              }}
-            >
-              <FacebookIcon />
-              <span>{loadingProvider === "facebook" ? "Connecting..." : "Continue with Facebook"}</span>
-            </button>
-
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 14,
-                margin: "4px 0 2px",
-              }}
-            >
-              <div style={{ flex: 1, height: 1, background: "#d9d9e8" }} />
-              <span
+            {hasGoogle && (
+              <button
+                type="button"
+                onClick={() => handleSocialLogin("google")}
+                disabled={loadingProvider !== "" || loadingCredentials}
                 style={{
-                  color: "#65748b",
-                  fontSize: 14,
-                  whiteSpace: "nowrap",
+                  width: "100%",
+                  minHeight: 54,
+                  borderRadius: 14,
+                  border: "1px solid #d9d9e8",
+                  background: "#ffffff",
+                  color: "#111633",
+                  fontSize: 15,
+                  fontWeight: 700,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "flex-start",
+                  gap: 12,
+                  padding: "0 18px",
+                  cursor: "pointer",
                 }}
               >
-                or with email
-              </span>
-              <div style={{ flex: 1, height: 1, background: "#d9d9e8" }} />
-            </div>
+                <GoogleIcon />
+                <span>{loadingProvider === "google" ? "Connecting..." : "Continue with Google"}</span>
+              </button>
+            )}
+
+            {hasFacebook && (
+              <button
+                type="button"
+                onClick={() => handleSocialLogin("facebook")}
+                disabled={loadingProvider !== "" || loadingCredentials}
+                style={{
+                  width: "100%",
+                  minHeight: 54,
+                  borderRadius: 14,
+                  border: "none",
+                  background: "#1877F2",
+                  color: "#ffffff",
+                  fontSize: 15,
+                  fontWeight: 700,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "flex-start",
+                  gap: 12,
+                  padding: "0 18px",
+                  cursor: "pointer",
+                }}
+              >
+                <FacebookIcon />
+                <span>{loadingProvider === "facebook" ? "Connecting..." : "Continue with Facebook"}</span>
+              </button>
+            )}
+
+            {(hasGoogle || hasFacebook) && (
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 14,
+                  margin: "4px 0 2px",
+                }}
+              >
+                <div style={{ flex: 1, height: 1, background: "#d9d9e8" }} />
+                <span
+                  style={{
+                    color: "#65748b",
+                    fontSize: 14,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  or with email
+                </span>
+                <div style={{ flex: 1, height: 1, background: "#d9d9e8" }} />
+              </div>
+            )}
 
             {error ? (
               <div
@@ -241,14 +248,7 @@ export default function LoginPage() {
               }}
             >
               <div style={{ display: "grid", gap: 8 }}>
-                <label
-                  htmlFor="email"
-                  style={{
-                    fontSize: 14,
-                    fontWeight: 700,
-                    color: "#111633",
-                  }}
-                >
+                <label htmlFor="email" style={{ fontSize: 14, fontWeight: 700, color: "#111633" }}>
                   Email address
                 </label>
 
@@ -275,14 +275,7 @@ export default function LoginPage() {
               </div>
 
               <div style={{ display: "grid", gap: 8 }}>
-                <label
-                  htmlFor="password"
-                  style={{
-                    fontSize: 14,
-                    fontWeight: 700,
-                    color: "#111633",
-                  }}
-                >
+                <label htmlFor="password" style={{ fontSize: 14, fontWeight: 700, color: "#111633" }}>
                   Password
                 </label>
 
