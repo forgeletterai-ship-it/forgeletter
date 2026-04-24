@@ -1,0 +1,16 @@
+<svg width="2400" height="640" viewBox="0 0 2400 640" xmlns="http://www.w3.org/2000/svg">
+  <rect width="2400" height="640" fill="transparent"/>
+  <g transform="translate(120 120)">
+    <rect width="400" height="400" rx="110" fill="url(#markGradient)"/>
+    <path d="M100 280 Q135 130 200 110 Q265 90 295 145 Q255 165 220 225 L275 200 Q230 265 205 285 Z" fill="white" opacity=".95"/>
+    <path d="M130 300 L105 335 Q145 315 180 290" stroke="white" stroke-width="14" stroke-linecap="round" fill="none"/>
+  </g>
+  <text x="600" y="355" font-family="Arial, Helvetica, sans-serif" font-size="178" font-weight="800" letter-spacing="-8" fill="#17120F">Letter</text>
+  <text x="1112" y="355" font-family="Arial, Helvetica, sans-serif" font-size="178" font-weight="800" letter-spacing="-8" fill="#C79A36">Forge</text>
+  <defs>
+    <linearGradient id="markGradient" x1="0" y1="0" x2="400" y2="400" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#F0C040"/>
+      <stop offset="100%" stop-color="#E07800"/>
+    </linearGradient>
+  </defs>
+</svg>

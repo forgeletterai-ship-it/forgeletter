@@ -4,14 +4,14 @@ export default function BillingCancelPage() {
   return (
     <SimplePage
       kicker="Billing"
-      title="Checkout not connected yet"
-      intro="This route stands in for Stripe cancel and preview states while billing is being prepared."
+      title="Checkout cancelled"
+      intro="The customer left Stripe Checkout before completing the subscription."
       ctaLabel="Back to billing"
       ctaHref="/dashboard/billing"
       cards={[
         {
           title: "No charge made",
-          body: "Paid checkout is not active in this build. Pricing buttons safely route to placeholder pages or signup.",
+          body: "Stripe cancelled checkout sessions do not create an active paid subscription.",
         },
         {
           title: "Next integration",

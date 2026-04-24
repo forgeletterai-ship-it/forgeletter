@@ -1328,7 +1328,7 @@ button.tone-chip:hover {
 
 .table-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   gap: 16px;
   align-items: center;
   border: 1px solid var(--line);
@@ -1511,5 +1511,10 @@ button.tone-chip:hover {
 
   .dashboard-main {
     padding: 20px 16px;
+  }
+
+  .table-row {
+    grid-template-columns: 1fr;
+    align-items: stretch;
   }
 }
