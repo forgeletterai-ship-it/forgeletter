@@ -70,6 +70,22 @@ export function BillingClient() {
   const [portalLoading, setPortalLoading] = useState(false)
   const [error, setError] = useState("")
 
+  async function readJsonResponse(res: Response) {
+    const text = await res.text()
+
+    if (!text) {
+      return {}
+    }
+
+    try {
+      return JSON.parse(text) as { url?: string; error?: string }
+    } catch {
+      return {
+        error: `Unexpected server response (${res.status}). Check Stripe environment variables and deployment logs.`,
+      }
+    }
+  }
+
   async function startCheckout(plan: "pro" | "premium") {
     setError("")
     setLoadingPlan(plan)
@@ -80,7 +96,7 @@ export function BillingClient() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ plan }),
       })
-      const data = await res.json()
+      const data = await readJsonResponse(res)
 
       if (!res.ok || !data.url) {
         throw new Error(data.error || "Could not start checkout.")
@@ -103,7 +119,7 @@ export function BillingClient() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ product }),
       })
-      const data = await res.json()
+      const data = await readJsonResponse(res)
 
       if (!res.ok || !data.url) {
         throw new Error(data.error || "Could not start checkout.")
@@ -122,7 +138,7 @@ export function BillingClient() {
 
     try {
       const res = await fetch("/api/stripe/portal", { method: "POST" })
-      const data = await res.json()
+      const data = await readJsonResponse(res)
 
       if (!res.ok || !data.url) {
         throw new Error(data.error || "No Stripe customer found yet.")

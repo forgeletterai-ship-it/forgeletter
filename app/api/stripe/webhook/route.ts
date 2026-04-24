@@ -7,6 +7,19 @@ export const runtime = "nodejs"
 
 const activeSubscriptionStatuses = new Set(["active", "trialing"])
 
+export async function GET() {
+  return NextResponse.json({
+    ok: true,
+    endpoint: "Stripe webhook endpoint",
+    expectedMethod: "POST",
+    events: [
+      "checkout.session.completed",
+      "customer.subscription.updated",
+      "customer.subscription.deleted",
+    ],
+  })
+}
+
 export async function POST(req: NextRequest) {
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
 
