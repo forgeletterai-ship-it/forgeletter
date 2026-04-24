@@ -4,11 +4,11 @@ export default function TermsPage() {
   return (
     <LegalPage
       title="Terms of service"
-      intro="Plain-language terms shell for the product. Review before public launch."
+      intro="The basic terms for using LetterForge to prepare application materials."
       sections={[
         {
           title: "Use of the service",
-          body: "Users are responsible for the accuracy of the information they enter and for reviewing any draft before submitting it to an employer.",
+          body: "Users are responsible for the accuracy of the information they enter and for reviewing any draft before submitting it to an employer or career partner.",
         },
         {
           title: "Accounts",
@@ -16,11 +16,15 @@ export default function TermsPage() {
         },
         {
           title: "Generated content",
-          body: "When AI generation is connected, output should be treated as a draft aid. Users remain responsible for edits, truthfulness, and final submissions.",
+          body: "Generated or assisted content should be treated as draft support. Users remain responsible for truthfulness, edits, and final submissions.",
+        },
+        {
+          title: "Billing",
+          body: "Paid subscriptions are processed by Stripe. Users can manage invoices, payment methods, and cancellation through the billing portal when available.",
         },
         {
           title: "Availability",
-          body: "The service may change as features are added, refined, or removed during development.",
+          body: "The service may change as features are added, refined, or removed. LetterForge aims to communicate material changes clearly.",
         },
       ]}
     />

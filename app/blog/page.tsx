@@ -1,29 +1,35 @@
-import { SimplePage } from "@/components/SimplePage"
+import Link from "next/link"
+import { PublicFooter, PublicNav } from "@/components/PublicChrome"
+import { resourceArticles } from "@/lib/resources"
 
 export default function BlogPage() {
   return (
-    <SimplePage
-      kicker="Resources"
-      title="LetterForge blog"
-      intro="A clean resource hub for job search strategy, cover letter writing, and product updates."
-      cards={[
-        {
-          title: "How to avoid generic cover letters",
-          body: "Lead with a role-specific reason, connect one achievement to the job, and keep the close confident.",
-        },
-        {
-          title: "What to save in your profile",
-          body: "Store metrics, projects, industries, tools, and leadership moments so every future draft has substance.",
-        },
-        {
-          title: "Product roadmap",
-          body: "Next up: persistent saved letters, secure AI generation, exports, Stripe checkout, and account controls.",
-        },
-        {
-          title: "Launch checklist",
-          body: "Review Supabase RLS, legal pages, environment variables, rate limits, and billing webhooks before launch.",
-        },
-      ]}
-    />
+    <div className="page-shell">
+      <PublicNav />
+      <main>
+        <section className="page-hero">
+          <div className="container">
+            <span className="section-kicker">Resources</span>
+            <h1>LetterForge resource library.</h1>
+            <p>
+              Practical guidance for stronger applications, cleaner profile
+              data, and professional workflows for future career-agency
+              partners.
+            </p>
+          </div>
+        </section>
+        <section className="container article-grid">
+          {resourceArticles.map((article) => (
+            <Link className="article-card" href={`/blog/${article.slug}`} key={article.slug}>
+              <span className="section-kicker">{article.category}</span>
+              <h2>{article.title}</h2>
+              <p>{article.summary}</p>
+              <small>{article.readingTime}</small>
+            </Link>
+          ))}
+        </section>
+      </main>
+      <PublicFooter />
+    </div>
   )
 }

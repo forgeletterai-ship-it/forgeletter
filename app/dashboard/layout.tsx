@@ -3,6 +3,7 @@ import { redirect } from "next/navigation"
 import type { ReactNode } from "react"
 import { auth, signOut } from "@/auth"
 import { Brand } from "@/components/Brand"
+import { getCurrentAppUser } from "@/lib/app-data"
 
 const navItems = [
   { href: "/dashboard", label: "Workspace" },
@@ -23,11 +24,12 @@ export default async function DashboardLayout({
     redirect("/auth/login")
   }
 
-  const user = session.user as {
+  const { user: appUser } = await getCurrentAppUser()
+  const sessionUser = session.user as {
     name?: string | null
     email?: string | null
-    plan?: string
   }
+  const plan = appUser?.plan || "free"
 
   return (
     <main className="dashboard-shell">
@@ -41,9 +43,11 @@ export default async function DashboardLayout({
           ))}
         </nav>
         <div className="dashboard-user">
-          <strong>{user.name || "LetterForge user"}</strong>
-          <span>{user.email || "No email on file"}</span>
-          <span>Plan: {user.plan || "free"}</span>
+          <strong>{appUser?.name || sessionUser.name || "LetterForge user"}</strong>
+          <span>{appUser?.email || sessionUser.email || "No email on file"}</span>
+          <span className="status-pill active">
+            {plan === "free" ? "Starter plan" : `${plan.toUpperCase()} plan`}
+          </span>
           <form
             action={async () => {
               "use server"

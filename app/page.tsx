@@ -294,11 +294,10 @@ export default function HomePage() {
           <div className="container">
             <div className="section-head">
               <span className="section-kicker">Pricing</span>
-              <h2>Clear plans, ready for Stripe later.</h2>
+              <h2>Clear plans, secured by Stripe.</h2>
               <p>
-                Pricing buttons route to signup for now. Checkout can be
-                connected after plans, webhooks, and subscription records are
-                confirmed.
+                Start free, then upgrade from the billing dashboard when you
+                are ready for a paid workflow.
               </p>
             </div>
             <div className="price-grid">
@@ -334,15 +333,15 @@ export default function HomePage() {
               </div>
               <div className="secure-item">
                 <strong>No hidden charges</strong>
-                <span>Clear plan pricing before checkout is enabled.</span>
+                <span>Clear plan pricing before Stripe Checkout opens.</span>
               </div>
               <div className="secure-item">
                 <strong>Cancel anytime</strong>
-                <span>Subscription controls should live in billing settings.</span>
+                <span>Subscription controls live in billing settings.</span>
               </div>
               <div className="secure-item">
                 <strong>Private workspace</strong>
-                <span>Supabase RLS review before storing real customer content.</span>
+                <span>Profile and application data are stored server-side.</span>
               </div>
             </div>
           </div>

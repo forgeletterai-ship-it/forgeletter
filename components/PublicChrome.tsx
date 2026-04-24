@@ -1,6 +1,5 @@
 import Link from "next/link"
 import { auth } from "@/auth"
-import { AnimatedSeparator } from "./AnimatedSeparator"
 import { Brand } from "./Brand"
 
 const productLinks = [
@@ -51,53 +50,50 @@ export async function PublicNav() {
 
 export function PublicFooter() {
   return (
-    <>
-      <AnimatedSeparator />
-      <footer className="footer">
-        <div className="container">
-          <div className="footer-grid">
-            <div>
-              <Brand dark />
-              <p>
-                A polished workspace for writing stronger applications without the
-                blank page panic. Built for job seekers who want speed and taste.
-              </p>
-            </div>
-            <FooterColumn
-              title="Product"
-              links={[
-                { href: "/#workspace", label: "Workspace" },
-                { href: "/#pricing", label: "Pricing" },
-                { href: "/dashboard", label: "Dashboard" },
-                { href: "/contact", label: "Contact" },
-              ]}
-            />
-            <FooterColumn
-              title="Resources"
-              links={[
-                { href: "/blog", label: "Blog" },
-                { href: "/cover-letter-tips", label: "Cover letter tips" },
-                { href: "/job-search-guide", label: "Job search guide" },
-                { href: "/interview-prep", label: "Interview prep" },
-              ]}
-            />
-            <FooterColumn
-              title="Legal"
-              links={[
-                { href: "/privacy", label: "Privacy policy" },
-                { href: "/terms", label: "Terms of service" },
-                { href: "/cookies", label: "Cookie policy" },
-                { href: "/refund-policy", label: "Refund policy" },
-              ]}
-            />
+    <footer className="footer">
+      <div className="container">
+        <div className="footer-grid">
+          <div>
+            <Brand dark />
+            <p>
+              A polished workspace for writing stronger applications without the
+              blank page panic. Built for job seekers who want speed and taste.
+            </p>
           </div>
-          <div className="footer-bottom">
-            <span>Copyright 2026 LetterForge. All rights reserved.</span>
-            <span>Stripe-ready billing. Supabase-ready accounts.</span>
-          </div>
+          <FooterColumn
+            title="Product"
+            links={[
+              { href: "/#workspace", label: "Workspace" },
+              { href: "/#pricing", label: "Pricing" },
+              { href: "/dashboard", label: "Dashboard" },
+              { href: "/contact", label: "Contact" },
+            ]}
+          />
+          <FooterColumn
+            title="Resources"
+            links={[
+              { href: "/blog", label: "Blog" },
+              { href: "/cover-letter-tips", label: "Cover letter tips" },
+              { href: "/job-search-guide", label: "Job search guide" },
+              { href: "/interview-prep", label: "Interview prep" },
+            ]}
+          />
+          <FooterColumn
+            title="Legal"
+            links={[
+              { href: "/privacy", label: "Privacy policy" },
+              { href: "/terms", label: "Terms of service" },
+              { href: "/cookies", label: "Cookie policy" },
+              { href: "/refund-policy", label: "Refund policy" },
+            ]}
+          />
         </div>
-      </footer>
-    </>
+        <div className="footer-bottom">
+          <span>Copyright 2026 LetterForge. All rights reserved.</span>
+          <span>Stripe-ready billing. Supabase-ready accounts.</span>
+        </div>
+      </div>
+    </footer>
   )
 }
 

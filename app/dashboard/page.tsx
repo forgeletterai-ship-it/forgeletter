@@ -1,6 +1,29 @@
-import { DashboardWorkspace } from "@/components/DashboardWorkspace"
+import {
+  defaultProfile,
+  defaultSettings,
+  getApplicationBriefs,
+  getCurrentAppUser,
+  getUserProfile,
+  getUserSettings,
+} from "@/lib/app-data"
+import { DashboardClient } from "./DashboardClient"
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const { user } = await getCurrentAppUser()
+  const userId = user?.id || ""
+  const [{ briefs, setupError: briefsError }, { profile, setupError: profileError }, { settings }] =
+    userId
+      ? await Promise.all([
+          getApplicationBriefs(userId),
+          getUserProfile(userId),
+          getUserSettings(userId),
+        ])
+      : [
+          { briefs: [], setupError: "Authentication required" },
+          { profile: defaultProfile, setupError: "Authentication required" },
+          { settings: defaultSettings },
+        ]
+
   return (
     <>
       <div className="dashboard-topbar">
@@ -17,15 +40,19 @@ export default function DashboardPage() {
 
       <div className="dashboard-grid">
         <div className="dashboard-card">
-          <h3>Free plan</h3>
-          <p>3 draft slots ready for testing.</p>
+          <h3>{user?.plan === "free" ? "Starter plan" : `${user?.plan.toUpperCase()} plan`}</h3>
+          <p>
+            {user?.plan === "free"
+              ? "Save briefs and prepare your profile before upgrading."
+              : "Your paid workspace is active."}
+          </p>
           <div className="usage-meter">
             <span />
           </div>
         </div>
         <div className="dashboard-card">
           <h3>Saved drafts</h3>
-          <p>2 examples are staged in history.</p>
+          <p>{briefs.length} saved {briefs.length === 1 ? "brief" : "briefs"} in history.</p>
         </div>
         <div className="dashboard-card">
           <h3>Partnership-ready</h3>
@@ -33,7 +60,12 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <DashboardWorkspace />
+      <DashboardClient
+        initialBriefs={briefs}
+        profile={profile}
+        settings={settings}
+        setupError={briefsError || profileError}
+      />
     </>
   )
 }

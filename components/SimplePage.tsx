@@ -44,10 +44,10 @@ export function SimplePage({
         </section>
         <section className="cta-band">
           <div className="container">
-            <h2>Keep the product moving.</h2>
+            <h2>Turn guidance into a saved brief.</h2>
             <p>
-              The shell is ready for the next layer: real generation,
-              persistence, exports, and checkout.
+              Use the dashboard to turn notes, proof, and role requirements
+              into a reusable application workflow.
             </p>
             <Link className="button" href={ctaHref}>
               {ctaLabel}

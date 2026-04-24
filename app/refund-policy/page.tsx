@@ -4,19 +4,19 @@ export default function RefundPolicyPage() {
   return (
     <LegalPage
       title="Refund policy"
-      intro="A billing policy placeholder for the moment Stripe subscriptions go live."
+      intro="How subscription cancellations and refund requests are handled."
       sections={[
         {
-          title: "Before billing is connected",
-          body: "No payments are collected in this build, so no refunds are processed yet.",
+          title: "Subscriptions",
+          body: "Subscriptions renew monthly unless cancelled before the next billing period. Users can manage subscriptions through the billing portal.",
         },
         {
-          title: "Subscriptions",
-          body: "Once paid plans are live, define cancellation timing, renewal rules, and refund eligibility clearly.",
+          title: "Refund requests",
+          body: "Refund requests are reviewed case by case. If a charge was accidental or a technical issue prevented access, contact support with the account email and invoice details.",
         },
         {
           title: "Support",
-          body: "Billing questions should route to hello@letterforge.io until a dedicated support workflow exists.",
+          body: "Billing questions can be sent through the contact page or to hello@letterforge.io.",
         },
       ]}
     />

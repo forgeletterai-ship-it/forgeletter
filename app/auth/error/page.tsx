@@ -10,8 +10,8 @@ export default function AuthErrorPage() {
         </div>
         <h2>Authentication error</h2>
         <p>
-          Something went wrong during sign in. Please try again, or use email
-          login if a social provider is not configured yet.
+          Login could not be completed. Please try again, or use email and
+          password if the social sign-in window was interrupted.
         </p>
         <Link className="button" href="/auth/login">
           Back to login

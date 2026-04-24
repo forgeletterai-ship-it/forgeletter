@@ -4,7 +4,7 @@ export default function CookiesPage() {
   return (
     <LegalPage
       title="Cookie policy"
-      intro="A clean cookie policy shell for authentication, analytics, and billing integrations."
+      intro="How LetterForge uses cookies and similar technologies for login, security, and checkout."
       sections={[
         {
           title: "Essential cookies",
@@ -12,7 +12,7 @@ export default function CookiesPage() {
         },
         {
           title: "Analytics cookies",
-          body: "Analytics should be added only after deciding what events are useful and privacy-safe.",
+          body: "If analytics are added, they should be limited to privacy-conscious product improvement and should avoid storing application content.",
         },
         {
           title: "Payment cookies",
@@ -20,7 +20,7 @@ export default function CookiesPage() {
         },
         {
           title: "Control",
-          body: "Users can manage cookies through their browser settings. Add a consent banner if your legal review requires it.",
+          body: "Users can manage cookies through browser settings. If optional analytics cookies are introduced, consent controls should be added before launch.",
         },
       ]}
     />

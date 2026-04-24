@@ -1,25 +1,12 @@
-const drafts = [
-  {
-    role: "Product Manager",
-    company: "Spotify Berlin",
-    status: "Brief ready",
-    updated: "Today",
-  },
-  {
-    role: "Marketing Manager",
-    company: "Booking.com",
-    status: "Needs background",
-    updated: "Yesterday",
-  },
-  {
-    role: "Software Engineer",
-    company: "ASML",
-    status: "Archived sample",
-    updated: "Last week",
-  },
-]
+import { getApplicationBriefs, getCurrentAppUser } from "@/lib/app-data"
+import { HistoryClient } from "./HistoryClient"
 
-export default function HistoryPage() {
+export default async function HistoryPage() {
+  const { user } = await getCurrentAppUser()
+  const { briefs, setupError } = user
+    ? await getApplicationBriefs(user.id)
+    : { briefs: [], setupError: "Authentication required" }
+
   return (
     <>
       <div className="dashboard-topbar">
@@ -30,20 +17,7 @@ export default function HistoryPage() {
         </div>
       </div>
 
-      <section className="dashboard-card">
-        <div className="table-list">
-          {drafts.map((draft) => (
-            <div className="table-row" key={`${draft.role}-${draft.company}`}>
-              <div>
-                <strong>{draft.role}</strong>
-                <span>{draft.company}</span>
-              </div>
-              <span className="status-pill">{draft.status}</span>
-              <span>{draft.updated}</span>
-            </div>
-          ))}
-        </div>
-      </section>
+      <HistoryClient initialBriefs={briefs} setupError={setupError} />
     </>
   )
 }

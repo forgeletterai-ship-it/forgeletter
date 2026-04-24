@@ -4,11 +4,11 @@ export default function PrivacyPage() {
   return (
     <LegalPage
       title="Privacy policy"
-      intro="A launch-ready privacy page shell. Have a qualified professional review the final wording before taking payments or storing sensitive documents."
+      intro="How LetterForge handles account, application, and billing-related data."
       sections={[
         {
           title: "Information we collect",
-          body: "LetterForge may collect account details, profile inputs, job descriptions, draft letters, usage events, and billing status when those features are connected.",
+          body: "LetterForge collects the information needed to run the workspace and billing experience.",
           points: [
             "Account data such as name and email address.",
             "Application content the user chooses to save.",
@@ -21,11 +21,15 @@ export default function PrivacyPage() {
         },
         {
           title: "Data protection",
-          body: "Secrets must stay server-side. Supabase row level security should restrict every user-owned row to the authenticated owner.",
+          body: "Application content is stored in Supabase and payment details are handled by Stripe. Raw card details are not stored by LetterForge.",
+        },
+        {
+          title: "Data rights",
+          body: "Users can export workspace data from account settings and request deletion of saved application content.",
         },
         {
           title: "Contact",
-          body: "Questions can be sent to hello@letterforge.io until a dedicated privacy inbox is created.",
+          body: "Privacy questions can be sent through the contact page or to hello@letterforge.io.",
         },
       ]}
     />

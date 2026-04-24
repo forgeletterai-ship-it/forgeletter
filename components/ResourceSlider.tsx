@@ -35,12 +35,12 @@ const resources = [
   },
   {
     title: "Launch checklist",
-    teaser: "Before AI, payments, and partnerships go live.",
+    teaser: "The product basics that make a serious workspace trustworthy.",
     details: [
-      "Confirm Supabase RLS on all user-owned tables.",
-      "Keep service role keys and AI keys server-side only.",
-      "Wire Stripe checkout and webhooks before taking payments.",
-      "Add rate limits, export controls, and clear data deletion rules.",
+      "Keep profile, briefs, and billing status tied to the logged-in account.",
+      "Use Stripe-hosted checkout for card security.",
+      "Offer export and deletion controls for saved workspace data.",
+      "Keep AI output paused until the secure generation route is ready.",
     ],
   },
 ]

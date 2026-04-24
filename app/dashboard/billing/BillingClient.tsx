@@ -11,11 +11,8 @@ type Plan = {
   highlighted?: boolean
 }
 
-type OneTimeProduct = {
-  id: "single-letter-pack" | "cv-review" | "interview-prep"
-  name: string
-  price: string
-  description: string
+type BillingClientProps = {
+  currentPlan: "free" | "pro" | "ultra"
 }
 
 const plans: Plan[] = [
@@ -43,30 +40,8 @@ const plans: Plan[] = [
   },
 ]
 
-const oneTimeProducts: OneTimeProduct[] = [
-  {
-    id: "single-letter-pack",
-    name: "Single Cover Letter Pack",
-    price: "EUR 7",
-    description: "One polished cover letter brief and export-ready draft.",
-  },
-  {
-    id: "cv-review",
-    name: "CV Review",
-    price: "EUR 29",
-    description: "A one-time CV review add-on for a stronger application package.",
-  },
-  {
-    id: "interview-prep",
-    name: "Interview Prep Session",
-    price: "EUR 39",
-    description: "A one-time interview preparation add-on.",
-  },
-]
-
-export function BillingClient() {
+export function BillingClient({ currentPlan }: BillingClientProps) {
   const [loadingPlan, setLoadingPlan] = useState<string>("")
-  const [loadingProduct, setLoadingProduct] = useState<string>("")
   const [portalLoading, setPortalLoading] = useState(false)
   const [error, setError] = useState("")
 
@@ -106,29 +81,6 @@ export function BillingClient() {
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not start checkout.")
       setLoadingPlan("")
-    }
-  }
-
-  async function startOneTimeCheckout(product: OneTimeProduct["id"]) {
-    setError("")
-    setLoadingProduct(product)
-
-    try {
-      const res = await fetch("/api/stripe/checkout-one-time", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ product }),
-      })
-      const data = await readJsonResponse(res)
-
-      if (!res.ok || !data.url) {
-        throw new Error(data.error || "Could not start checkout.")
-      }
-
-      window.location.href = data.url
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not start checkout.")
-      setLoadingProduct("")
     }
   }
 
@@ -173,7 +125,7 @@ export function BillingClient() {
                 <li key={point}>{point}</li>
               ))}
             </ul>
-            {plan.id === "starter" ? (
+            {currentPlan === (plan.id === "starter" ? "free" : plan.id) ? (
               <button className="button-secondary" type="button">
                 Current plan
               </button>
@@ -192,33 +144,6 @@ export function BillingClient() {
           </article>
         ))}
       </div>
-
-      <section className="dashboard-card" style={{ marginTop: 16 }}>
-        <h3>One-time add-ons</h3>
-        <p>
-          Use one-off Stripe Checkout for services that are not part of the
-          monthly subscription.
-        </p>
-        <div className="table-list">
-          {oneTimeProducts.map((product) => (
-            <div className="table-row" key={product.id}>
-              <div>
-                <strong>{product.name}</strong>
-                <span>{product.description}</span>
-              </div>
-              <span className="status-pill">{product.price}</span>
-              <button
-                className="button-secondary"
-                type="button"
-                onClick={() => startOneTimeCheckout(product.id)}
-                disabled={Boolean(loadingProduct)}
-              >
-                {loadingProduct === product.id ? "Opening Stripe..." : "Buy once"}
-              </button>
-            </div>
-          ))}
-        </div>
-      </section>
 
       <section className="dashboard-card" style={{ marginTop: 16 }}>
         <h3>Manage subscription</h3>

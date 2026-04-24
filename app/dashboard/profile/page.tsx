@@ -1,4 +1,12 @@
-export default function ProfilePage() {
+import { defaultProfile, getCurrentAppUser, getUserProfile } from "@/lib/app-data"
+import { ProfileClient } from "./ProfileClient"
+
+export default async function ProfilePage() {
+  const { user } = await getCurrentAppUser()
+  const { profile, setupError } = user
+    ? await getUserProfile(user.id)
+    : { profile: defaultProfile, setupError: "Authentication required" }
+
   return (
     <>
       <div className="dashboard-topbar">
@@ -12,31 +20,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      <section className="dashboard-card">
-        <form className="form-stack">
-          <div className="field">
-            <label htmlFor="headline">Professional headline</label>
-            <input id="headline" placeholder="Growth marketer with SaaS and lifecycle experience" />
-          </div>
-          <div className="field">
-            <label htmlFor="achievements">Key achievements</label>
-            <textarea
-              id="achievements"
-              placeholder="Add 3-5 measurable wins. Example: improved onboarding conversion by 18%."
-            />
-          </div>
-          <div className="field">
-            <label htmlFor="strengths">Strengths and skills</label>
-            <textarea
-              id="strengths"
-              placeholder="List the skills, tools, industries, and working style you want reflected."
-            />
-          </div>
-          <button className="button-soft" type="button">
-            Save profile soon
-          </button>
-        </form>
-      </section>
+      <ProfileClient initialProfile={profile} setupError={setupError} />
     </>
   )
 }

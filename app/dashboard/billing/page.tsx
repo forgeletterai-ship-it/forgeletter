@@ -1,21 +1,26 @@
 import { BillingClient } from "./BillingClient"
+import { getCurrentAppUser } from "@/lib/app-data"
 
-export default function BillingPage() {
+export default async function BillingPage() {
+  const { user } = await getCurrentAppUser()
+
   return (
     <>
       <div className="dashboard-topbar">
         <div className="dashboard-title">
           <span className="section-kicker">Billing</span>
-          <h1>Stripe subscriptions.</h1>
+          <h1>Your plan and billing.</h1>
           <p>
-            Upgrade customers through Stripe Checkout and manage subscriptions
-            through the Stripe customer portal.
+            Upgrade through secure Stripe Checkout, then manage invoices,
+            payment methods, and subscriptions in the customer portal.
           </p>
         </div>
-        <span className="status-pill active">Stripe ready</span>
+        <span className="status-pill active">
+          {user?.plan === "free" ? "Starter" : user?.plan.toUpperCase()}
+        </span>
       </div>
 
-      <BillingClient />
+      <BillingClient currentPlan={user?.plan || "free"} />
     </>
   )
 }
