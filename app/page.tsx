@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { AnimatedSeparator } from "@/components/AnimatedSeparator"
 import { LandingWorkspace } from "@/components/LandingWorkspace"
 import { PublicFooter, PublicNav } from "@/components/PublicChrome"
 import { ResourceSlider } from "@/components/ResourceSlider"
@@ -162,28 +163,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        <div className="logo-strip" aria-hidden="true">
-          <div className="logo-strip__track">
-            {[
-              "Product",
-              "Profile",
-              "History",
-              "Billing",
-              "Settings",
-              "Agencies",
-              "Resources",
-              "Product",
-              "Profile",
-              "History",
-              "Billing",
-              "Settings",
-              "Agencies",
-              "Resources",
-            ].map((item, index) => (
-              <span key={`${item}-${index}`}>{item}</span>
-            ))}
-          </div>
-        </div>
+        <AnimatedSeparator />
 
         <section className="section" id="how-it-works">
           <div className="container">

@@ -349,24 +349,64 @@ a {
   font-size: 22px;
 }
 
-.logo-strip {
-  border-top: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
-  background: var(--ink);
-  color: rgba(255, 255, 255, 0.62);
+.premium-separator {
+  position: relative;
   overflow: hidden;
+  border-top: 1px solid rgba(229, 222, 210, 0.78);
+  border-bottom: 1px solid rgba(229, 222, 210, 0.78);
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.66), rgba(255, 253, 248, 0.16), rgba(255, 255, 255, 0.66)),
+    rgba(246, 243, 235, 0.76);
+  color: var(--muted-strong);
 }
 
-.logo-strip__track {
+.premium-separator::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 34%;
+  background: linear-gradient(90deg, transparent, rgba(199, 154, 54, 0.18), transparent);
+  animation: separator-sheen 6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.premium-separator__glow {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold), var(--teal), transparent);
+  animation: separator-line 8s linear infinite;
+}
+
+.premium-separator__track {
   width: max-content;
   display: flex;
-  gap: 44px;
-  padding: 16px 0;
-  animation: marquee 30s linear infinite;
-  font-size: 13px;
+  align-items: center;
+  gap: 24px;
+  padding: 15px 0;
+  animation: marquee 34s linear infinite;
+  font-size: 12px;
   font-weight: 800;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
+}
+
+.premium-separator__track span {
+  display: inline-flex;
+  align-items: center;
+  gap: 24px;
+  white-space: nowrap;
+}
+
+.premium-separator__track i {
+  width: 7px;
+  height: 7px;
+  display: inline-block;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--gold), var(--teal));
+  box-shadow: 0 0 0 4px rgba(199, 154, 54, 0.11);
 }
 
 .section {
@@ -1310,6 +1350,17 @@ button.tone-chip:hover {
 @keyframes marquee {
   0% { transform: translateX(0); }
   100% { transform: translateX(-50%); }
+}
+
+@keyframes separator-line {
+  0% { transform: translateX(-35%); }
+  100% { transform: translateX(35%); }
+}
+
+@keyframes separator-sheen {
+  0%, 100% { transform: translateX(-120%); opacity: 0; }
+  35%, 65% { opacity: 1; }
+  100% { transform: translateX(340%); }
 }
 
 @media (max-width: 1024px) {
