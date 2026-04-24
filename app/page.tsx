@@ -65,11 +65,11 @@ const plans = [
     highlight: true,
   },
   {
-    name: "Premium",
+    name: "Ultra",
     price: "EUR 19",
     body: "For high-volume applications and international searches.",
     features: ["Unlimited workspace", "Profile variants", "Application pipeline", "Priority support"],
-    cta: "Choose Premium",
+    cta: "Choose Ultra",
     href: "/auth/signup",
   },
 ]
@@ -111,7 +111,7 @@ export default function HomePage() {
             <div>
               <div className="eyebrow">
                 <span className="eyebrow-dot" />
-                Premium cover letter workspace
+                Ultra cover letter workspace
               </div>
               <h1>
                 Apply with letters that feel <span>specific, sharp, and yours.</span>
@@ -135,7 +135,7 @@ export default function HomePage() {
                   <span>tone, job requirements, and experience fields</span>
                 </div>
                 <div className="proof-item">
-                  <strong>Premium</strong>
+                  <strong>Ultra</strong>
                   <span>auth, dashboard, resources, billing, and legal shell</span>
                 </div>
                 <div className="proof-item">
@@ -152,7 +152,7 @@ export default function HomePage() {
               <div className="mini-metrics">
                 <div className="mini-metric">
                   <span>Workspace</span>
-                  <strong>Premium shell</strong>
+                  <strong>Ultra shell</strong>
                 </div>
                 <div className="mini-metric">
                   <span>Status</span>
@@ -209,7 +209,7 @@ export default function HomePage() {
               <h2>A stronger product foundation.</h2>
               <p>
                 The important missing pieces are now represented with consistent
-                product language and premium interaction patterns.
+                product language and polished interaction patterns.
               </p>
             </div>
             <div className="grid-4">
@@ -369,7 +369,7 @@ export default function HomePage() {
           <div className="container">
             <h2>Ready for a smoother product demo.</h2>
             <p>
-              The site now presents like a premium SaaS even before AI
+              The site now presents like a polished SaaS even before AI
               generation is wired in.
             </p>
             <Link className="button" href="/auth/signup">

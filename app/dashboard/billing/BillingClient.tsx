@@ -3,7 +3,7 @@
 import { useState } from "react"
 
 type Plan = {
-  id: "starter" | "pro" | "premium"
+  id: "starter" | "pro" | "ultra"
   name: string
   price: string
   state: string
@@ -35,8 +35,8 @@ const plans: Plan[] = [
     points: ["More saved letters", "Export controls", "Priority roadmap"],
   },
   {
-    id: "premium",
-    name: "Premium",
+    id: "ultra",
+    name: "Ultra",
     price: "EUR 19 / month",
     state: "Partner-ready",
     points: ["Unlimited workspace", "Profile variants", "Priority support"],
@@ -86,7 +86,7 @@ export function BillingClient() {
     }
   }
 
-  async function startCheckout(plan: "pro" | "premium") {
+  async function startCheckout(plan: "pro" | "ultra") {
     setError("")
     setLoadingPlan(plan)
 
@@ -182,7 +182,7 @@ export function BillingClient() {
                 className={plan.highlighted ? "button" : "button-secondary"}
                 type="button"
                 onClick={() =>
-                  startCheckout(plan.id === "pro" ? "pro" : "premium")
+                  startCheckout(plan.id === "pro" ? "pro" : "ultra")
                 }
                 disabled={Boolean(loadingPlan)}
               >

@@ -16,7 +16,7 @@ export function getStripe() {
   return stripeClient
 }
 
-export type BillingPlan = "pro" | "premium"
+export type BillingPlan = "pro" | "ultra"
 export type OneTimeProduct = "single-letter-pack" | "cv-review" | "interview-prep"
 
 export const billingPlans: Record<
@@ -34,11 +34,11 @@ export const billingPlans: Record<
     unitAmount: 900,
     lookupKey: "letterforge_pro_monthly",
   },
-  premium: {
-    name: "LetterForge Premium",
-    priceIdEnv: "STRIPE_PREMIUM_PRICE_ID",
+  ultra: {
+    name: "LetterForge Ultra",
+    priceIdEnv: "STRIPE_ULTRA_PRICE_ID",
     unitAmount: 1900,
-    lookupKey: "letterforge_premium_monthly",
+    lookupKey: "letterforge_ultra_monthly",
   },
 }
 

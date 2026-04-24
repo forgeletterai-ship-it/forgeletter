@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import "./globals.css"
 
 export const metadata: Metadata = {
-  title: "LetterForge - Premium cover letter workspace",
+  title: "LetterForge - Ultra cover letter workspace",
   description:
     "A polished workspace for drafting, saving, and managing tailored cover letters.",
 }

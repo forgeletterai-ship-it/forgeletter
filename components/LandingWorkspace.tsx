@@ -79,11 +79,11 @@ export function LandingWorkspace() {
         </div>
       </div>
       <div className="letter-paper">
-        <h3>Premium output area</h3>
+        <h3>Ultra output area</h3>
         <p>
           The selected tone, job requirements, and experience will feed the
           generator later. For now, this preview keeps the product honest while
-          still giving customers a complete, premium setup flow.
+          still giving customers a complete, polished setup flow.
         </p>
         <p>
           Selected tone: <strong>{tone}</strong>

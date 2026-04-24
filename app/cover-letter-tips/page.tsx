@@ -5,7 +5,7 @@ export default function CoverLetterTipsPage() {
     <SimplePage
       kicker="Guide"
       title="Cover letter tips"
-      intro="Practical writing rules that match the premium product direction."
+      intro="Practical writing rules that match the polished product direction."
       cards={[
         {
           title: "Open with relevance",

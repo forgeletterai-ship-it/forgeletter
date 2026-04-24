@@ -5,7 +5,7 @@ import { useState } from "react"
 const resources = [
   {
     title: "Cover letter structure",
-    teaser: "A premium letter needs a strong hook, proof, fit, and close.",
+    teaser: "A polished letter needs a strong hook, proof, fit, and close.",
     details: [
       "Open with the specific role and the business reason you care about it.",
       "Use one achievement with a measurable result instead of broad claims.",

@@ -74,7 +74,7 @@ export function DashboardWorkspace() {
           </div>
 
           <button className="button-soft" type="button">
-            Save premium brief soon
+            Save polished brief soon
           </button>
         </div>
       </section>

@@ -1,5 +1,5 @@
 const separatorItems = [
-  "Premium workspace",
+  "Ultra workspace",
   "Secure drafting",
   "Career-ready letters",
   "Agency-ready workflow",

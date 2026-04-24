@@ -77,7 +77,7 @@ export default function SignupClient() {
       <section className="auth-content">
         <div className="auth-card">
           <h2>Create account</h2>
-          <p>Start with the premium product shell.</p>
+          <p>Start with the polished product shell.</p>
 
           {error ? <div className="alert">{error}</div> : null}
 

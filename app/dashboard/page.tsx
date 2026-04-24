@@ -6,7 +6,7 @@ export default function DashboardPage() {
       <div className="dashboard-topbar">
         <div className="dashboard-title">
           <span className="section-kicker">Workspace</span>
-          <h1>Prepare a premium cover letter brief.</h1>
+          <h1>Prepare a polished cover letter brief.</h1>
           <p>
             A smoother, more professional workspace for individuals now and
             career-agency partnerships later. AI generation remains paused.
