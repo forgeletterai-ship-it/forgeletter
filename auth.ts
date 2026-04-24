@@ -66,27 +66,32 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   providers,
   callbacks: {
     async signIn({ user, account }) {
-      if (account?.provider === "google" || account?.provider === "facebook") {
-        const { data: existing } = await supabaseAdmin
-          .from("users")
-          .select("id")
-          .eq("email", user.email!)
-          .single()
+  if (account?.provider === "google" || account?.provider === "facebook") {
+    const fallbackEmail =
+      user.email || `${account.provider}_${account.providerAccountId}@no-email.local`
 
-        if (!existing) {
-          await supabaseAdmin.from("users").insert({
-            email: user.email,
-            name: user.name,
-            image: user.image,
-            provider: account.provider,
-            provider_id: account.providerAccountId,
-            plan: "free",
-          })
-        }
-      }
+    const { data: existing } = await supabaseAdmin
+      .from("users")
+      .select("id")
+      .eq("email", fallbackEmail)
+      .single()
 
-      return true
-    },
+    if (!existing) {
+      await supabaseAdmin.from("users").insert({
+        email: fallbackEmail,
+        name: user.name,
+        image: user.image,
+        provider: account.provider,
+        provider_id: account.providerAccountId,
+        plan: "free",
+      })
+    }
+
+    user.email = fallbackEmail
+  }
+
+  return true
+},
 
     async jwt({ token, user }) {
       if (user) {
