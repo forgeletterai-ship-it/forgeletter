@@ -1,10 +1,15 @@
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import "./globals.css"
 
 export const metadata: Metadata = {
   title: "LetterForge - Ultra cover letter workspace",
   description:
     "A polished workspace for drafting, saving, and managing tailored cover letters.",
+}
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
 }
 
 export default function RootLayout({

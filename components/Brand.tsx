@@ -36,7 +36,7 @@ export function Brand({ href = "/", dark = false }: BrandProps) {
         </defs>
       </svg>
       <span className="brand__text">
-        Letter<span className="brand__accent">Forge</span>
+        Forge<span className="brand__accent">Letter</span>
       </span>
     </Link>
   )

@@ -1,17 +1,25 @@
-import Link from "next/link"
 import { redirect } from "next/navigation"
 import type { ReactNode } from "react"
 import { auth, signOut } from "@/auth"
-import { Brand } from "@/components/Brand"
 import { getCurrentAppUser } from "@/lib/app-data"
+import { DashboardNavigation } from "./DashboardNavigation"
 
-const navItems = [
-  { href: "/dashboard", label: "Workspace" },
-  { href: "/dashboard/history", label: "History" },
-  { href: "/dashboard/profile", label: "Profile" },
-  { href: "/dashboard/billing", label: "Billing" },
-  { href: "/dashboard/settings", label: "Settings" },
-]
+function getInitials(name: string) {
+  const parts = name
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+
+  if (!parts.length) {
+    return "FL"
+  }
+
+  return parts
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase()
+}
 
 export default async function DashboardLayout({
   children,
@@ -30,37 +38,25 @@ export default async function DashboardLayout({
     email?: string | null
   }
   const plan = appUser?.plan || "free"
+  const displayName = appUser?.name || sessionUser.name || "ForgeLetter user"
+  const planTier = plan === "ultra" ? "ultra" : plan === "pro" ? "pro" : "regular"
+  const planLabel =
+    planTier === "regular" ? "Regular" : planTier === "pro" ? "PRO" : "ULTRA"
+
+  async function logoutAction() {
+    "use server"
+    await signOut({ redirectTo: "/auth/login" })
+  }
 
   return (
     <main className="dashboard-shell">
-      <aside className="dashboard-sidebar">
-        <Brand dark />
-        <nav className="dashboard-nav" aria-label="Dashboard navigation">
-          {navItems.map((item) => (
-            <Link href={item.href} key={item.href}>
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-        <div className="dashboard-user">
-          <strong>{appUser?.name || sessionUser.name || "LetterForge user"}</strong>
-          <span>{appUser?.email || sessionUser.email || "No email on file"}</span>
-          <span className="status-pill active">
-            {plan === "free" ? "Starter plan" : `${plan.toUpperCase()} plan`}
-          </span>
-          <form
-            action={async () => {
-              "use server"
-              await signOut({ redirectTo: "/auth/login" })
-            }}
-            style={{ marginTop: 14 }}
-          >
-            <button className="button-secondary" type="submit" style={{ width: "100%" }}>
-              Log out
-            </button>
-          </form>
-        </div>
-      </aside>
+      <DashboardNavigation
+        displayName={displayName}
+        initials={getInitials(displayName)}
+        logoutAction={logoutAction}
+        planLabel={planLabel}
+        planTier={planTier}
+      />
       <section className="dashboard-main">{children}</section>
     </main>
   )
