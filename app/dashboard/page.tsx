@@ -26,42 +26,9 @@ export default async function DashboardPage() {
 
   return (
     <>
-      <div className="dashboard-topbar">
-        <div className="dashboard-title">
-          <span className="section-kicker">Workspace</span>
-          <h1>Prepare a polished cover letter brief.</h1>
-          <p>
-            A smoother, more professional workspace for individuals now and
-            career-agency partnerships later. AI generation remains paused.
-          </p>
-        </div>
-        <span className="status-pill active">Generator paused</span>
-      </div>
-
-      <div className="dashboard-grid">
-        <div className="dashboard-card">
-          <h3>{user?.plan === "free" ? "Starter plan" : `${user?.plan.toUpperCase()} plan`}</h3>
-          <p>
-            {user?.plan === "free"
-              ? "Save briefs and prepare your profile before upgrading."
-              : "Your paid workspace is active."}
-          </p>
-          <div className="usage-meter">
-            <span />
-          </div>
-        </div>
-        <div className="dashboard-card">
-          <h3>Saved drafts</h3>
-          <p>{briefs.length} saved {briefs.length === 1 ? "brief" : "briefs"} in history.</p>
-        </div>
-        <div className="dashboard-card">
-          <h3>Partnership-ready</h3>
-          <p>Profile, history, billing, and advisor-style workflow pages are in place.</p>
-        </div>
-      </div>
-
       <DashboardClient
         initialBriefs={briefs}
+        plan={user?.plan || "free"}
         profile={profile}
         settings={settings}
         setupError={briefsError || profileError}

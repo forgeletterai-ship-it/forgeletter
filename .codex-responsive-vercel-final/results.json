@@ -1,0 +1,1744 @@
+[
+  {
+    "page": "landing",
+    "device": "large-monitor",
+    "width": 1920,
+    "height": 1080,
+    "screenshot": "landing-large-monitor-1920x1080.png",
+    "finalUrl": "https://forgeletter.vercel.app/",
+    "title": "LetterForge - Ultra cover letter workspace",
+    "innerWidth": 1920,
+    "innerHeight": 1080,
+    "scrollWidth": 1920,
+    "scrollHeight": 6880,
+    "overflowX": 0,
+    "headerRect": {
+      "left": 370,
+      "right": 1550,
+      "top": 0,
+      "bottom": 72,
+      "width": 1180,
+      "height": 72
+    },
+    "offenders": [
+      {
+        "tag": "div",
+        "cls": "premium-separator__glow",
+        "text": "",
+        "left": -501,
+        "right": 1419,
+        "width": 1920
+      },
+      {
+        "tag": "div",
+        "cls": "premium-separator__track",
+        "text": "ULTRA WORKSPACE\nSECURE DRAFTING\nCAREER-READY LETTERS\nAGENCY-READY WORKFLOW\nSAVED PROFILES\n",
+        "left": -52,
+        "right": 3453,
+        "width": 3505
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "text": "ULTRA WORKSPACE",
+        "left": -52,
+        "right": 119,
+        "width": 171
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "text": "SECURE DRAFTING",
+        "left": 1907,
+        "right": 2071,
+        "width": 164
+      },
+      {
+        "tag": "i",
+        "cls": "",
+        "text": "",
+        "left": 2064,
+        "right": 2071,
+        "width": 7
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "text": "CAREER-READY LETTERS",
+        "left": 2095,
+        "right": 2303,
+        "width": 208
+      },
+      {
+        "tag": "i",
+        "cls": "",
+        "text": "",
+        "left": 2296,
+        "right": 2303,
+        "width": 7
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "text": "AGENCY-READY WORKFLOW",
+        "left": 2327,
+        "right": 2565,
+        "width": 238
+      }
+    ]
+  },
+  {
+    "page": "landing",
+    "device": "medium-monitor",
+    "width": 1536,
+    "height": 864,
+    "screenshot": "landing-medium-monitor-1536x864.png",
+    "finalUrl": "https://forgeletter.vercel.app/",
+    "title": "LetterForge - Ultra cover letter workspace",
+    "innerWidth": 1536,
+    "innerHeight": 864,
+    "scrollWidth": 1536,
+    "scrollHeight": 6664,
+    "overflowX": 0,
+    "headerRect": {
+      "left": 178,
+      "right": 1358,
+      "top": 0,
+      "bottom": 72,
+      "width": 1180,
+      "height": 72
+    },
+    "offenders": [
+      {
+        "tag": "div",
+        "cls": "premium-separator__glow",
+        "text": "",
+        "left": -414,
+        "right": 1122,
+        "width": 1536
+      },
+      {
+        "tag": "div",
+        "cls": "premium-separator__track",
+        "text": "ULTRA WORKSPACE\nSECURE DRAFTING\nCAREER-READY LETTERS\nAGENCY-READY WORKFLOW\nSAVED PROFILES\n",
+        "left": -47,
+        "right": 3458,
+        "width": 3505
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "text": "ULTRA WORKSPACE",
+        "left": -47,
+        "right": 124,
+        "width": 171
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "text": "SUPABASE-READY ACCOUNTS",
+        "left": 1445,
+        "right": 1693,
+        "width": 248
+      },
+      {
+        "tag": "i",
+        "cls": "",
+        "text": "",
+        "left": 1686,
+        "right": 1693,
+        "width": 7
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "text": "ULTRA WORKSPACE",
+        "left": 1717,
+        "right": 1888,
+        "width": 171
+      },
+      {
+        "tag": "i",
+        "cls": "",
+        "text": "",
+        "left": 1881,
+        "right": 1888,
+        "width": 7
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "text": "SECURE DRAFTING",
+        "left": 1912,
+        "right": 2076,
+        "width": 164
+      }
+    ]
+  },
+  {
+    "page": "landing",
+    "device": "small-monitor",
+    "width": 1366,
+    "height": 768,
+    "screenshot": "landing-small-monitor-1366x768.png",
+    "finalUrl": "https://forgeletter.vercel.app/",
+    "title": "LetterForge - Ultra cover letter workspace",
+    "innerWidth": 1366,
+    "innerHeight": 768,
+    "scrollWidth": 1366,
+    "scrollHeight": 6634,
+    "overflowX": 0,
+    "headerRect": {
+      "left": 93,
+      "right": 1273,
+      "top": 0,
+      "bottom": 72,
+      "width": 1180,
+      "height": 72
+    },
+    "offenders": [
+      {
+        "tag": "div",
+        "cls": "premium-separator__glow",
+        "text": "",
+        "left": -369,
+        "right": 997,
+        "width": 1366
+      },
+      {
+        "tag": "div",
+        "cls": "premium-separator__track",
+        "text": "ULTRA WORKSPACE\nSECURE DRAFTING\nCAREER-READY LETTERS\nAGENCY-READY WORKFLOW\nSAVED PROFILES\n",
+        "left": -47,
+        "right": 3458,
+        "width": 3505
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "text": "ULTRA WORKSPACE",
+        "left": -47,
+        "right": 124,
+        "width": 171
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "text": "STRIPE-READY BILLING",
+        "left": 1224,
+        "right": 1421,
+        "width": 198
+      },
+      {
+        "tag": "i",
+        "cls": "",
+        "text": "",
+        "left": 1414,
+        "right": 1421,
+        "width": 7
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "text": "SUPABASE-READY ACCOUNTS",
+        "left": 1445,
+        "right": 1693,
+        "width": 248
+      },
+      {
+        "tag": "i",
+        "cls": "",
+        "text": "",
+        "left": 1686,
+        "right": 1693,
+        "width": 7
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "text": "ULTRA WORKSPACE",
+        "left": 1717,
+        "right": 1888,
+        "width": 171
+      }
+    ]
+  },
+  {
+    "page": "landing",
+    "device": "large-laptop",
+    "width": 1440,
+    "height": 900,
+    "screenshot": "landing-large-laptop-1440x900.png",
+    "finalUrl": "https://forgeletter.vercel.app/",
+    "title": "LetterForge - Ultra cover letter workspace",
+    "innerWidth": 1440,
+    "innerHeight": 900,
+    "scrollWidth": 1440,
+    "scrollHeight": 6700,
+    "overflowX": 0,
+    "headerRect": {
+      "left": 130,
+      "right": 1310,
+      "top": 0,
+      "bottom": 72,
+      "width": 1180,
+      "height": 72
+    },
+    "offenders": [
+      {
+        "tag": "div",
+        "cls": "premium-separator__glow",
+        "text": "",
+        "left": -386,
+        "right": 1054,
+        "width": 1440
+      },
+      {
+        "tag": "div",
+        "cls": "premium-separator__track",
+        "text": "ULTRA WORKSPACE\nSECURE DRAFTING\nCAREER-READY LETTERS\nAGENCY-READY WORKFLOW\nSAVED PROFILES\n",
+        "left": -48,
+        "right": 3457,
+        "width": 3505
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "text": "ULTRA WORKSPACE",
+        "left": -48,
+        "right": 123,
+        "width": 171
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "text": "SUPABASE-READY ACCOUNTS",
+        "left": 1445,
+        "right": 1692,
+        "width": 248
+      },
+      {
+        "tag": "i",
+        "cls": "",
+        "text": "",
+        "left": 1685,
+        "right": 1692,
+        "width": 7
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "text": "ULTRA WORKSPACE",
+        "left": 1716,
+        "right": 1888,
+        "width": 171
+      },
+      {
+        "tag": "i",
+        "cls": "",
+        "text": "",
+        "left": 1881,
+        "right": 1888,
+        "width": 7
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "text": "SECURE DRAFTING",
+        "left": 1912,
+        "right": 2076,
+        "width": 164
+      }
+    ]
+  },
+  {
+    "page": "landing",
+    "device": "medium-laptop",
+    "width": 1280,
+    "height": 800,
+    "screenshot": "landing-medium-laptop-1280x800.png",
+    "finalUrl": "https://forgeletter.vercel.app/",
+    "title": "LetterForge - Ultra cover letter workspace",
+    "innerWidth": 1280,
+    "innerHeight": 800,
+    "scrollWidth": 1280,
+    "scrollHeight": 6634,
+    "overflowX": 0,
+    "headerRect": {
+      "left": 50,
+      "right": 1230,
+      "top": 0,
+      "bottom": 72,
+      "width": 1180,
+      "height": 72
+    },
+    "offenders": [
+      {
+        "tag": "div",
+        "cls": "premium-separator__glow",
+        "text": "",
+        "left": -345,
+        "right": 935,
+        "width": 1280
+      },
+      {
+        "tag": "div",
+        "cls": "premium-separator__track",
+        "text": "ULTRA WORKSPACE\nSECURE DRAFTING\nCAREER-READY LETTERS\nAGENCY-READY WORKFLOW\nSAVED PROFILES\n",
+        "left": -47,
+        "right": 3458,
+        "width": 3505
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "text": "ULTRA WORKSPACE",
+        "left": -47,
+        "right": 124,
+        "width": 171
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "text": "STRIPE-READY BILLING",
+        "left": 1224,
+        "right": 1421,
+        "width": 198
+      },
+      {
+        "tag": "i",
+        "cls": "",
+        "text": "",
+        "left": 1414,
+        "right": 1421,
+        "width": 7
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "text": "SUPABASE-READY ACCOUNTS",
+        "left": 1445,
+        "right": 1693,
+        "width": 248
+      },
+      {
+        "tag": "i",
+        "cls": "",
+        "text": "",
+        "left": 1686,
+        "right": 1693,
+        "width": 7
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "text": "ULTRA WORKSPACE",
+        "left": 1717,
+        "right": 1888,
+        "width": 171
+      }
+    ]
+  },
+  {
+    "page": "landing",
+    "device": "small-laptop",
+    "width": 1024,
+    "height": 768,
+    "screenshot": "landing-small-laptop-1024x768.png",
+    "finalUrl": "https://forgeletter.vercel.app/",
+    "title": "LetterForge - Ultra cover letter workspace",
+    "innerWidth": 1024,
+    "innerHeight": 768,
+    "scrollWidth": 1024,
+    "scrollHeight": 8874,
+    "overflowX": 0,
+    "headerRect": {
+      "left": 24,
+      "right": 1000,
+      "top": 0,
+      "bottom": 72,
+      "width": 976,
+      "height": 72
+    },
+    "offenders": [
+      {
+        "tag": "div",
+        "cls": "premium-separator__glow",
+        "text": "",
+        "left": -275,
+        "right": 749,
+        "width": 1024
+      },
+      {
+        "tag": "div",
+        "cls": "premium-separator__track",
+        "text": "ULTRA WORKSPACE\nSECURE DRAFTING\nCAREER-READY LETTERS\nAGENCY-READY WORKFLOW\nSAVED PROFILES\n",
+        "left": -48,
+        "right": 3457,
+        "width": 3505
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "text": "ULTRA WORKSPACE",
+        "left": -48,
+        "right": 123,
+        "width": 171
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "text": "APPLICATION HISTORY",
+        "left": 1004,
+        "right": 1199,
+        "width": 195
+      },
+      {
+        "tag": "i",
+        "cls": "",
+        "text": "",
+        "left": 1192,
+        "right": 1199,
+        "width": 7
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "text": "STRIPE-READY BILLING",
+        "left": 1223,
+        "right": 1421,
+        "width": 198
+      },
+      {
+        "tag": "i",
+        "cls": "",
+        "text": "",
+        "left": 1414,
+        "right": 1421,
+        "width": 7
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "text": "SUPABASE-READY ACCOUNTS",
+        "left": 1445,
+        "right": 1693,
+        "width": 248
+      }
+    ]
+  },
+  {
+    "page": "landing",
+    "device": "large-tablet",
+    "width": 820,
+    "height": 1180,
+    "screenshot": "landing-large-tablet-820x1180.png",
+    "finalUrl": "https://forgeletter.vercel.app/",
+    "title": "LetterForge - Ultra cover letter workspace",
+    "innerWidth": 820,
+    "innerHeight": 1180,
+    "scrollWidth": 820,
+    "scrollHeight": 8626,
+    "overflowX": 0,
+    "headerRect": {
+      "left": 24,
+      "right": 796,
+      "top": 0,
+      "bottom": 72,
+      "width": 772,
+      "height": 72
+    },
+    "offenders": [
+      {
+        "tag": "div",
+        "cls": "premium-separator__glow",
+        "text": "",
+        "left": -221,
+        "right": 599,
+        "width": 820
+      },
+      {
+        "tag": "div",
+        "cls": "premium-separator__track",
+        "text": "ULTRA WORKSPACE\nSECURE DRAFTING\nCAREER-READY LETTERS\nAGENCY-READY WORKFLOW\nSAVED PROFILES\n",
+        "left": -47,
+        "right": 3458,
+        "width": 3505
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "text": "ULTRA WORKSPACE",
+        "left": -47,
+        "right": 124,
+        "width": 171
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "text": "SAVED PROFILES",
+        "left": 829,
+        "right": 981,
+        "width": 152
+      },
+      {
+        "tag": "i",
+        "cls": "",
+        "text": "",
+        "left": 974,
+        "right": 981,
+        "width": 7
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "text": "APPLICATION HISTORY",
+        "left": 1005,
+        "right": 1200,
+        "width": 195
+      },
+      {
+        "tag": "i",
+        "cls": "",
+        "text": "",
+        "left": 1193,
+        "right": 1200,
+        "width": 7
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "text": "STRIPE-READY BILLING",
+        "left": 1224,
+        "right": 1421,
+        "width": 198
+      }
+    ]
+  },
+  {
+    "page": "landing",
+    "device": "medium-tablet",
+    "width": 768,
+    "height": 1024,
+    "screenshot": "landing-medium-tablet-768x1024.png",
+    "finalUrl": "https://forgeletter.vercel.app/",
+    "title": "LetterForge - Ultra cover letter workspace",
+    "innerWidth": 768,
+    "innerHeight": 1024,
+    "scrollWidth": 768,
+    "scrollHeight": 8622,
+    "overflowX": 0,
+    "headerRect": {
+      "left": 24,
+      "right": 744,
+      "top": 0,
+      "bottom": 72,
+      "width": 720,
+      "height": 72
+    },
+    "offenders": [
+      {
+        "tag": "div",
+        "cls": "premium-separator__glow",
+        "text": "",
+        "left": -206,
+        "right": 562,
+        "width": 768
+      },
+      {
+        "tag": "div",
+        "cls": "premium-separator__track",
+        "text": "ULTRA WORKSPACE\nSECURE DRAFTING\nCAREER-READY LETTERS\nAGENCY-READY WORKFLOW\nSAVED PROFILES\n",
+        "left": -48,
+        "right": 3457,
+        "width": 3505
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "text": "ULTRA WORKSPACE",
+        "left": -48,
+        "right": 123,
+        "width": 171
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "text": "AGENCY-READY WORKFLOW",
+        "left": 567,
+        "right": 805,
+        "width": 238
+      },
+      {
+        "tag": "i",
+        "cls": "",
+        "text": "",
+        "left": 798,
+        "right": 805,
+        "width": 7
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "text": "SAVED PROFILES",
+        "left": 829,
+        "right": 980,
+        "width": 152
+      },
+      {
+        "tag": "i",
+        "cls": "",
+        "text": "",
+        "left": 973,
+        "right": 980,
+        "width": 7
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "text": "APPLICATION HISTORY",
+        "left": 1004,
+        "right": 1199,
+        "width": 195
+      }
+    ]
+  },
+  {
+    "page": "landing",
+    "device": "small-tablet",
+    "width": 600,
+    "height": 960,
+    "screenshot": "landing-small-tablet-600x960.png",
+    "finalUrl": "https://forgeletter.vercel.app/",
+    "title": "LetterForge - Ultra cover letter workspace",
+    "innerWidth": 600,
+    "innerHeight": 960,
+    "scrollWidth": 600,
+    "scrollHeight": 10056,
+    "overflowX": 0,
+    "headerRect": {
+      "left": 16,
+      "right": 584,
+      "top": 0,
+      "bottom": 112,
+      "width": 568,
+      "height": 112
+    },
+    "offenders": [
+      {
+        "tag": "div",
+        "cls": "premium-separator__glow",
+        "text": "",
+        "left": -163,
+        "right": 437,
+        "width": 600
+      },
+      {
+        "tag": "div",
+        "cls": "premium-separator__track",
+        "text": "ULTRA WORKSPACE\nSECURE DRAFTING\nCAREER-READY LETTERS\nAGENCY-READY WORKFLOW\nSAVED PROFILES\n",
+        "left": -46,
+        "right": 3459,
+        "width": 3505
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "text": "ULTRA WORKSPACE",
+        "left": -46,
+        "right": 125,
+        "width": 171
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "text": "AGENCY-READY WORKFLOW",
+        "left": 569,
+        "right": 806,
+        "width": 238
+      },
+      {
+        "tag": "i",
+        "cls": "",
+        "text": "",
+        "left": 799,
+        "right": 806,
+        "width": 7
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "text": "SAVED PROFILES",
+        "left": 830,
+        "right": 982,
+        "width": 152
+      },
+      {
+        "tag": "i",
+        "cls": "",
+        "text": "",
+        "left": 975,
+        "right": 982,
+        "width": 7
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "text": "APPLICATION HISTORY",
+        "left": 1006,
+        "right": 1201,
+        "width": 195
+      }
+    ]
+  },
+  {
+    "page": "landing",
+    "device": "large-phone",
+    "width": 430,
+    "height": 932,
+    "screenshot": "landing-large-phone-430x932.png",
+    "finalUrl": "https://forgeletter.vercel.app/",
+    "title": "LetterForge - Ultra cover letter workspace",
+    "innerWidth": 430,
+    "innerHeight": 932,
+    "scrollWidth": 430,
+    "scrollHeight": 10494,
+    "overflowX": 0,
+    "headerRect": {
+      "left": 16,
+      "right": 414,
+      "top": 0,
+      "bottom": 112,
+      "width": 398,
+      "height": 112
+    },
+    "offenders": [
+      {
+        "tag": "div",
+        "cls": "premium-separator__glow",
+        "text": "",
+        "left": -122,
+        "right": 308,
+        "width": 430
+      },
+      {
+        "tag": "div",
+        "cls": "premium-separator__track",
+        "text": "ULTRA WORKSPACE\nSECURE DRAFTING\nCAREER-READY LETTERS\nAGENCY-READY WORKFLOW\nSAVED PROFILES\n",
+        "left": -39,
+        "right": 3467,
+        "width": 3505
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "text": "ULTRA WORKSPACE",
+        "left": -39,
+        "right": 132,
+        "width": 171
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "text": "CAREER-READY LETTERS",
+        "left": 344,
+        "right": 552,
+        "width": 208
+      },
+      {
+        "tag": "i",
+        "cls": "",
+        "text": "",
+        "left": 545,
+        "right": 552,
+        "width": 7
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "text": "AGENCY-READY WORKFLOW",
+        "left": 576,
+        "right": 814,
+        "width": 238
+      },
+      {
+        "tag": "i",
+        "cls": "",
+        "text": "",
+        "left": 807,
+        "right": 814,
+        "width": 7
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "text": "SAVED PROFILES",
+        "left": 838,
+        "right": 990,
+        "width": 152
+      }
+    ]
+  },
+  {
+    "page": "landing",
+    "device": "medium-phone",
+    "width": 390,
+    "height": 844,
+    "screenshot": "landing-medium-phone-390x844.png",
+    "finalUrl": "https://forgeletter.vercel.app/",
+    "title": "LetterForge - Ultra cover letter workspace",
+    "innerWidth": 390,
+    "innerHeight": 844,
+    "scrollWidth": 390,
+    "scrollHeight": 10715,
+    "overflowX": 0,
+    "headerRect": {
+      "left": 16,
+      "right": 374,
+      "top": 0,
+      "bottom": 110,
+      "width": 358,
+      "height": 110
+    },
+    "offenders": [
+      {
+        "tag": "div",
+        "cls": "premium-separator__glow",
+        "text": "",
+        "left": -106,
+        "right": 284,
+        "width": 390
+      },
+      {
+        "tag": "div",
+        "cls": "premium-separator__track",
+        "text": "ULTRA WORKSPACE\nSECURE DRAFTING\nCAREER-READY LETTERS\nAGENCY-READY WORKFLOW\nSAVED PROFILES\n",
+        "left": -46,
+        "right": 3459,
+        "width": 3505
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "text": "ULTRA WORKSPACE",
+        "left": -46,
+        "right": 125,
+        "width": 171
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "text": "CAREER-READY LETTERS",
+        "left": 337,
+        "right": 545,
+        "width": 208
+      },
+      {
+        "tag": "i",
+        "cls": "",
+        "text": "",
+        "left": 538,
+        "right": 545,
+        "width": 7
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "text": "AGENCY-READY WORKFLOW",
+        "left": 569,
+        "right": 806,
+        "width": 238
+      },
+      {
+        "tag": "i",
+        "cls": "",
+        "text": "",
+        "left": 799,
+        "right": 806,
+        "width": 7
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "text": "SAVED PROFILES",
+        "left": 830,
+        "right": 982,
+        "width": 152
+      }
+    ]
+  },
+  {
+    "page": "landing",
+    "device": "small-phone",
+    "width": 360,
+    "height": 740,
+    "screenshot": "landing-small-phone-360x740.png",
+    "finalUrl": "https://forgeletter.vercel.app/",
+    "title": "LetterForge - Ultra cover letter workspace",
+    "innerWidth": 360,
+    "innerHeight": 740,
+    "scrollWidth": 360,
+    "scrollHeight": 10833,
+    "overflowX": 0,
+    "headerRect": {
+      "left": 16,
+      "right": 344,
+      "top": 0,
+      "bottom": 110,
+      "width": 328,
+      "height": 110
+    },
+    "offenders": [
+      {
+        "tag": "div",
+        "cls": "premium-separator__glow",
+        "text": "",
+        "left": -98,
+        "right": 262,
+        "width": 360
+      },
+      {
+        "tag": "div",
+        "cls": "premium-separator__track",
+        "text": "ULTRA WORKSPACE\nSECURE DRAFTING\nCAREER-READY LETTERS\nAGENCY-READY WORKFLOW\nSAVED PROFILES\n",
+        "left": -46,
+        "right": 3459,
+        "width": 3505
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "text": "ULTRA WORKSPACE",
+        "left": -46,
+        "right": 125,
+        "width": 171
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "text": "CAREER-READY LETTERS",
+        "left": 337,
+        "right": 545,
+        "width": 208
+      },
+      {
+        "tag": "i",
+        "cls": "",
+        "text": "",
+        "left": 538,
+        "right": 545,
+        "width": 7
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "text": "AGENCY-READY WORKFLOW",
+        "left": 569,
+        "right": 806,
+        "width": 238
+      },
+      {
+        "tag": "i",
+        "cls": "",
+        "text": "",
+        "left": 799,
+        "right": 806,
+        "width": 7
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "text": "SAVED PROFILES",
+        "left": 830,
+        "right": 982,
+        "width": 152
+      }
+    ]
+  },
+  {
+    "page": "landing",
+    "device": "tiny-phone",
+    "width": 320,
+    "height": 568,
+    "screenshot": "landing-tiny-phone-320x568.png",
+    "finalUrl": "https://forgeletter.vercel.app/",
+    "title": "LetterForge - Ultra cover letter workspace",
+    "innerWidth": 320,
+    "innerHeight": 568,
+    "scrollWidth": 320,
+    "scrollHeight": 11287,
+    "overflowX": 0,
+    "headerRect": {
+      "left": 16,
+      "right": 304,
+      "top": 0,
+      "bottom": 110,
+      "width": 288,
+      "height": 110
+    },
+    "offenders": [
+      {
+        "tag": "div",
+        "cls": "premium-separator__glow",
+        "text": "",
+        "left": -86,
+        "right": 234,
+        "width": 320
+      },
+      {
+        "tag": "div",
+        "cls": "premium-separator__track",
+        "text": "ULTRA WORKSPACE\nSECURE DRAFTING\nCAREER-READY LETTERS\nAGENCY-READY WORKFLOW\nSAVED PROFILES\n",
+        "left": -47,
+        "right": 3458,
+        "width": 3505
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "text": "ULTRA WORKSPACE",
+        "left": -47,
+        "right": 124,
+        "width": 171
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "text": "CAREER-READY LETTERS",
+        "left": 336,
+        "right": 544,
+        "width": 208
+      },
+      {
+        "tag": "i",
+        "cls": "",
+        "text": "",
+        "left": 537,
+        "right": 544,
+        "width": 7
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "text": "AGENCY-READY WORKFLOW",
+        "left": 568,
+        "right": 805,
+        "width": 238
+      },
+      {
+        "tag": "i",
+        "cls": "",
+        "text": "",
+        "left": 798,
+        "right": 805,
+        "width": 7
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "text": "SAVED PROFILES",
+        "left": 829,
+        "right": 981,
+        "width": 152
+      }
+    ]
+  },
+  {
+    "page": "dashboard-route",
+    "device": "large-monitor",
+    "width": 1920,
+    "height": 1080,
+    "screenshot": "dashboard-route-large-monitor-1920x1080.png",
+    "finalUrl": "https://forgeletter.vercel.app/auth/login",
+    "title": "LetterForge - Ultra cover letter workspace",
+    "innerWidth": 1920,
+    "innerHeight": 1080,
+    "scrollWidth": 1920,
+    "scrollHeight": 1080,
+    "overflowX": 0,
+    "headerRect": {
+      "left": 0,
+      "right": 912,
+      "top": 0,
+      "bottom": 1080,
+      "width": 912,
+      "height": 1080
+    },
+    "offenders": []
+  },
+  {
+    "page": "dashboard-route",
+    "device": "medium-monitor",
+    "width": 1536,
+    "height": 864,
+    "screenshot": "dashboard-route-medium-monitor-1536x864.png",
+    "finalUrl": "https://forgeletter.vercel.app/auth/login",
+    "title": "LetterForge - Ultra cover letter workspace",
+    "innerWidth": 1536,
+    "innerHeight": 864,
+    "scrollWidth": 1536,
+    "scrollHeight": 864,
+    "overflowX": 0,
+    "headerRect": {
+      "left": 0,
+      "right": 730,
+      "top": 0,
+      "bottom": 864,
+      "width": 730,
+      "height": 864
+    },
+    "offenders": []
+  },
+  {
+    "page": "dashboard-route",
+    "device": "small-monitor",
+    "width": 1366,
+    "height": 768,
+    "screenshot": "dashboard-route-small-monitor-1366x768.png",
+    "finalUrl": "https://forgeletter.vercel.app/auth/login",
+    "title": "LetterForge - Ultra cover letter workspace",
+    "innerWidth": 1366,
+    "innerHeight": 768,
+    "scrollWidth": 1366,
+    "scrollHeight": 768,
+    "overflowX": 0,
+    "headerRect": {
+      "left": 0,
+      "right": 649,
+      "top": 0,
+      "bottom": 768,
+      "width": 649,
+      "height": 768
+    },
+    "offenders": []
+  },
+  {
+    "page": "dashboard-route",
+    "device": "large-laptop",
+    "width": 1440,
+    "height": 900,
+    "screenshot": "dashboard-route-large-laptop-1440x900.png",
+    "finalUrl": "https://forgeletter.vercel.app/auth/login",
+    "title": "LetterForge - Ultra cover letter workspace",
+    "innerWidth": 1440,
+    "innerHeight": 900,
+    "scrollWidth": 1440,
+    "scrollHeight": 900,
+    "overflowX": 0,
+    "headerRect": {
+      "left": 0,
+      "right": 684,
+      "top": 0,
+      "bottom": 900,
+      "width": 684,
+      "height": 900
+    },
+    "offenders": []
+  },
+  {
+    "page": "dashboard-route",
+    "device": "medium-laptop",
+    "width": 1280,
+    "height": 800,
+    "screenshot": "dashboard-route-medium-laptop-1280x800.png",
+    "finalUrl": "https://forgeletter.vercel.app/auth/login",
+    "title": "LetterForge - Ultra cover letter workspace",
+    "innerWidth": 1280,
+    "innerHeight": 800,
+    "scrollWidth": 1280,
+    "scrollHeight": 800,
+    "overflowX": 0,
+    "headerRect": {
+      "left": 0,
+      "right": 608,
+      "top": 0,
+      "bottom": 800,
+      "width": 608,
+      "height": 800
+    },
+    "offenders": []
+  },
+  {
+    "page": "dashboard-route",
+    "device": "small-laptop",
+    "width": 1024,
+    "height": 768,
+    "screenshot": "dashboard-route-small-laptop-1024x768.png",
+    "finalUrl": "https://forgeletter.vercel.app/auth/login",
+    "title": "LetterForge - Ultra cover letter workspace",
+    "innerWidth": 1024,
+    "innerHeight": 768,
+    "scrollWidth": 1024,
+    "scrollHeight": 1183,
+    "overflowX": 0,
+    "headerRect": {
+      "left": 0,
+      "right": 1024,
+      "top": 0,
+      "bottom": 524,
+      "width": 1024,
+      "height": 524
+    },
+    "offenders": []
+  },
+  {
+    "page": "dashboard-route",
+    "device": "large-tablet",
+    "width": 820,
+    "height": 1180,
+    "screenshot": "dashboard-route-large-tablet-820x1180.png",
+    "finalUrl": "https://forgeletter.vercel.app/auth/login",
+    "title": "LetterForge - Ultra cover letter workspace",
+    "innerWidth": 820,
+    "innerHeight": 1180,
+    "scrollWidth": 820,
+    "scrollHeight": 1180,
+    "overflowX": 0,
+    "headerRect": {
+      "left": 0,
+      "right": 820,
+      "top": 0,
+      "bottom": 507,
+      "width": 820,
+      "height": 507
+    },
+    "offenders": []
+  },
+  {
+    "page": "dashboard-route",
+    "device": "medium-tablet",
+    "width": 768,
+    "height": 1024,
+    "screenshot": "dashboard-route-medium-tablet-768x1024.png",
+    "finalUrl": "https://forgeletter.vercel.app/auth/login",
+    "title": "LetterForge - Ultra cover letter workspace",
+    "innerWidth": 768,
+    "innerHeight": 1024,
+    "scrollWidth": 768,
+    "scrollHeight": 1106,
+    "overflowX": 0,
+    "headerRect": {
+      "left": 0,
+      "right": 768,
+      "top": 0,
+      "bottom": 447,
+      "width": 768,
+      "height": 447
+    },
+    "offenders": []
+  },
+  {
+    "page": "dashboard-route",
+    "device": "small-tablet",
+    "width": 600,
+    "height": 960,
+    "screenshot": "dashboard-route-small-tablet-600x960.png",
+    "finalUrl": "https://forgeletter.vercel.app/auth/login",
+    "title": "LetterForge - Ultra cover letter workspace",
+    "innerWidth": 600,
+    "innerHeight": 960,
+    "scrollWidth": 600,
+    "scrollHeight": 1012,
+    "overflowX": 0,
+    "headerRect": {
+      "left": 0,
+      "right": 600,
+      "top": 0,
+      "bottom": 373,
+      "width": 600,
+      "height": 373
+    },
+    "offenders": []
+  },
+  {
+    "page": "dashboard-route",
+    "device": "large-phone",
+    "width": 430,
+    "height": 932,
+    "screenshot": "dashboard-route-large-phone-430x932.png",
+    "finalUrl": "https://forgeletter.vercel.app/auth/login",
+    "title": "LetterForge - Ultra cover letter workspace",
+    "innerWidth": 430,
+    "innerHeight": 932,
+    "scrollWidth": 430,
+    "scrollHeight": 1104,
+    "overflowX": 0,
+    "headerRect": {
+      "left": 0,
+      "right": 430,
+      "top": 0,
+      "bottom": 465,
+      "width": 430,
+      "height": 465
+    },
+    "offenders": []
+  },
+  {
+    "page": "dashboard-route",
+    "device": "medium-phone",
+    "width": 390,
+    "height": 844,
+    "screenshot": "dashboard-route-medium-phone-390x844.png",
+    "finalUrl": "https://forgeletter.vercel.app/auth/login",
+    "title": "LetterForge - Ultra cover letter workspace",
+    "innerWidth": 390,
+    "innerHeight": 844,
+    "scrollWidth": 390,
+    "scrollHeight": 1083,
+    "overflowX": 0,
+    "headerRect": {
+      "left": 0,
+      "right": 390,
+      "top": 0,
+      "bottom": 448,
+      "width": 390,
+      "height": 448
+    },
+    "offenders": []
+  },
+  {
+    "page": "dashboard-route",
+    "device": "small-phone",
+    "width": 360,
+    "height": 740,
+    "screenshot": "dashboard-route-small-phone-360x740.png",
+    "finalUrl": "https://forgeletter.vercel.app/auth/login",
+    "title": "LetterForge - Ultra cover letter workspace",
+    "innerWidth": 360,
+    "innerHeight": 740,
+    "scrollWidth": 360,
+    "scrollHeight": 1078,
+    "overflowX": 0,
+    "headerRect": {
+      "left": 0,
+      "right": 360,
+      "top": 0,
+      "bottom": 443,
+      "width": 360,
+      "height": 443
+    },
+    "offenders": []
+  },
+  {
+    "page": "dashboard-route",
+    "device": "tiny-phone",
+    "width": 320,
+    "height": 568,
+    "screenshot": "dashboard-route-tiny-phone-320x568.png",
+    "finalUrl": "https://forgeletter.vercel.app/auth/login",
+    "title": "LetterForge - Ultra cover letter workspace",
+    "innerWidth": 320,
+    "innerHeight": 568,
+    "scrollWidth": 320,
+    "scrollHeight": 1097,
+    "overflowX": 0,
+    "headerRect": {
+      "left": 0,
+      "right": 320,
+      "top": 0,
+      "bottom": 462,
+      "width": 320,
+      "height": 462
+    },
+    "offenders": []
+  },
+  {
+    "page": "login",
+    "device": "large-monitor",
+    "width": 1920,
+    "height": 1080,
+    "screenshot": "login-large-monitor-1920x1080.png",
+    "finalUrl": "https://forgeletter.vercel.app/auth/login",
+    "title": "LetterForge - Ultra cover letter workspace",
+    "innerWidth": 1920,
+    "innerHeight": 1080,
+    "scrollWidth": 1920,
+    "scrollHeight": 1080,
+    "overflowX": 0,
+    "headerRect": {
+      "left": 0,
+      "right": 912,
+      "top": 0,
+      "bottom": 1080,
+      "width": 912,
+      "height": 1080
+    },
+    "offenders": []
+  },
+  {
+    "page": "login",
+    "device": "medium-monitor",
+    "width": 1536,
+    "height": 864,
+    "screenshot": "login-medium-monitor-1536x864.png",
+    "finalUrl": "https://forgeletter.vercel.app/auth/login",
+    "title": "LetterForge - Ultra cover letter workspace",
+    "innerWidth": 1536,
+    "innerHeight": 864,
+    "scrollWidth": 1536,
+    "scrollHeight": 864,
+    "overflowX": 0,
+    "headerRect": {
+      "left": 0,
+      "right": 730,
+      "top": 0,
+      "bottom": 864,
+      "width": 730,
+      "height": 864
+    },
+    "offenders": []
+  },
+  {
+    "page": "login",
+    "device": "small-monitor",
+    "width": 1366,
+    "height": 768,
+    "screenshot": "login-small-monitor-1366x768.png",
+    "finalUrl": "https://forgeletter.vercel.app/auth/login",
+    "title": "LetterForge - Ultra cover letter workspace",
+    "innerWidth": 1366,
+    "innerHeight": 768,
+    "scrollWidth": 1366,
+    "scrollHeight": 768,
+    "overflowX": 0,
+    "headerRect": {
+      "left": 0,
+      "right": 649,
+      "top": 0,
+      "bottom": 768,
+      "width": 649,
+      "height": 768
+    },
+    "offenders": []
+  },
+  {
+    "page": "login",
+    "device": "large-laptop",
+    "width": 1440,
+    "height": 900,
+    "screenshot": "login-large-laptop-1440x900.png",
+    "finalUrl": "https://forgeletter.vercel.app/auth/login",
+    "title": "LetterForge - Ultra cover letter workspace",
+    "innerWidth": 1440,
+    "innerHeight": 900,
+    "scrollWidth": 1440,
+    "scrollHeight": 900,
+    "overflowX": 0,
+    "headerRect": {
+      "left": 0,
+      "right": 684,
+      "top": 0,
+      "bottom": 900,
+      "width": 684,
+      "height": 900
+    },
+    "offenders": []
+  },
+  {
+    "page": "login",
+    "device": "medium-laptop",
+    "width": 1280,
+    "height": 800,
+    "screenshot": "login-medium-laptop-1280x800.png",
+    "finalUrl": "https://forgeletter.vercel.app/auth/login",
+    "title": "LetterForge - Ultra cover letter workspace",
+    "innerWidth": 1280,
+    "innerHeight": 800,
+    "scrollWidth": 1280,
+    "scrollHeight": 800,
+    "overflowX": 0,
+    "headerRect": {
+      "left": 0,
+      "right": 608,
+      "top": 0,
+      "bottom": 800,
+      "width": 608,
+      "height": 800
+    },
+    "offenders": []
+  },
+  {
+    "page": "login",
+    "device": "small-laptop",
+    "width": 1024,
+    "height": 768,
+    "screenshot": "login-small-laptop-1024x768.png",
+    "finalUrl": "https://forgeletter.vercel.app/auth/login",
+    "title": "LetterForge - Ultra cover letter workspace",
+    "innerWidth": 1024,
+    "innerHeight": 768,
+    "scrollWidth": 1024,
+    "scrollHeight": 1183,
+    "overflowX": 0,
+    "headerRect": {
+      "left": 0,
+      "right": 1024,
+      "top": 0,
+      "bottom": 524,
+      "width": 1024,
+      "height": 524
+    },
+    "offenders": []
+  },
+  {
+    "page": "login",
+    "device": "large-tablet",
+    "width": 820,
+    "height": 1180,
+    "screenshot": "login-large-tablet-820x1180.png",
+    "finalUrl": "https://forgeletter.vercel.app/auth/login",
+    "title": "LetterForge - Ultra cover letter workspace",
+    "innerWidth": 820,
+    "innerHeight": 1180,
+    "scrollWidth": 820,
+    "scrollHeight": 1180,
+    "overflowX": 0,
+    "headerRect": {
+      "left": 0,
+      "right": 820,
+      "top": 0,
+      "bottom": 507,
+      "width": 820,
+      "height": 507
+    },
+    "offenders": []
+  },
+  {
+    "page": "login",
+    "device": "medium-tablet",
+    "width": 768,
+    "height": 1024,
+    "screenshot": "login-medium-tablet-768x1024.png",
+    "finalUrl": "https://forgeletter.vercel.app/auth/login",
+    "title": "LetterForge - Ultra cover letter workspace",
+    "innerWidth": 768,
+    "innerHeight": 1024,
+    "scrollWidth": 768,
+    "scrollHeight": 1106,
+    "overflowX": 0,
+    "headerRect": {
+      "left": 0,
+      "right": 768,
+      "top": 0,
+      "bottom": 447,
+      "width": 768,
+      "height": 447
+    },
+    "offenders": []
+  },
+  {
+    "page": "login",
+    "device": "small-tablet",
+    "width": 600,
+    "height": 960,
+    "screenshot": "login-small-tablet-600x960.png",
+    "finalUrl": "https://forgeletter.vercel.app/auth/login",
+    "title": "LetterForge - Ultra cover letter workspace",
+    "innerWidth": 600,
+    "innerHeight": 960,
+    "scrollWidth": 600,
+    "scrollHeight": 1012,
+    "overflowX": 0,
+    "headerRect": {
+      "left": 0,
+      "right": 600,
+      "top": 0,
+      "bottom": 373,
+      "width": 600,
+      "height": 373
+    },
+    "offenders": []
+  },
+  {
+    "page": "login",
+    "device": "large-phone",
+    "width": 430,
+    "height": 932,
+    "screenshot": "login-large-phone-430x932.png",
+    "finalUrl": "https://forgeletter.vercel.app/auth/login",
+    "title": "LetterForge - Ultra cover letter workspace",
+    "innerWidth": 430,
+    "innerHeight": 932,
+    "scrollWidth": 430,
+    "scrollHeight": 1104,
+    "overflowX": 0,
+    "headerRect": {
+      "left": 0,
+      "right": 430,
+      "top": 0,
+      "bottom": 465,
+      "width": 430,
+      "height": 465
+    },
+    "offenders": []
+  },
+  {
+    "page": "login",
+    "device": "medium-phone",
+    "width": 390,
+    "height": 844,
+    "screenshot": "login-medium-phone-390x844.png",
+    "finalUrl": "https://forgeletter.vercel.app/auth/login",
+    "title": "LetterForge - Ultra cover letter workspace",
+    "innerWidth": 390,
+    "innerHeight": 844,
+    "scrollWidth": 390,
+    "scrollHeight": 1083,
+    "overflowX": 0,
+    "headerRect": {
+      "left": 0,
+      "right": 390,
+      "top": 0,
+      "bottom": 448,
+      "width": 390,
+      "height": 448
+    },
+    "offenders": []
+  },
+  {
+    "page": "login",
+    "device": "small-phone",
+    "width": 360,
+    "height": 740,
+    "screenshot": "login-small-phone-360x740.png",
+    "finalUrl": "https://forgeletter.vercel.app/auth/login",
+    "title": "LetterForge - Ultra cover letter workspace",
+    "innerWidth": 360,
+    "innerHeight": 740,
+    "scrollWidth": 360,
+    "scrollHeight": 1078,
+    "overflowX": 0,
+    "headerRect": {
+      "left": 0,
+      "right": 360,
+      "top": 0,
+      "bottom": 443,
+      "width": 360,
+      "height": 443
+    },
+    "offenders": []
+  },
+  {
+    "page": "login",
+    "device": "tiny-phone",
+    "width": 320,
+    "height": 568,
+    "screenshot": "login-tiny-phone-320x568.png",
+    "finalUrl": "https://forgeletter.vercel.app/auth/login",
+    "title": "LetterForge - Ultra cover letter workspace",
+    "innerWidth": 320,
+    "innerHeight": 568,
+    "scrollWidth": 320,
+    "scrollHeight": 1097,
+    "overflowX": 0,
+    "headerRect": {
+      "left": 0,
+      "right": 320,
+      "top": 0,
+      "bottom": 462,
+      "width": 320,
+      "height": 462
+    },
+    "offenders": []
+  }
+]
