@@ -4,11 +4,11 @@ export default function PrivacyPage() {
   return (
     <LegalPage
       title="Privacy policy"
-      intro="How LetterForge handles account, application, and billing-related data."
+      intro="How ForgeLetter handles account, application, and billing-related data."
       sections={[
         {
           title: "Information we collect",
-          body: "LetterForge collects the information needed to run the workspace and billing experience.",
+          body: "ForgeLetter collects the information needed to run the workspace and billing experience.",
           points: [
             "Account data such as name and email address.",
             "Application content the user chooses to save.",
@@ -21,7 +21,7 @@ export default function PrivacyPage() {
         },
         {
           title: "Data protection",
-          body: "Application content is stored in Supabase and payment details are handled by Stripe. Raw card details are not stored by LetterForge.",
+          body: "Application content is stored securely and payment details are handled by our payment provider. Raw card details are not stored by ForgeLetter.",
         },
         {
           title: "Data rights",
@@ -29,7 +29,7 @@ export default function PrivacyPage() {
         },
         {
           title: "Contact",
-          body: "Privacy questions can be sent through the contact page or to hello@letterforge.io.",
+          body: "Privacy questions can be sent through the contact page.",
         },
       ]}
     />

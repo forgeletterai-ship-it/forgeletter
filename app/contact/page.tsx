@@ -9,11 +9,11 @@ export default function ContactPage() {
         <section className="page-hero">
           <div className="container">
             <span className="section-kicker">Contact</span>
-            <h1>Talk to LetterForge.</h1>
+            <h1>Talk to ForgeLetter.</h1>
             <p>
-              Get help with accounts, billing, data, partnerships, or early
-              product feedback. Messages are stored securely and can also be
-              routed to email when support delivery is configured.
+              Get help with accounts, billing, data, partnerships, or product
+              feedback. Messages are stored securely and routed to the support
+              team.
             </p>
           </div>
         </section>

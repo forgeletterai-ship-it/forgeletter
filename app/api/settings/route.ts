@@ -9,7 +9,7 @@ import {
 } from "@/lib/app-data"
 import { supabaseAdmin } from "@/lib/supabase"
 
-const allowedTones = new Set(["Professional", "Warm", "Direct", "Executive"])
+const allowedTones = new Set(["Professional", "Warm", "Direct"])
 
 export async function GET() {
   const { user, error } = await getCurrentAppUser()

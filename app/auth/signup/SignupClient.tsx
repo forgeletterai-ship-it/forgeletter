@@ -65,19 +65,18 @@ export default function SignupClient() {
             <span className="eyebrow-dot" />
             Free workspace
           </span>
-          <h1>Build a cleaner job search before the first letter is generated.</h1>
+          <h1>Start writing cover letters that actually get responses.</h1>
           <p>
-            Create an account to access the polished dashboard, saved draft
-            structure, profile area, billing shell, and settings pages.
+            Create your free account. No credit card required.
           </p>
         </div>
-        <p>No credit card needed. The generator remains paused in this build.</p>
+        <p>Write stronger applications with a focused, premium workflow.</p>
       </section>
 
       <section className="auth-content">
         <div className="auth-card">
           <h2>Create account</h2>
-          <p>Start with the polished product shell.</p>
+          <p>Your account is ready in 30 seconds.</p>
 
           {error ? <div className="alert">{error}</div> : null}
 

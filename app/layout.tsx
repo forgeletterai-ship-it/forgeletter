@@ -3,9 +3,9 @@ import { BackToTopButton } from "@/components/BackToTopButton"
 import "./globals.css"
 
 export const metadata: Metadata = {
-  title: "LetterForge - Ultra cover letter workspace",
+  title: "ForgeLetter — AI Cover Letters That Get You Hired",
   description:
-    "A polished workspace for drafting, saving, and managing tailored cover letters.",
+    "ForgeLetter uses a 12-agent AI pipeline to write, verify, and perfect your cover letter before you ever see it. Every letter passes a 95+ quality score.",
 }
 
 export const viewport: Viewport = {

@@ -3,7 +3,7 @@ import { auth } from "@/auth"
 import { Brand } from "./Brand"
 
 const productLinks = [
-  { href: "/#workspace", label: "Workspace" },
+  { href: "/#how-it-works", label: "How It Works" },
   { href: "/#pricing", label: "Pricing" },
   { href: "/#faq", label: "FAQ" },
   { href: "/blog", label: "Resources" },
@@ -56,14 +56,15 @@ export function PublicFooter() {
           <div>
             <Brand dark />
             <p>
-              A polished workspace for writing stronger applications without the
-              blank page panic. Built for job seekers who want speed and taste.
+              AI-verified cover letters for job seekers who refuse to send
+              generic applications. Every letter passes a strict quality gate
+              before you see it.
             </p>
           </div>
           <FooterColumn
             title="Product"
             links={[
-              { href: "/#workspace", label: "Workspace" },
+              { href: "/#how-it-works", label: "How It Works" },
               { href: "/#pricing", label: "Pricing" },
               { href: "/dashboard", label: "Dashboard" },
               { href: "/contact", label: "Contact" },
@@ -89,8 +90,7 @@ export function PublicFooter() {
           />
         </div>
         <div className="footer-bottom">
-          <span>Copyright 2026 LetterForge. All rights reserved.</span>
-          <span>Stripe-ready billing. Supabase-ready accounts.</span>
+          <span>&copy; 2026 ForgeLetter. All rights reserved.</span>
         </div>
       </div>
     </footer>

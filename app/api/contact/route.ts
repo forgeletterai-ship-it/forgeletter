@@ -26,8 +26,8 @@ async function sendContactEmail(payload: {
     },
     body: JSON.stringify({
       from: process.env.RESEND_FROM_EMAIL,
-      to: process.env.SUPPORT_EMAIL || "hello@letterforge.io",
-      subject: `LetterForge ${payload.topic} request`,
+      to: process.env.SUPPORT_EMAIL || "hello@forgeletter.io",
+      subject: `ForgeLetter ${payload.topic} request`,
       reply_to: payload.email,
       text: [
         `Name: ${payload.name}`,

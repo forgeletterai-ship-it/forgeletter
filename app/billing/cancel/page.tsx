@@ -13,7 +13,7 @@ export default function BillingCancelPage() {
             <h1>No payment was taken.</h1>
             <p>
               You left Stripe before confirming the checkout. Your current
-              LetterForge plan has not changed.
+              ForgeLetter plan has not changed.
             </p>
             <div className="billing-result-actions">
               <Link className="button" href="/dashboard/billing">
@@ -47,8 +47,8 @@ export default function BillingCancelPage() {
             <span>03</span>
             <h3>Keep using Starter</h3>
             <p>
-              The free workspace remains available while you continue testing
-              the product.
+              Your free account remains available while you prepare your next
+              application.
             </p>
           </article>
         </section>

@@ -7,17 +7,5 @@ export default async function SettingsPage() {
     ? await getUserSettings(user.id)
     : { settings: defaultSettings, setupError: "Authentication required" }
 
-  return (
-    <>
-      <div className="dashboard-topbar">
-        <div className="dashboard-title">
-          <span className="section-kicker">Settings</span>
-          <h1>Account preferences.</h1>
-          <p>Manage tone defaults, notifications, exports, and workspace data.</p>
-        </div>
-      </div>
-
-      <SettingsClient initialSettings={settings} setupError={setupError} />
-    </>
-  )
+  return <SettingsClient initialSettings={settings} setupError={setupError} />
 }

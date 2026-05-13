@@ -57,7 +57,7 @@ export const resourceArticles: ResourceArticle[] = [
   },
   {
     slug: "career-agency-workflows",
-    title: "How career agencies can use LetterForge",
+    title: "How career agencies can use ForgeLetter",
     category: "Partnerships",
     readingTime: "5 min read",
     summary:
@@ -69,7 +69,7 @@ export const resourceArticles: ResourceArticle[] = [
       },
       {
         title: "Keep review human",
-        body: "LetterForge should prepare strong drafts, but partner teams still need review, compliance, and candidate approval before sending.",
+        body: "ForgeLetter should prepare strong drafts, but partner teams still need review, compliance, and candidate approval before sending.",
       },
       {
         title: "Track outcomes",

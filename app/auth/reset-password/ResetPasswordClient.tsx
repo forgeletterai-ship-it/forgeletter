@@ -58,7 +58,7 @@ export function ResetPasswordClient() {
           </span>
           <h1>Create a new password for your workspace.</h1>
           <p>
-            Keep it unique to LetterForge and avoid reusing a password from
+            Keep it unique to ForgeLetter and avoid reusing a password from
             email, banking, or work accounts.
           </p>
         </div>

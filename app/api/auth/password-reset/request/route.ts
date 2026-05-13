@@ -29,8 +29,8 @@ async function sendResetEmail(email: string, resetUrl: string) {
     body: JSON.stringify({
       from: process.env.RESEND_FROM_EMAIL,
       to: email,
-      subject: "Reset your LetterForge password",
-      text: `Use this secure link to reset your LetterForge password:\n\n${resetUrl}\n\nThis link expires in 45 minutes.`,
+      subject: "Reset your ForgeLetter password",
+      text: `Use this secure link to reset your ForgeLetter password:\n\n${resetUrl}\n\nThis link expires in 45 minutes.`,
     }),
   })
 }

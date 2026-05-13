@@ -16,7 +16,7 @@ export default function RefundPolicyPage() {
         },
         {
           title: "Support",
-          body: "Billing questions can be sent through the contact page or to hello@letterforge.io.",
+          body: "Billing questions can be sent through the contact page.",
         },
       ]}
     />

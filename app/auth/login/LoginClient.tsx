@@ -96,13 +96,13 @@ export default function LoginClient({
             <span className="eyebrow-dot" />
             Secure workspace
           </span>
-          <h1>Welcome back to your application command center.</h1>
+          <h1>Welcome back.</h1>
           <p>
-            Keep your profile, draft briefs, saved letters, and billing in one
-            polished place while the AI generator is being prepared.
+            Your letters, your profile, and your application history - all in
+            one place.
           </p>
         </div>
-        <p>LetterForge is designed for calm, serious job search momentum.</p>
+        <p>Your letters. Your profile. Your applications. All in one place.</p>
       </section>
 
       <section className="auth-content">
@@ -197,7 +197,7 @@ export default function LoginClient({
           </form>
 
           <p className="muted-link" style={{ marginTop: 18 }}>
-            New to LetterForge? <Link href="/auth/signup">Create account</Link>
+            New to ForgeLetter? <Link href="/auth/signup">Create account</Link>
           </p>
         </div>
       </section>

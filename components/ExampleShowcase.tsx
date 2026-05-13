@@ -110,8 +110,8 @@ export function ExampleShowcase() {
             <SparkIcon />
           </span>
           <div>
-            <strong>More roles coming soon.</strong>
-            <p>We&apos;re adding new examples regularly.</p>
+            <strong>ForgeLetter works across every industry and seniority level.</strong>
+            <p>See all examples -&gt;</p>
           </div>
         </div>
       </aside>

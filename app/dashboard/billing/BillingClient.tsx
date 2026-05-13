@@ -1,47 +1,14 @@
 "use client"
 
 import { useState } from "react"
-
-type Plan = {
-  id: "starter" | "pro" | "ultra"
-  name: string
-  price: string
-  state: string
-  points: string[]
-  highlighted?: boolean
-}
+import { PricingCards, type PlanKey } from "@/components/PricingCards"
 
 type BillingClientProps = {
   currentPlan: "free" | "pro" | "ultra"
 }
 
-const plans: Plan[] = [
-  {
-    id: "starter",
-    name: "Starter",
-    price: "Free",
-    state: "Current",
-    points: ["3 draft slots", "Basic workspace", "Manual copy"],
-  },
-  {
-    id: "pro",
-    name: "Pro",
-    price: "EUR 9 / month",
-    state: "Most popular",
-    highlighted: true,
-    points: ["More saved letters", "Export controls", "Priority roadmap"],
-  },
-  {
-    id: "ultra",
-    name: "Ultra",
-    price: "EUR 19 / month",
-    state: "Partner-ready",
-    points: ["Unlimited workspace", "Profile variants", "Priority support"],
-  },
-]
-
 export function BillingClient({ currentPlan }: BillingClientProps) {
-  const [loadingPlan, setLoadingPlan] = useState<string>("")
+  const [loadingPlan, setLoadingPlan] = useState<"" | PlanKey>("")
   const [portalLoading, setPortalLoading] = useState(false)
   const [error, setError] = useState("")
 
@@ -56,12 +23,19 @@ export function BillingClient({ currentPlan }: BillingClientProps) {
       return JSON.parse(text) as { url?: string; error?: string }
     } catch {
       return {
-        error: `Unexpected server response (${res.status}). Check Stripe environment variables and deployment logs.`,
+        error: `Unexpected billing response (${res.status}). Please try again or contact support.`,
       }
     }
   }
 
-  async function startCheckout(plan: "pro" | "ultra") {
+  async function startCheckout(plan: PlanKey) {
+    if (plan === "starter") {
+      setLoadingPlan("starter")
+      await openPortal()
+      setLoadingPlan("")
+      return
+    }
+
     setError("")
     setLoadingPlan(plan)
 
@@ -111,45 +85,19 @@ export function BillingClient({ currentPlan }: BillingClientProps) {
     <>
       {error ? <div className="alert" style={{ marginBottom: 16 }}>{error}</div> : null}
 
-      <div className="price-grid">
-        {plans.map((plan) => (
-          <article
-            className={`price-card${plan.highlighted ? " highlight" : ""}`}
-            key={plan.id}
-          >
-            <small>{plan.state}</small>
-            <h2>{plan.name}</h2>
-            <div className="price">{plan.price}</div>
-            <ul className="check-list">
-              {plan.points.map((point) => (
-                <li key={point}>{point}</li>
-              ))}
-            </ul>
-            {currentPlan === (plan.id === "starter" ? "free" : plan.id) ? (
-              <button className="button-secondary" type="button">
-                Current plan
-              </button>
-            ) : (
-              <button
-                className={plan.highlighted ? "button" : "button-secondary"}
-                type="button"
-                onClick={() =>
-                  startCheckout(plan.id === "pro" ? "pro" : "ultra")
-                }
-                disabled={Boolean(loadingPlan)}
-              >
-                {loadingPlan === plan.id ? "Opening Stripe..." : `Upgrade to ${plan.name}`}
-              </button>
-            )}
-          </article>
-        ))}
-      </div>
+      <section className="dashboard-pricing-surface" aria-label="Subscription plans">
+        <PricingCards
+          currentPlan={currentPlan === "free" ? "starter" : currentPlan}
+          loadingPlan={loadingPlan}
+          onSelectPlan={startCheckout}
+        />
+      </section>
 
       <section className="dashboard-card" style={{ marginTop: 16 }}>
         <h3>Manage subscription</h3>
         <p>
-          After a customer completes Stripe checkout, they can update payment
-          method, invoices, and cancellation inside the Stripe customer portal.
+          Update payment method, invoices, and cancellation inside the secure
+          billing portal.
         </p>
         <button
           className="button-soft"

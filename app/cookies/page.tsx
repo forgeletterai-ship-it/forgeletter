@@ -4,7 +4,7 @@ export default function CookiesPage() {
   return (
     <LegalPage
       title="Cookie policy"
-      intro="How LetterForge uses cookies and similar technologies for login, security, and checkout."
+      intro="How ForgeLetter uses cookies and similar technologies for login, security, and checkout."
       sections={[
         {
           title: "Essential cookies",
@@ -12,15 +12,15 @@ export default function CookiesPage() {
         },
         {
           title: "Analytics cookies",
-          body: "If analytics are added, they should be limited to privacy-conscious product improvement and should avoid storing application content.",
+          body: "Analytics cookies are used only for privacy-conscious product improvement and do not store application content.",
         },
         {
           title: "Payment cookies",
-          body: "Stripe may use cookies or similar technologies during checkout once billing is connected.",
+          body: "Stripe may use cookies or similar technologies during secure checkout.",
         },
         {
           title: "Control",
-          body: "Users can manage cookies through browser settings. If optional analytics cookies are introduced, consent controls should be added before launch.",
+          body: "Users can manage cookies through browser settings and privacy controls where available.",
         },
       ]}
     />

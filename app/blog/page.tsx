@@ -10,11 +10,10 @@ export default function BlogPage() {
         <section className="page-hero">
           <div className="container">
             <span className="section-kicker">Resources</span>
-            <h1>LetterForge resource library.</h1>
+            <h1>ForgeLetter Resources</h1>
             <p>
-              Practical guidance for stronger applications, cleaner profile
-              data, and professional workflows for future career-agency
-              partners.
+              Practical guides and frameworks for writing stronger cover
+              letters and running a sharper job search.
             </p>
           </div>
         </section>

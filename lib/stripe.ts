@@ -29,16 +29,16 @@ export const billingPlans: Record<
   }
 > = {
   pro: {
-    name: "LetterForge Pro",
+    name: "ForgeLetter Pro",
     priceIdEnv: "STRIPE_PRO_PRICE_ID",
-    unitAmount: 900,
-    lookupKey: "letterforge_pro_monthly",
+    unitAmount: 1999,
+    lookupKey: "forgeletter_pro_monthly",
   },
   ultra: {
-    name: "LetterForge Ultra",
+    name: "ForgeLetter Ultra",
     priceIdEnv: "STRIPE_ULTRA_PRICE_ID",
-    unitAmount: 1900,
-    lookupKey: "letterforge_ultra_monthly",
+    unitAmount: 3499,
+    lookupKey: "forgeletter_ultra_monthly",
   },
 }
 

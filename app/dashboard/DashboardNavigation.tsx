@@ -98,6 +98,16 @@ function AccountIcon() {
   )
 }
 
+function WorkspaceIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24">
+      <rect x="4" y="5" width="16" height="14" rx="2" />
+      <path d="M8 9h8M8 13h5" />
+      <path d="M16 17h.01" />
+    </svg>
+  )
+}
+
 function SecurityIcon() {
   return (
     <svg aria-hidden="true" viewBox="0 0 24 24">
@@ -262,13 +272,16 @@ export function DashboardNavigation({
           </Link>
 
           <div className={`dropdown dropdown-desktop${openMenu === "desktop" ? " is-open" : ""}`}>
+            <AccountMenuItem href="/dashboard" icon={<WorkspaceIcon />} onClick={closeMenus}>
+              Workspace
+            </AccountMenuItem>
             <AccountMenuItem href="/dashboard/settings" icon={<AccountIcon />} onClick={closeMenus}>
               Account settings
             </AccountMenuItem>
             <AccountMenuItem href="/dashboard/profile" icon={<AccountIcon />} onClick={closeMenus}>
               Profile
             </AccountMenuItem>
-            <AccountMenuItem href="/dashboard/settings" icon={<SecurityIcon />} onClick={closeMenus}>
+            <AccountMenuItem href="/dashboard/security" icon={<SecurityIcon />} onClick={closeMenus}>
               Security
             </AccountMenuItem>
             <DropdownDivider />
@@ -319,8 +332,14 @@ export function DashboardNavigation({
           </div>
 
           <div className={`dropdown dropdown-large-tablet${openMenu === "large-tablet" ? " is-open" : ""}`}>
+            <AccountMenuItem href="/dashboard" icon={<WorkspaceIcon />} onClick={closeMenus}>
+              Workspace
+            </AccountMenuItem>
             <AccountMenuItem href="/dashboard/settings" icon={<AccountIcon />} onClick={closeMenus}>
               Account settings
+            </AccountMenuItem>
+            <AccountMenuItem href="/dashboard/security" icon={<SecurityIcon />} onClick={closeMenus}>
+              Security
             </AccountMenuItem>
             <AccountMenuItem href="/contact" icon={<HelpIcon />} onClick={closeMenus}>
               Help & support
@@ -355,8 +374,14 @@ export function DashboardNavigation({
           <div className={`dropdown dropdown-tablet${openMenu === "tablet" ? " is-open" : ""}`}>
             <p className="signed-in">Signed in as {displayName}</p>
             <DropdownDivider />
+            <AccountMenuItem href="/dashboard" icon={<WorkspaceIcon />} onClick={closeMenus}>
+              Workspace
+            </AccountMenuItem>
             <AccountMenuItem href="/dashboard/settings" icon={<AccountIcon />} onClick={closeMenus}>
               Account settings
+            </AccountMenuItem>
+            <AccountMenuItem href="/dashboard/security" icon={<SecurityIcon />} onClick={closeMenus}>
+              Security
             </AccountMenuItem>
             <AccountMenuItem href="/dashboard/billing" icon={<BillingIcon />} onClick={closeMenus}>
               Billing / plan
@@ -417,8 +442,14 @@ export function DashboardNavigation({
 
         <div className="sheet-divider" />
 
+        <SheetItem href="/dashboard" icon={<WorkspaceIcon />} onClick={closeMenus}>
+          Workspace
+        </SheetItem>
         <SheetItem href="/dashboard/settings" icon={<AccountIcon />} onClick={closeMenus}>
           Account settings
+        </SheetItem>
+        <SheetItem href="/dashboard/security" icon={<SecurityIcon />} onClick={closeMenus}>
+          Security
         </SheetItem>
         <SheetItem href="/dashboard/billing" icon={<BillingIcon />} onClick={closeMenus}>
           Billing / plan

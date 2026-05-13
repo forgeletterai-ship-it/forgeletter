@@ -67,8 +67,8 @@ export function isMissingTableError(error: { code?: string; message?: string } |
   )
 }
 
-export function setupMessage(tableName: string) {
-  return `Supabase table "${tableName}" is not ready yet. Run docs/supabase-schema.sql in Supabase, then reload.`
+export function setupMessage(_tableName: string) {
+  return "A workspace setup issue is preventing this data from loading. Please contact support."
 }
 
 export async function getCurrentAppUser(): Promise<{

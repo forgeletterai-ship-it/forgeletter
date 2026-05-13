@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { AnimatedSeparator } from "@/components/AnimatedSeparator"
 import { ExampleShowcase } from "@/components/ExampleShowcase"
+import { PricingCards } from "@/components/PricingCards"
 import { PublicFooter, PublicNav } from "@/components/PublicChrome"
 import { ResourceSlider } from "@/components/ResourceSlider"
 
@@ -20,13 +21,13 @@ const steps = [
   {
     n: "03",
     title: "Choose the tone",
-    body: "Set the voice—professional, warm, direct, or executive—so every letter matches the role.",
+    body: "Set the voice - professional, warm, direct, or executive - so every letter matches the role.",
     dark: false,
   },
   {
     n: "04",
-    title: "Review and apply",
-    body: "Refine the final output, make edits, and export a polished cover letter ready to send.",
+    title: "Review and send",
+    body: "Refine your letter, choose your template, and download a polished PDF ready to submit.",
     dark: true,
   },
 ] as const
@@ -42,7 +43,7 @@ const engineFeatures = [
     icon: "profile",
     number: "02",
     title: "Personalized to Perfection",
-    body: "Tailored to the job description, your experience, and the company’s values—every time.",
+    body: "Tailored to the job description, your experience, and the company's values - every time.",
   },
   {
     icon: "chip",
@@ -54,69 +55,18 @@ const engineFeatures = [
     icon: "document",
     number: "04",
     title: "Ready to Send, Every Time",
-    body: "Clean, confident, and error-free letters—optimized for impact and readability.",
-  },
-] as const
-
-const plans = [
-  {
-    name: "Starter",
-    price: "Free",
-    body: "For testing the product and preparing your first applications.",
-    features: ["Draft workspace", "Applicant profile", "3 saved letters", "Basic history"],
-    cta: "Start free",
-    href: "/auth/signup",
-  },
-  {
-    name: "Pro",
-    price: "EUR 9",
-    body: "For active job seekers who want a smoother weekly workflow.",
-    features: ["More saved letters", "Tone presets", "PDF-ready exports", "Priority roadmap access"],
-    cta: "Choose Pro",
-    href: "/auth/signup",
-    highlight: true,
-  },
-  {
-    name: "Ultra",
-    price: "EUR 19",
-    body: "For high-volume applications and international searches.",
-    features: ["Unlimited workspace", "Profile variants", "Application pipeline", "Priority support"],
-    cta: "Choose Ultra",
-    href: "/auth/signup",
-  },
-]
-
-const securityItems = [
-  {
-    icon: "shield",
-    title: "Secure checkout",
-    body: "Stripe-ready payment flow",
-  },
-  {
-    icon: "tag",
-    title: "No hidden charges",
-    body: "Clear plan pricing",
-  },
-  {
-    icon: "sync",
-    title: "Cancel anytime",
-    body: "Subscription controls in billing settings",
-  },
-  {
-    icon: "lock",
-    title: "Private workspace",
-    body: "Profile and application data are stored securely",
+    body: "Clean, confident, and error-free letters - optimized for impact and readability.",
   },
 ] as const
 
 const faqs = [
   {
     q: "Why not just use ChatGPT for free?",
-    a: "A blank chat still leaves users building prompts, formatting letters, and tracking versions manually. LetterForge gives the whole workflow a focused structure.",
+    a: "A blank chat still leaves users building prompts, formatting letters, and tracking versions manually. ForgeLetter gives the whole workflow a focused structure.",
   },
   {
     q: "Will hiring managers know it is AI?",
-    a: "The product is designed to produce a polished draft that still needs user review. The final letter should be truthful, specific, and edited before sending.",
+    a: "ForgeLetter is built to produce truthful, specific letters based on your real experience. You can review and edit every letter before sending.",
   },
   {
     q: "How personalised is it really?",
@@ -124,15 +74,15 @@ const faqs = [
   },
   {
     q: "What languages does it support?",
-    a: "The product is currently shaped around polished English applications. Additional languages can be added after the core flow is stable.",
+    a: "ForgeLetter is optimized for polished English cover letters, with additional language support planned over time.",
   },
   {
     q: "Can I cancel anytime?",
-    a: "Yes. Once Stripe billing is connected, subscription controls should live inside the billing dashboard and Stripe customer portal.",
+    a: "Yes. You can cancel your subscription at any time from your billing dashboard. Your account stays active until the end of the billing period.",
   },
   {
     q: "Is my data safe?",
-    a: "The interface is prepared for private user data. Before launch, Supabase RLS and server-side secret handling should be reviewed carefully.",
+    a: "Yes. Your resume, letters, and personal information are stored securely and never shared with third parties. You can delete your account and all associated data at any time.",
   },
 ]
 
@@ -186,41 +136,48 @@ function EngineFeatureIcon({ name }: { name: (typeof engineFeatures)[number]["ic
   )
 }
 
-function PricingSecurityIcon({ type }: { type: (typeof securityItems)[number]["icon"] }) {
+function HeroIcon({ type }: { type: "check" | "compass" | "shield" | "lock" | "pause" }) {
+  if (type === "check") {
+    return (
+      <svg viewBox="0 0 32 32" aria-hidden="true">
+        <path d="M8.5 16.7 13.5 21.7 24 10.8" />
+      </svg>
+    )
+  }
+
+  if (type === "compass") {
+    return (
+      <svg viewBox="0 0 32 32" aria-hidden="true">
+        <circle cx="16" cy="16" r="9.5" />
+        <path d="m19.6 9.2-2.3 8.1-5 5.5 2.3-8.1 5-5.5Z" />
+        <path d="M16 4.5v3M16 24.5v3M4.5 16h3M24.5 16h3" />
+      </svg>
+    )
+  }
+
   if (type === "shield") {
     return (
       <svg viewBox="0 0 32 32" aria-hidden="true">
-        <path d="M16 4.5 25 8v6.6c0 5.9-3.6 10.2-9 12.9-5.4-2.7-9-7-9-12.9V8l9-3.5Z" />
-        <path d="m12.2 16.3 2.5 2.5 5.5-6" />
+        <path d="M16 4.6 25 8v6.6c0 5.9-3.6 10.1-9 12.8-5.4-2.7-9-6.9-9-12.8V8l9-3.4Z" />
+        <path d="m12.4 16 2.5 2.5 5.3-5.9" />
       </svg>
     )
   }
 
-  if (type === "tag") {
+  if (type === "pause") {
     return (
       <svg viewBox="0 0 32 32" aria-hidden="true">
-        <path d="M5.5 17.2 17.2 5.5h7.3v7.3L12.8 24.5 5.5 17.2Z" />
-        <circle cx="21.4" cy="10.6" r="1.8" />
-      </svg>
-    )
-  }
-
-  if (type === "sync") {
-    return (
-      <svg viewBox="0 0 32 32" aria-hidden="true">
-        <path d="M25.5 12.6A9.8 9.8 0 0 0 8.7 8.8L6 11.6" />
-        <path d="M6 6.1v5.5h5.5" />
-        <path d="M6.5 19.4a9.8 9.8 0 0 0 16.8 3.8l2.7-2.8" />
-        <path d="M26 25.9v-5.5h-5.5" />
+        <circle cx="16" cy="16" r="10" />
+        <path d="M13 11.5v9M19 11.5v9" />
       </svg>
     )
   }
 
   return (
     <svg viewBox="0 0 32 32" aria-hidden="true">
-      <rect x="8" y="14" width="16" height="12" rx="2" />
+      <rect x="8" y="14" width="16" height="12" rx="2.2" />
       <path d="M11.5 14v-3.1a4.5 4.5 0 0 1 9 0V14" />
-      <path d="M16 18.5v3.3" />
+      <path d="M16 18.2v3.4" />
     </svg>
   )
 }
@@ -237,46 +194,57 @@ export default function HomePage() {
                 Apply with letters that feel <span>specific, sharp, and yours.</span>
               </h1>
               <p className="hero-copy">
-                LetterForge helps job seekers and future career-agency partners
-                prepare stronger cover letter briefs, organise applications, and
-                move faster without losing quality.
+                ForgeLetter uses a 12-agent AI pipeline to write, verify, and
+                perfect your cover letter before you ever see it. Every letter
+                passes a 95+ quality check.
               </p>
               <div className="hero-actions">
-                <Link className="button" href="/auth/signup">
+                <Link className="button hero-primary-button" href="/auth/signup">
                   Start free
+                  <span className="hero-button-arrow" aria-hidden="true">-&gt;</span>
                 </Link>
-                <Link className="button-secondary" href="#workspace">
+                <Link className="button-secondary hero-secondary-button" href="#workspace">
                   Try the workspace
+                  <span className="hero-button-arrow" aria-hidden="true">-&gt;</span>
                 </Link>
               </div>
               <div className="hero-proof" aria-label="Product highlights">
                 <div className="proof-item">
+                  <span className="proof-icon"><HeroIcon type="check" /></span>
                   <strong>Guided</strong>
-                  <span>tone, job requirements, and experience fields</span>
+                  <span>smart prompts that extract your strongest evidence</span>
                 </div>
                 <div className="proof-item">
-                  <strong>Ultra</strong>
-                  <span>auth, dashboard, resources, billing, and legal shell</span>
+                  <span className="proof-icon"><HeroIcon type="check" /></span>
+                  <strong>Verified</strong>
+                  <span>every letter checked against your real experience</span>
                 </div>
                 <div className="proof-item">
+                  <span className="proof-icon"><HeroIcon type="check" /></span>
                   <strong>Ready</strong>
-                  <span>for secure AI, Supabase persistence, and Stripe</span>
+                  <span>polished PDF exports in seconds</span>
                 </div>
               </div>
             </div>
 
             <div className="hero-media">
               <div className="hero-image-frame">
-                <img src="/hero-image-transparent.png" alt="LetterForge brain workspace illustration" />
+                <img src="/hero-image-transparent.png" alt="ForgeLetter brain workspace illustration" />
               </div>
               <div className="mini-metrics">
                 <div className="mini-metric">
-                  <span>Workspace</span>
-                  <strong>Private</strong>
+                  <span className="mini-metric-icon"><HeroIcon type="lock" /></span>
+                  <div>
+                    <span>Workspace</span>
+                    <strong>Private</strong>
+                  </div>
                 </div>
                 <div className="mini-metric">
-                  <span>Status</span>
-                  <strong>AI paused</strong>
+                  <span className="mini-metric-icon"><HeroIcon type="check" /></span>
+                  <div>
+                    <span>Status</span>
+                    <strong>Live</strong>
+                  </div>
                 </div>
               </div>
             </div>
@@ -290,7 +258,9 @@ export default function HomePage() {
             <div className="engine-compare">
               <div className="engine-compare__head">
                 <span className="section-kicker">Compare</span>
-                <h2>Why Choose ForgeLetter</h2>
+                <h2>
+                  Why <span className="headline-teal">Choose</span> ForgeLetter
+                </h2>
                 <p>
                   Stop relying on blank pages and generic prompts. ForgeLetter
                   structures the job brief, your evidence, and the right tone so
@@ -309,7 +279,7 @@ export default function HomePage() {
                     </li>
                     <li className="engine-compare__item">
                       <span className="engine-compare__mark engine-compare__mark--bad" aria-hidden="true" />
-                      <span>Generic ChatGPT or Claude prompts</span>
+                      <span>Unstructured AI prompts with no quality check</span>
                     </li>
                     <li className="engine-compare__item">
                       <span className="engine-compare__mark engine-compare__mark--bad" aria-hidden="true" />
@@ -390,9 +360,9 @@ export default function HomePage() {
           <div className="intro-copy">
             <div className="kicker">How it works</div>
             <h2 id="workflow-heading">
-              A faster way to write
+              From job description to <span className="headline-teal">interview-ready</span>
               <br />
-              better cover letters.
+              letter in under 3 minutes.
             </h2>
             <p>
               A guided AI workflow that helps you move from job description
@@ -463,7 +433,7 @@ export default function HomePage() {
                 AI COVER LETTER ENGINE
               </span>
               <h2>
-                AI that writes. <span>You get hired.</span>
+                12 agents. One <span className="headline-teal">letter</span>. No shortcuts.
               </h2>
               <p>
                 Our AI engine crafts personalized cover letters that speak to the role,
@@ -500,7 +470,9 @@ export default function HomePage() {
           <div className="container">
             <div className="examples-luxury__head">
               <span className="examples-luxury__kicker">Examples</span>
-              <h2>From generic application text to world-class positioning.</h2>
+              <h2>
+                From generic application text to <span className="headline-teal">world-class</span> positioning.
+              </h2>
               <p>
                 See how ForgeLetter transforms a standard prompt into a
                 compelling, role-specific narrative that shows impact, fit, and
@@ -515,7 +487,9 @@ export default function HomePage() {
           <div className="container">
             <div className="resources-luxury__head">
               <span className="resources-luxury__kicker">Tips & tricks</span>
-              <h2>A flexible library that grows with your workflow.</h2>
+              <h2>
+                A flexible library that grows with your <span className="headline-teal">workflow</span>.
+              </h2>
               <p>
                 Practical guides, templates, and insights curated to help you
                 move faster and make stronger applications.
@@ -529,77 +503,16 @@ export default function HomePage() {
           <div className="container">
             <div className="pricing-luxury__head">
               <span className="pricing-luxury__kicker">Pricing</span>
-              <h2>Clear plans, secured by Stripe.</h2>
+              <h2>
+                Clear plans, secured by <span className="headline-teal">Stripe</span>.
+              </h2>
               <p>
                 Start free, then upgrade when you&apos;re ready for a smoother
                 application workflow.
               </p>
             </div>
 
-            <div className="pricing-arch-grid">
-              {plans.map((plan) => {
-                const isPaid = plan.price !== "Free"
-                const amount = plan.price.replace("EUR ", "")
-
-                return (
-                <article
-                  className={`pricing-arch-card${plan.highlight ? " pricing-arch-card--featured" : ""}`}
-                  key={plan.name}
-                >
-                  <div className="pricing-arch-card__inner">
-                    <small>{plan.name}</small>
-                    <div className="pricing-arch-price">
-                      {isPaid ? (
-                        <>
-                          <span>EUR</span>
-                          <strong>{amount}</strong>
-                          <em>/ month</em>
-                        </>
-                      ) : (
-                        <strong>Free</strong>
-                      )}
-                    </div>
-                    <p>{plan.body}</p>
-
-                    <div className="pricing-arch-rule" aria-hidden="true">
-                      <span />
-                    </div>
-
-                    <ul className="pricing-arch-list">
-                      {plan.features.map((feature) => (
-                        <li key={feature}>{feature}</li>
-                      ))}
-                    </ul>
-
-                    {plan.highlight ? (
-                      <div className="pricing-popular">Most popular</div>
-                    ) : null}
-
-                    <Link
-                      className={`pricing-arch-button${plan.highlight ? " pricing-arch-button--gold" : ""}`}
-                      href={plan.href}
-                    >
-                      {plan.cta}
-                    </Link>
-                  </div>
-                </article>
-                )
-              })}
-            </div>
-
-            <div className="pricing-security-bar" aria-label="Purchase security">
-              {securityItems.map((item) => (
-                <div className="pricing-security-item" key={item.title}>
-                  <div className="pricing-security-icon">
-                    <PricingSecurityIcon type={item.icon} />
-                  </div>
-                  <div>
-                    <strong>{item.title}</strong>
-                    <span>{item.body}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <PricingCards />
           </div>
         </section>
 
@@ -608,7 +521,7 @@ export default function HomePage() {
             <aside className="faq-luxury__copy" aria-labelledby="faq-heading">
               <span className="faq-luxury__kicker">FAQ</span>
               <h2 id="faq-heading">
-                The original customer questions, <span>answered clearly.</span>
+                The original customer questions, <span className="headline-teal">answered</span> clearly.
               </h2>
               <div className="faq-luxury__rule" aria-hidden="true" />
               <p>
@@ -619,7 +532,7 @@ export default function HomePage() {
 
             <div className="faq-luxury__list">
               {faqs.map((faq, index) => (
-                <details className="faq-luxury__item" key={faq.q} open={index === 0}>
+                <details className="faq-luxury__item" key={faq.q}>
                   <summary>
                     <span className="faq-luxury__number">{String(index + 1).padStart(2, "0")}</span>
                     <span className="faq-luxury__question">{faq.q}</span>
@@ -638,7 +551,7 @@ export default function HomePage() {
                 <span className="faq-luxury__help" aria-hidden="true">?</span>
                 <span>Still have questions?</span>
                 <Link href="/contact">Contact us</Link>
-                <span aria-hidden="true">→</span>
+                <span aria-hidden="true">-&gt;</span>
               </div>
             </div>
           </div>
@@ -646,13 +559,13 @@ export default function HomePage() {
 
         <section className="cta-band">
           <div className="container">
-            <h2>Ready for a smoother product demo.</h2>
+            <h2>Stop sending generic letters. Start getting interviews.</h2>
             <p>
-              The site now presents like a polished SaaS even before AI
-              generation is wired in.
+              Join thousands of job seekers using ForgeLetter to write stronger,
+              faster, more specific cover letters.
             </p>
             <Link className="button" href="/auth/signup">
-              Create account
+              Create your free account -&gt;
             </Link>
           </div>
         </section>

@@ -27,7 +27,7 @@ export default async function BillingSuccessPage({
             <p>
               {isOneTimePurchase
                 ? "Your purchase has been confirmed by Stripe. You can return to the workspace and continue preparing your next application."
-                : "Your LetterForge plan is now ready. Stripe manages the payment securely, and your workspace will update automatically."}
+                : "Your ForgeLetter plan is now ready. Stripe manages the payment securely, and your workspace will update automatically."}
             </p>
             <div className="billing-result-actions">
               <Link className="button" href="/dashboard">

@@ -96,7 +96,7 @@ export function ContactClient() {
         <h3>Support expectations</h3>
         <p>
           Use the form for account questions, billing issues, partnerships, or
-          security reports. Stripe handles card data directly, and LetterForge
+          security reports. Stripe handles card data directly, and ForgeLetter
           support will never ask for full card numbers or passwords.
         </p>
         <div className="insight-list">

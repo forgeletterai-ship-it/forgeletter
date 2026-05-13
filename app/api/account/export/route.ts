@@ -35,7 +35,7 @@ export async function GET() {
     },
     {
       headers: {
-        "Content-Disposition": `attachment; filename="letterforge-export-${exportedAt.slice(0, 10)}.json"`,
+        "Content-Disposition": `attachment; filename="ForgeLetter-export-${exportedAt.slice(0, 10)}.json"`,
       },
     }
   )

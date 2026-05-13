@@ -193,13 +193,10 @@ export function ResourceSlider() {
               <span className="tips-card__icon">
                 <ResourceIcon type={resource.icon} />
               </span>
-              <span className="tips-card__meta">{resource.meta}</span>
+              {isActive ? <span className="tips-card__meta">Click to open</span> : null}
               <strong>{resource.title}</strong>
               <span className="tips-card__rule" aria-hidden="true" />
               <span className="tips-card__teaser">{resource.teaser}</span>
-              {isActive && resource.readTime ? (
-                <span className="tips-card__read-time">{resource.readTime}</span>
-              ) : null}
             </button>
           )
         })}
@@ -218,7 +215,6 @@ export function ResourceSlider() {
       {openResource ? (
         <div className="modal-backdrop tips-modal" role="dialog" aria-modal="true">
           <div className="modal-card tips-modal-card">
-            <span className="section-kicker">{openResource.readTime}</span>
             <h3>{openResource.title}</h3>
             <p>{openResource.teaser}</p>
             <ul>

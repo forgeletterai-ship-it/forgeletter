@@ -4,7 +4,7 @@ export default function TermsPage() {
   return (
     <LegalPage
       title="Terms of service"
-      intro="The basic terms for using LetterForge to prepare application materials."
+      intro="The basic terms for using ForgeLetter to prepare application materials."
       sections={[
         {
           title: "Use of the service",
@@ -12,7 +12,7 @@ export default function TermsPage() {
         },
         {
           title: "Accounts",
-          body: "Users should keep login credentials secure and notify LetterForge if they suspect unauthorized access.",
+          body: "Users should keep login credentials secure and notify ForgeLetter if they suspect unauthorized access.",
         },
         {
           title: "Generated content",
@@ -20,11 +20,11 @@ export default function TermsPage() {
         },
         {
           title: "Billing",
-          body: "Paid subscriptions are processed by Stripe. Users can manage invoices, payment methods, and cancellation through the billing portal when available.",
+          body: "Paid subscriptions are processed securely. Users can manage invoices, payment methods, and cancellation through the billing portal.",
         },
         {
           title: "Availability",
-          body: "The service may change as features are added, refined, or removed. LetterForge aims to communicate material changes clearly.",
+          body: "The service may change as features are added, refined, or removed. ForgeLetter aims to communicate material changes clearly.",
         },
       ]}
     />

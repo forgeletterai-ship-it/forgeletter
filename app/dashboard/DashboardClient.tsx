@@ -33,26 +33,21 @@ const tones: Array<{
     detail: "Sharp, confident, and outcome-focused.",
     icon: "send",
   },
-  {
-    name: "Executive",
-    detail: "Strategic language for senior or agency-reviewed work.",
-    icon: "crown",
-  },
 ]
 
 const sampleLetter = `May 14, 2025
 
 Hiring Manager
-Spotify
+Apple
 Stockholm, Sweden
 
 Dear Hiring Manager,
 
-I'm excited to apply for the Senior Marketing Manager role at Spotify. With 8+ years leading growth and brand campaigns for global B2C products, I've built data-informed strategies that connect audiences to meaningful-and move metrics.
+I'm excited to apply for the Senior Business Consultant role at Apple. With 8+ years leading growth and brand campaigns for global B2C products, I've built data-informed strategies that connect audiences to meaningful-and move metrics.
 
 At my current company, I led cross-functional teams to launch multi-channel campaigns across email, social, and paid media that increased audience usage by 34% and drove a 35% lift in conversion. I thrive at the intersection of creativity and analytics, turning insights into stories that resonate.
 
-I'm drawn to Spotify's mission to unlock the power of human creativity. I'd love the opportunity to help your marketing team continue building moments that millions of people connect with every day.
+I'm drawn to Apple's mission to unlock the power of human creativity. I'd love the opportunity to help your marketing team continue building moments that millions of people connect with every day.
 
 Thank you for your time and consideration.
 
@@ -104,6 +99,16 @@ function Icon({ name }: { name: string }) {
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="m3.6 11.5 16.8-8-7.8 16.9-2.4-7-6.6-1.9Z" />
         <path d="m10.2 13.4 5-5" />
+      </svg>
+    )
+  }
+
+  if (name === "edit") {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4.5 19.5h15" />
+        <path d="M6 15.8 16.8 5a2.5 2.5 0 0 1 3.5 3.5L9.5 19.3H6v-3.5Z" />
+        <path d="m15.2 6.6 3.2 3.2" />
       </svg>
     )
   }
@@ -244,8 +249,8 @@ export function DashboardClient({
     ? (settings.default_tone as ToneName)
     : "Professional"
   const [briefs, setBriefs] = useState(initialBriefs)
-  const [role, setRole] = useState(initialBriefs[0]?.role || "Senior Marketing Manager")
-  const [company, setCompany] = useState(initialBriefs[0]?.company || "Spotify")
+  const [role, setRole] = useState(initialBriefs[0]?.role || "Senior Business Consultant")
+  const [company, setCompany] = useState(initialBriefs[0]?.company || "Apple")
   const [tone, setTone] = useState<ToneName>(normalizedTone)
   const [jobDescription, setJobDescription] = useState("")
   const [candidateExperience, setCandidateExperience] = useState(
@@ -262,8 +267,8 @@ export function DashboardClient({
     }
 
     return sampleLetter
-      .replaceAll("Senior Marketing Manager", role || "Senior Marketing Manager")
-      .replaceAll("Spotify", company || "Spotify")
+      .replaceAll("Senior Business Consultant", role || "Senior Business Consultant")
+      .replaceAll("Apple", company || "Apple")
   }, [company, role])
 
   async function saveBrief() {
@@ -385,10 +390,10 @@ export function DashboardClient({
       </section>
 
       <section className="cover-panel cover-draft-panel">
-        <div className="cover-section-row cover-section-row--compact">
+          <div className="cover-section-row cover-section-row--compact">
           <div className="cover-panel-title">
             <span className="cover-title-icon">
-              <Icon name="sparkle" />
+              <Icon name="edit" />
             </span>
             <h2>Draft inputs</h2>
           </div>
@@ -434,7 +439,7 @@ export function DashboardClient({
               id="cover-role"
               value={role}
               onChange={(event) => setRole(event.target.value)}
-              placeholder="Senior Marketing Manager"
+              placeholder="Senior Business Consultant"
             />
           </div>
           <div className="cover-field">
@@ -443,7 +448,7 @@ export function DashboardClient({
               id="cover-company"
               value={company}
               onChange={(event) => setCompany(event.target.value)}
-              placeholder="Spotify"
+              placeholder="Apple"
             />
           </div>
         </div>
@@ -510,12 +515,12 @@ export function DashboardClient({
           <p>May 14, 2025</p>
           <p>
             Hiring Manager<br />
-            {company || "Spotify"}<br />
+            {company || "Apple"}<br />
             Stockholm, Sweden
           </p>
           <p>Dear Hiring Manager,</p>
           <p>
-            I'm excited to apply for the {role || "Senior Marketing Manager"} role at {company || "Spotify"}. With
+            I'm excited to apply for the {role || "Senior Business Consultant"} role at {company || "Apple"}. With
             8+ years leading growth and brand campaigns for global B2C products, I've built data-informed
             strategies that connect audiences to meaningful-and move metrics.
           </p>
@@ -525,7 +530,7 @@ export function DashboardClient({
             thrive at the intersection of creativity and analytics, turning insights into stories that resonate.
           </p>
           <p>
-            I'm drawn to {company || "Spotify"}'s mission to unlock the power of human creativity. I'd love the
+            I'm drawn to {company || "Apple"}'s mission to unlock the power of human creativity. I'd love the
             opportunity to help your marketing team continue building moments that millions of people connect
             with every day.
           </p>

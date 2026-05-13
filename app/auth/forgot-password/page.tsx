@@ -51,7 +51,7 @@ export default function ForgotPasswordPage() {
           </span>
           <h1>Recover access without losing your workspace.</h1>
           <p>
-            Enter your account email and LetterForge will send a secure reset
+            Enter your account email and ForgeLetter will send a secure reset
             link when email delivery is configured.
           </p>
         </div>
