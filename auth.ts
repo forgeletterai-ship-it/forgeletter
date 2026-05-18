@@ -6,6 +6,94 @@ import Facebook from "next-auth/providers/facebook"
 import { compare } from "bcryptjs"
 import { supabaseAdmin } from "./lib/supabase"
 
+type AppAuthUser = {
+  id: string
+  plan: string | null
+}
+
+function normalizeEmail(email: string) {
+  return email.trim().toLowerCase()
+}
+
+function isDuplicateError(error: unknown) {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code?: string }).code === "23505"
+  )
+}
+
+async function findUserByEmail(email: string) {
+  const { data, error } = await supabaseAdmin
+    .from("users")
+    .select("id,plan")
+    .eq("email", email)
+    .maybeSingle()
+
+  if (error) {
+    throw error
+  }
+
+  return data as AppAuthUser | null
+}
+
+async function ensureOAuthUser({
+  email,
+  name,
+  image,
+  provider,
+  providerAccountId,
+}: {
+  email: string
+  name?: string | null
+  image?: string | null
+  provider: string
+  providerAccountId: string
+}) {
+  const normalizedEmail = normalizeEmail(email)
+  const existing = await findUserByEmail(normalizedEmail)
+
+  if (existing) {
+    await supabaseAdmin
+      .from("users")
+      .update({
+        name: name || normalizedEmail.split("@")[0],
+        image,
+        provider,
+        provider_id: providerAccountId,
+      })
+      .eq("id", existing.id)
+
+    return existing
+  }
+
+  const { error: insertError } = await supabaseAdmin.from("users").insert({
+    email: normalizedEmail,
+    name: name || normalizedEmail.split("@")[0],
+    image,
+    provider,
+    provider_id: providerAccountId,
+    plan: "free",
+  })
+
+  if (insertError && !isDuplicateError(insertError)) {
+    throw insertError
+  }
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const created = await findUserByEmail(normalizedEmail)
+
+    if (created) {
+      return created
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 120 * (attempt + 1)))
+  }
+
+  throw new Error("OAuth user could not be loaded after account creation.")
+}
+
 const providers: Provider[] = [
   Credentials({
     name: "Email",
@@ -75,41 +163,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   callbacks: {
     async signIn({ user, account }) {
       if (account?.provider === "google" || account?.provider === "facebook") {
-        const fallbackEmail = (
+        const email = (
           user.email || `${account.provider}_${account.providerAccountId}@no-email.local`
-        ).toLowerCase()
+        )
 
         try {
-          const { data: existing, error: existingError } = await supabaseAdmin
-            .from("users")
-            .select("id,plan")
-            .eq("email", fallbackEmail)
-            .maybeSingle()
-
-          if (existingError) return false
-
-          let appUser = existing
-
-          if (!appUser) {
-            const { data: created, error: createError } = await supabaseAdmin
-              .from("users")
-              .insert({
-                email: fallbackEmail,
-                name: user.name,
-                image: user.image,
-                provider: account.provider,
-                provider_id: account.providerAccountId,
-                plan: "free",
-              })
-              .select("id,plan")
-              .single()
-
-            if (createError || !created) return false
-            appUser = created
-          }
-
+          const appUser = await ensureOAuthUser({
+            email,
+            name: user.name,
+            image: user.image,
+            provider: account.provider,
+            providerAccountId: account.providerAccountId,
+          })
           user.id = appUser.id
-          user.email = fallbackEmail
+          user.email = normalizeEmail(email)
           ;(user as any).plan = appUser.plan || "free"
         } catch {
           return false
@@ -119,9 +186,33 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return true
     },
 
-    async jwt({ token, user }) {
+    async jwt({ token, user, account }) {
+      if (account?.provider === "google" || account?.provider === "facebook") {
+        const email = String(
+          user?.email ||
+            token.email ||
+            `${account.provider}_${account.providerAccountId}@no-email.local`
+        )
+
+        try {
+          const appUser = await ensureOAuthUser({
+            email,
+            name: user?.name || token.name,
+            image: user?.image || (token.picture as string | undefined),
+            provider: account.provider,
+            providerAccountId: account.providerAccountId,
+          })
+
+          token.id = appUser.id
+          token.plan = appUser.plan || "free"
+          token.email = normalizeEmail(email)
+        } catch {
+          token.plan ||= "free"
+        }
+      }
+
       if (user) {
-        token.id = user.id
+        token.id ||= user.id
         token.plan = (user as any).plan || "free"
       }
       return token
