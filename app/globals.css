@@ -13969,3 +13969,34 @@ button.tone-chip:hover {
     padding: 12px 14px;
   }
 }
+
+/* Final launch hardening: keep the sticky public nav from clipping the first hero viewport. */
+.landing-main {
+  overflow-x: clip;
+}
+
+.hero {
+  display: block;
+  min-height: auto;
+  overflow: visible;
+}
+
+@media (min-width: 1181px) {
+  .hero {
+    padding-top: clamp(46px, 4.8vw, 76px);
+  }
+
+  .hero h1 {
+    font-size: clamp(54px, 5.2vw, 82px);
+  }
+
+  .hero-image-frame {
+    width: min(100%, 690px);
+  }
+}
+
+@media (max-width: 900px) {
+  .hero {
+    padding-top: 24px;
+  }
+}

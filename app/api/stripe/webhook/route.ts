@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import Stripe from "stripe"
-import { supabaseAdmin } from "@/lib/supabase"
+import { customerSafeSupabaseError, supabaseAdmin } from "@/lib/supabase"
 import { getStripe, type BillingPlan } from "@/lib/stripe"
 
 export const runtime = "nodejs"
@@ -63,8 +63,7 @@ export async function POST(req: NextRequest) {
         break
     }
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error"
-    return NextResponse.json({ error: message }, { status: 500 })
+    return NextResponse.json({ error: customerSafeSupabaseError(error) }, { status: 500 })
   }
 
   return NextResponse.json({ received: true })
@@ -110,12 +109,16 @@ async function getCustomerEmail(customer: string | Stripe.Customer | Stripe.Dele
 }
 
 async function updateUserPlan(email: string, plan: BillingPlan | "free") {
-  const { error } = await supabaseAdmin
-    .from("users")
-    .update({ plan })
-    .eq("email", email)
+  try {
+    const { error } = await supabaseAdmin
+      .from("users")
+      .update({ plan })
+      .eq("email", email)
 
-  if (error) {
-    throw new Error(error.message)
+    if (error) {
+      throw error
+    }
+  } catch (error) {
+    throw new Error(customerSafeSupabaseError(error))
   }
 }

@@ -15,10 +15,6 @@ const tones = [
     name: "Direct",
     detail: "Short, confident, and outcome-focused.",
   },
-  {
-    name: "Executive",
-    detail: "Strategic language for senior or agency-reviewed work.",
-  },
 ]
 
 export function DashboardWorkspace() {
@@ -29,8 +25,8 @@ export function DashboardWorkspace() {
       <section className="dashboard-card">
         <h3>Draft inputs</h3>
         <p>
-          Designed for individual users now, with a structure that can later
-          support career agencies managing multiple candidates.
+          Designed for focused applications, reusable evidence, and a smoother
+          workflow from role brief to final letter.
         </p>
 
         <div className="form-stack" style={{ marginTop: 18 }}>
@@ -74,7 +70,7 @@ export function DashboardWorkspace() {
           </div>
 
           <button className="button-soft" type="button">
-            Save polished brief soon
+            Save polished brief
           </button>
         </div>
       </section>
@@ -82,8 +78,8 @@ export function DashboardWorkspace() {
       <aside className="dashboard-card">
         <h3>Output preview</h3>
         <p>
-          The generated letter will appear here once the secure AI route is
-          added. Planned actions:
+          Your generated letter appears here with the actions you need to move
+          from draft to application-ready.
         </p>
         <ul className="check-list">
           <li>Copy polished text</li>

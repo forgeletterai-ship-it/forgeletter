@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getCurrentAppUser, isMissingTableError } from "@/lib/app-data"
+import {
+  dataErrorMessage,
+  getCurrentAppUser,
+  isMissingTableError,
+} from "@/lib/app-data"
 import { supabaseAdmin } from "@/lib/supabase"
 
 export async function POST(req: NextRequest) {
@@ -22,18 +26,22 @@ export async function POST(req: NextRequest) {
   const errors: string[] = []
 
   for (const table of tables) {
-    const { error: deleteError } = await supabaseAdmin
-      .from(table)
-      .delete()
-      .eq("user_id", user.id)
+    try {
+      const { error: deleteError } = await supabaseAdmin
+        .from(table)
+        .delete()
+        .eq("user_id", user.id)
 
-    if (deleteError && !isMissingTableError(deleteError)) {
-      errors.push(deleteError.message)
+      if (deleteError && !isMissingTableError(deleteError)) {
+        errors.push(dataErrorMessage(deleteError, table))
+      }
+    } catch (error) {
+      errors.push(dataErrorMessage(error, table))
     }
   }
 
   if (errors.length) {
-    return NextResponse.json({ error: errors.join(" ") }, { status: 500 })
+    return NextResponse.json({ error: errors[0] }, { status: 500 })
   }
 
   return NextResponse.json({ ok: true })

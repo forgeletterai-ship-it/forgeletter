@@ -48,7 +48,7 @@ const resources = [
     details: [
       "Use professional tone for most roles, warm tone for relationship-led teams.",
       "Use direct tone when the application needs brevity and sharper outcomes.",
-      "Use executive tone for senior, strategic, or agency-reviewed applications.",
+      "Keep every draft consistent, specific, and easy to refine before sending.",
     ],
   },
   {

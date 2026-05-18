@@ -21,7 +21,7 @@ const steps = [
   {
     n: "03",
     title: "Choose the tone",
-    body: "Set the voice - professional, warm, direct, or executive - so every letter matches the role.",
+    body: "Set the voice - professional, warm, or direct - so every letter matches the role.",
     dark: false,
   },
   {

@@ -16,22 +16,30 @@ const providers: Provider[] = [
     async authorize(credentials) {
       if (!credentials?.email || !credentials?.password) return null
 
-      const { data: user } = await supabaseAdmin
-        .from("users")
-        .select("*")
-        .eq("email", credentials.email)
-        .single()
+      const email = String(credentials.email).trim().toLowerCase()
 
-      if (!user?.password) return null
+      try {
+        const { data: user, error } = await supabaseAdmin
+          .from("users")
+          .select("id,email,name,password,plan")
+          .eq("email", email)
+          .maybeSingle()
 
-      const ok = await compare(credentials.password as string, user.password)
-      if (!ok) return null
+        if (error) return null
 
-      return {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        plan: user.plan,
+        if (!user?.password) return null
+
+        const ok = await compare(credentials.password as string, user.password)
+        if (!ok) return null
+
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          plan: user.plan,
+        }
+      } catch {
+        return null
       }
     },
   }),
@@ -53,7 +61,7 @@ if (process.env.FACEBOOK_CLIENT_ID && process.env.FACEBOOK_CLIENT_SECRET) {
       clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
       authorization: {
         params: {
-          scope: "public_profile",
+          scope: "email,public_profile",
         },
       },
     })
@@ -66,32 +74,50 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   providers,
   callbacks: {
     async signIn({ user, account }) {
-  if (account?.provider === "google" || account?.provider === "facebook") {
-    const fallbackEmail =
-      user.email || `${account.provider}_${account.providerAccountId}@no-email.local`
+      if (account?.provider === "google" || account?.provider === "facebook") {
+        const fallbackEmail = (
+          user.email || `${account.provider}_${account.providerAccountId}@no-email.local`
+        ).toLowerCase()
 
-    const { data: existing } = await supabaseAdmin
-      .from("users")
-      .select("id")
-      .eq("email", fallbackEmail)
-      .single()
+        try {
+          const { data: existing, error: existingError } = await supabaseAdmin
+            .from("users")
+            .select("id,plan")
+            .eq("email", fallbackEmail)
+            .maybeSingle()
 
-    if (!existing) {
-      await supabaseAdmin.from("users").insert({
-        email: fallbackEmail,
-        name: user.name,
-        image: user.image,
-        provider: account.provider,
-        provider_id: account.providerAccountId,
-        plan: "free",
-      })
-    }
+          if (existingError) return false
 
-    user.email = fallbackEmail
-  }
+          let appUser = existing
 
-  return true
-},
+          if (!appUser) {
+            const { data: created, error: createError } = await supabaseAdmin
+              .from("users")
+              .insert({
+                email: fallbackEmail,
+                name: user.name,
+                image: user.image,
+                provider: account.provider,
+                provider_id: account.providerAccountId,
+                plan: "free",
+              })
+              .select("id,plan")
+              .single()
+
+            if (createError || !created) return false
+            appUser = created
+          }
+
+          user.id = appUser.id
+          user.email = fallbackEmail
+          ;(user as any).plan = appUser.plan || "free"
+        } catch {
+          return false
+        }
+      }
+
+      return true
+    },
 
     async jwt({ token, user }) {
       if (user) {

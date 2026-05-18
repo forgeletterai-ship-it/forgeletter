@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import {
+  dataErrorMessage,
   defaultSettings,
   getCurrentAppUser,
   getUserSettings,
-  isMissingTableError,
-  setupMessage,
   type UserSettings,
 } from "@/lib/app-data"
 import { supabaseAdmin } from "@/lib/supabase"
@@ -38,29 +37,32 @@ export async function PUT(req: NextRequest) {
     product_updates: Boolean(body.product_updates),
   }
 
-  const { data, error: saveError } = await supabaseAdmin
-    .from("user_settings")
-    .upsert(
-      {
-        user_id: user.id,
-        ...settings,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "user_id" }
-    )
-    .select("default_tone,email_updates,product_updates")
-    .single()
+  try {
+    const { data, error: saveError } = await supabaseAdmin
+      .from("user_settings")
+      .upsert(
+        {
+          user_id: user.id,
+          ...settings,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "user_id" }
+      )
+      .select("default_tone,email_updates,product_updates")
+      .single()
 
-  if (saveError) {
+    if (saveError) {
+      return NextResponse.json(
+        { error: dataErrorMessage(saveError, "user_settings") },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json({ settings: data })
+  } catch (error) {
     return NextResponse.json(
-      {
-        error: isMissingTableError(saveError)
-          ? setupMessage("user_settings")
-          : saveError.message,
-      },
+      { error: dataErrorMessage(error, "user_settings") },
       { status: 500 }
     )
   }
-
-  return NextResponse.json({ settings: data })
 }

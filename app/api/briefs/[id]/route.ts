@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
 import {
+  dataErrorMessage,
   getCurrentAppUser,
-  isMissingTableError,
-  setupMessage,
 } from "@/lib/app-data"
 import { supabaseAdmin } from "@/lib/supabase"
 
 const allowedStatuses = new Set(["draft", "brief_ready", "generated", "archived"])
-const allowedTones = new Set(["Professional", "Warm", "Direct", "Executive"])
+const allowedTones = new Set(["Professional", "Warm", "Direct"])
 
 type BriefRouteProps = {
   params: Promise<{
@@ -48,26 +47,29 @@ export async function PATCH(req: NextRequest, { params }: BriefRouteProps) {
     updates.status = body.status
   }
 
-  const { data, error: saveError } = await supabaseAdmin
-    .from("application_briefs")
-    .update(updates)
-    .eq("id", id)
-    .eq("user_id", user.id)
-    .select("*")
-    .single()
+  try {
+    const { data, error: saveError } = await supabaseAdmin
+      .from("application_briefs")
+      .update(updates)
+      .eq("id", id)
+      .eq("user_id", user.id)
+      .select("*")
+      .single()
 
-  if (saveError) {
+    if (saveError) {
+      return NextResponse.json(
+        { error: dataErrorMessage(saveError, "application_briefs") },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json({ brief: data })
+  } catch (error) {
     return NextResponse.json(
-      {
-        error: isMissingTableError(saveError)
-          ? setupMessage("application_briefs")
-          : saveError.message,
-      },
+      { error: dataErrorMessage(error, "application_briefs") },
       { status: 500 }
     )
   }
-
-  return NextResponse.json({ brief: data })
 }
 
 export async function DELETE(_req: NextRequest, { params }: BriefRouteProps) {
@@ -78,22 +80,25 @@ export async function DELETE(_req: NextRequest, { params }: BriefRouteProps) {
   }
 
   const { id } = await params
-  const { error: deleteError } = await supabaseAdmin
-    .from("application_briefs")
-    .delete()
-    .eq("id", id)
-    .eq("user_id", user.id)
+  try {
+    const { error: deleteError } = await supabaseAdmin
+      .from("application_briefs")
+      .delete()
+      .eq("id", id)
+      .eq("user_id", user.id)
 
-  if (deleteError) {
+    if (deleteError) {
+      return NextResponse.json(
+        { error: dataErrorMessage(deleteError, "application_briefs") },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json({ ok: true })
+  } catch (error) {
     return NextResponse.json(
-      {
-        error: isMissingTableError(deleteError)
-          ? setupMessage("application_briefs")
-          : deleteError.message,
-      },
+      { error: dataErrorMessage(error, "application_briefs") },
       { status: 500 }
     )
   }
-
-  return NextResponse.json({ ok: true })
 }

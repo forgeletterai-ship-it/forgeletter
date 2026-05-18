@@ -1,5 +1,5 @@
 import { auth } from "@/auth"
-import { supabaseAdmin } from "@/lib/supabase"
+import { customerSafeSupabaseError, supabaseAdmin } from "@/lib/supabase"
 
 export type PlanId = "free" | "pro" | "ultra"
 
@@ -57,13 +57,22 @@ export function normalizePlan(plan: unknown): PlanId {
   return plan === "pro" || plan === "ultra" ? plan : "free"
 }
 
-export function isMissingTableError(error: { code?: string; message?: string } | null) {
+type DatabaseError = {
+  code?: string | null
+  message?: string | null
+}
+
+export function isMissingTableError(error: DatabaseError | null | undefined) {
   if (!error) return false
+
+  const message = error.message || ""
 
   return (
     error.code === "42P01" ||
-    error.message?.includes("Could not find the table") ||
-    error.message?.includes("schema cache")
+    error.code === "PGRST205" ||
+    message.includes("Could not find the table") ||
+    message.includes("schema cache") ||
+    (message.includes("relation") && message.includes("does not exist"))
   )
 }
 
@@ -71,97 +80,129 @@ export function setupMessage(_tableName: string) {
   return "A workspace setup issue is preventing this data from loading. Please contact support."
 }
 
+export function dataErrorMessage(error: unknown, tableName: string) {
+  return isMissingTableError(error as DatabaseError)
+    ? setupMessage(tableName)
+    : customerSafeSupabaseError(error)
+}
+
 export async function getCurrentAppUser(): Promise<{
   user: AppUser | null
   error?: string
 }> {
-  const session = await auth()
+  let session
+
+  try {
+    session = await auth()
+  } catch (error) {
+    return { user: null, error: customerSafeSupabaseError(error) }
+  }
+
   const email = session?.user?.email
 
   if (!email) {
     return { user: null, error: "Authentication required" }
   }
 
-  const { data, error } = await supabaseAdmin
-    .from("users")
-    .select("id,email,name,image,plan")
-    .eq("email", email)
-    .maybeSingle()
+  try {
+    const { data, error } = await supabaseAdmin
+      .from("users")
+      .select("id,email,name,image,plan")
+      .eq("email", email)
+      .maybeSingle()
 
-  if (error) {
-    return { user: null, error: error.message }
-  }
+    if (error) {
+      return { user: null, error: dataErrorMessage(error, "users") }
+    }
 
-  if (!data) {
-    return { user: null, error: "Account record not found" }
-  }
+    if (!data) {
+      return { user: null, error: "Account record not found" }
+    }
 
-  return {
-    user: {
-      id: data.id,
-      email: data.email,
-      name: data.name,
-      image: data.image,
-      plan: normalizePlan(data.plan),
-    },
+    return {
+      user: {
+        id: data.id,
+        email: data.email,
+        name: data.name,
+        image: data.image,
+        plan: normalizePlan(data.plan),
+      },
+    }
+  } catch (error) {
+    return { user: null, error: dataErrorMessage(error, "users") }
   }
 }
 
 export async function getUserProfile(userId: string) {
-  const { data, error } = await supabaseAdmin
-    .from("user_profiles")
-    .select(
-      "professional_headline,target_roles,industries,key_achievements,strengths"
-    )
-    .eq("user_id", userId)
-    .maybeSingle()
+  try {
+    const { data, error } = await supabaseAdmin
+      .from("user_profiles")
+      .select(
+        "professional_headline,target_roles,industries,key_achievements,strengths"
+      )
+      .eq("user_id", userId)
+      .maybeSingle()
 
-  if (error) {
+    if (error) {
+      return {
+        profile: defaultProfile,
+        setupError: dataErrorMessage(error, "user_profiles"),
+      }
+    }
+
+    return { profile: { ...defaultProfile, ...(data || {}) } as UserProfile }
+  } catch (error) {
     return {
       profile: defaultProfile,
-      setupError: isMissingTableError(error)
-        ? setupMessage("user_profiles")
-        : error.message,
+      setupError: dataErrorMessage(error, "user_profiles"),
     }
   }
-
-  return { profile: { ...defaultProfile, ...(data || {}) } as UserProfile }
 }
 
 export async function getApplicationBriefs(userId: string) {
-  const { data, error } = await supabaseAdmin
-    .from("application_briefs")
-    .select("*")
-    .eq("user_id", userId)
-    .order("updated_at", { ascending: false })
+  try {
+    const { data, error } = await supabaseAdmin
+      .from("application_briefs")
+      .select("*")
+      .eq("user_id", userId)
+      .order("updated_at", { ascending: false })
 
-  if (error) {
+    if (error) {
+      return {
+        briefs: [] as ApplicationBrief[],
+        setupError: dataErrorMessage(error, "application_briefs"),
+      }
+    }
+
+    return { briefs: (data || []) as ApplicationBrief[] }
+  } catch (error) {
     return {
       briefs: [] as ApplicationBrief[],
-      setupError: isMissingTableError(error)
-        ? setupMessage("application_briefs")
-        : error.message,
+      setupError: dataErrorMessage(error, "application_briefs"),
     }
   }
-
-  return { briefs: (data || []) as ApplicationBrief[] }
 }
 
 export async function getUserSettings(userId: string) {
-  const { data, error } = await supabaseAdmin
-    .from("user_settings")
-    .select("default_tone,email_updates,product_updates")
-    .eq("user_id", userId)
-    .maybeSingle()
+  try {
+    const { data, error } = await supabaseAdmin
+      .from("user_settings")
+      .select("default_tone,email_updates,product_updates")
+      .eq("user_id", userId)
+      .maybeSingle()
 
-  if (error) {
+    if (error) {
+      return {
+        settings: defaultSettings,
+        setupError: dataErrorMessage(error, "user_settings"),
+      }
+    }
+
+    return { settings: { ...defaultSettings, ...(data || {}) } as UserSettings }
+  } catch (error) {
     return {
       settings: defaultSettings,
-      setupError: isMissingTableError(error)
-        ? setupMessage("user_settings")
-        : error.message,
+      setupError: dataErrorMessage(error, "user_settings"),
     }
   }
-
-  return { settings: { ...defaultSettings, ...(data || {}) } as UserSettings }
 }

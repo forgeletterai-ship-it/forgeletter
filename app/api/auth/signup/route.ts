@@ -1,43 +1,63 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { hash } from 'bcryptjs'
+import { dataErrorMessage } from '@/lib/app-data'
 import { supabaseAdmin } from '@/lib/supabase'
 
 export async function POST(req: NextRequest) {
-  const { email, password, name } = await req.json()
+  const { email, password, name } = (await req.json().catch(() => ({}))) as {
+    email?: string
+    password?: string
+    name?: string
+  }
+  const normalizedEmail = String(email || "").trim().toLowerCase()
 
-  if (!email || !password || password.length < 8) {
+  if (!normalizedEmail || !password || password.length < 8) {
     return NextResponse.json(
       { error: 'Email and password (8+ chars) required' },
       { status: 400 }
     )
   }
 
-  const { data: existing } = await supabaseAdmin
-    .from('users')
-    .select('id')
-    .eq('email', email)
-    .single()
+  try {
+    const { data: existing, error: existingError } = await supabaseAdmin
+      .from('users')
+      .select('id')
+      .eq('email', normalizedEmail)
+      .maybeSingle()
 
-  if (existing) {
+    if (existingError) {
+      return NextResponse.json(
+        { error: dataErrorMessage(existingError, 'users') },
+        { status: 500 }
+      )
+    }
+
+    if (existing) {
+      return NextResponse.json(
+        { error: 'An account with this email already exists' },
+        { status: 409 }
+      )
+    }
+
+    const hashed = await hash(password, 12)
+
+    const { error } = await supabaseAdmin.from('users').insert({
+      email: normalizedEmail,
+      name: String(name || normalizedEmail.split('@')[0]).trim(),
+      password: hashed,
+      provider: 'email',
+      plan: 'free',
+    })
+
+    if (error) {
+      return NextResponse.json(
+        { error: dataErrorMessage(error, 'users') },
+        { status: 500 }
+      )
+    }
+  } catch (error) {
     return NextResponse.json(
-      { error: 'An account with this email already exists' },
-      { status: 409 }
-    )
-  }
-
-  const hashed = await hash(password, 12)
-
-  const { error } = await supabaseAdmin.from('users').insert({
-    email,
-    name: name || email.split('@')[0],
-    password: hashed,
-    provider: 'email',
-    plan: 'free',
-  })
-
-  if (error) {
-    return NextResponse.json(
-      { error: 'Failed to create account' },
+      { error: dataErrorMessage(error, 'users') },
       { status: 500 }
     )
   }

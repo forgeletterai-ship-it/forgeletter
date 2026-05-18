@@ -15,10 +15,6 @@ const tones = [
     name: "Direct",
     hint: "Concise, confident, and low-fluff.",
   },
-  {
-    name: "Executive",
-    hint: "Strategic, senior, and polished.",
-  },
 ]
 
 export function LandingWorkspace() {
@@ -81,9 +77,8 @@ export function LandingWorkspace() {
       <div className="letter-paper">
         <h3>Ultra output area</h3>
         <p>
-          The selected tone, job requirements, and experience will feed the
-          generator later. For now, this preview keeps the product honest while
-          still giving customers a complete, polished setup flow.
+          The selected tone, job requirements, and experience shape a tailored
+          letter that is easier to review, refine, and send with confidence.
         </p>
         <p>
           Selected tone: <strong>{tone}</strong>

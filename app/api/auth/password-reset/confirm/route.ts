@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createHash } from "crypto"
 import { hash } from "bcryptjs"
-import { isMissingTableError, setupMessage } from "@/lib/app-data"
+import { dataErrorMessage } from "@/lib/app-data"
 import { supabaseAdmin } from "@/lib/supabase"
 
 function hashToken(token: string) {
@@ -21,19 +21,33 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  const { data: resetToken, error } = await supabaseAdmin
-    .from("password_reset_tokens")
-    .select("id,user_id,expires_at,used_at")
-    .eq("token_hash", hashToken(token))
-    .maybeSingle()
+  let resetToken:
+    | {
+        id: string
+        user_id: string
+        expires_at: string
+        used_at: string | null
+      }
+    | null = null
 
-  if (error) {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from("password_reset_tokens")
+      .select("id,user_id,expires_at,used_at")
+      .eq("token_hash", hashToken(token))
+      .maybeSingle()
+
+    if (error) {
+      return NextResponse.json(
+        { error: dataErrorMessage(error, "password_reset_tokens") },
+        { status: 500 }
+      )
+    }
+
+    resetToken = data
+  } catch (error) {
     return NextResponse.json(
-      {
-        error: isMissingTableError(error)
-          ? setupMessage("password_reset_tokens")
-          : error.message,
-      },
+      { error: dataErrorMessage(error, "password_reset_tokens") },
       { status: 500 }
     )
   }
@@ -50,19 +64,33 @@ export async function POST(req: NextRequest) {
   }
 
   const hashedPassword = await hash(password, 12)
-  const { error: updateError } = await supabaseAdmin
-    .from("users")
-    .update({ password: hashedPassword, provider: "email" })
-    .eq("id", resetToken.user_id)
+  try {
+    const { error: updateError } = await supabaseAdmin
+      .from("users")
+      .update({ password: hashedPassword, provider: "email" })
+      .eq("id", resetToken.user_id)
 
-  if (updateError) {
-    return NextResponse.json({ error: updateError.message }, { status: 500 })
+    if (updateError) {
+      return NextResponse.json(
+        { error: dataErrorMessage(updateError, "users") },
+        { status: 500 }
+      )
+    }
+  } catch (error) {
+    return NextResponse.json(
+      { error: dataErrorMessage(error, "users") },
+      { status: 500 }
+    )
   }
 
-  await supabaseAdmin
-    .from("password_reset_tokens")
-    .update({ used_at: new Date().toISOString() })
-    .eq("id", resetToken.id)
+  try {
+    await supabaseAdmin
+      .from("password_reset_tokens")
+      .update({ used_at: new Date().toISOString() })
+      .eq("id", resetToken.id)
+  } catch {
+    // The password is already updated; token cleanup should not block success.
+  }
 
   return NextResponse.json({ ok: true })
 }

@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
 import {
+  dataErrorMessage,
   getApplicationBriefs,
   getCurrentAppUser,
-  isMissingTableError,
-  setupMessage,
 } from "@/lib/app-data"
 import { supabaseAdmin } from "@/lib/supabase"
 
-const allowedTones = new Set(["Professional", "Warm", "Direct", "Executive"])
+const allowedTones = new Set(["Professional", "Warm", "Direct"])
 
 function statusForBrief(role: string, jobDescription: string, experience: string) {
   return role && jobDescription && experience ? "brief_ready" : "draft"
@@ -52,30 +51,33 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  const { data, error: saveError } = await supabaseAdmin
-    .from("application_briefs")
-    .insert({
-      user_id: user.id,
-      role,
-      company,
-      tone,
-      job_description,
-      candidate_experience,
-      status: statusForBrief(role, job_description, candidate_experience),
-    })
-    .select("*")
-    .single()
+  try {
+    const { data, error: saveError } = await supabaseAdmin
+      .from("application_briefs")
+      .insert({
+        user_id: user.id,
+        role,
+        company,
+        tone,
+        job_description,
+        candidate_experience,
+        status: statusForBrief(role, job_description, candidate_experience),
+      })
+      .select("*")
+      .single()
 
-  if (saveError) {
+    if (saveError) {
+      return NextResponse.json(
+        { error: dataErrorMessage(saveError, "application_briefs") },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json({ brief: data })
+  } catch (error) {
     return NextResponse.json(
-      {
-        error: isMissingTableError(saveError)
-          ? setupMessage("application_briefs")
-          : saveError.message,
-      },
+      { error: dataErrorMessage(error, "application_briefs") },
       { status: 500 }
     )
   }
-
-  return NextResponse.json({ brief: data })
 }

@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import {
+  dataErrorMessage,
   defaultProfile,
   getCurrentAppUser,
   getUserProfile,
-  isMissingTableError,
-  setupMessage,
   type UserProfile,
 } from "@/lib/app-data"
 import { supabaseAdmin } from "@/lib/supabase"
@@ -40,31 +39,34 @@ export async function PUT(req: NextRequest) {
   const body = (await req.json().catch(() => ({}))) as Partial<UserProfile>
   const profile = cleanProfile({ ...defaultProfile, ...body })
 
-  const { data, error: saveError } = await supabaseAdmin
-    .from("user_profiles")
-    .upsert(
-      {
-        user_id: user.id,
-        ...profile,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "user_id" }
-    )
-    .select(
-      "professional_headline,target_roles,industries,key_achievements,strengths"
-    )
-    .single()
+  try {
+    const { data, error: saveError } = await supabaseAdmin
+      .from("user_profiles")
+      .upsert(
+        {
+          user_id: user.id,
+          ...profile,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "user_id" }
+      )
+      .select(
+        "professional_headline,target_roles,industries,key_achievements,strengths"
+      )
+      .single()
 
-  if (saveError) {
+    if (saveError) {
+      return NextResponse.json(
+        { error: dataErrorMessage(saveError, "user_profiles") },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json({ profile: data })
+  } catch (error) {
     return NextResponse.json(
-      {
-        error: isMissingTableError(saveError)
-          ? setupMessage("user_profiles")
-          : saveError.message,
-      },
+      { error: dataErrorMessage(error, "user_profiles") },
       { status: 500 }
     )
   }
-
-  return NextResponse.json({ profile: data })
 }

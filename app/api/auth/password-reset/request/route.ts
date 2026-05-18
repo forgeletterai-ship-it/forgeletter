@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createHash, randomBytes } from "crypto"
-import { isMissingTableError, setupMessage } from "@/lib/app-data"
+import { dataErrorMessage } from "@/lib/app-data"
 import { supabaseAdmin } from "@/lib/supabase"
 
 function hashToken(token: string) {
@@ -43,11 +43,29 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Email is required" }, { status: 400 })
   }
 
-  const { data: user } = await supabaseAdmin
-    .from("users")
-    .select("id,email")
-    .eq("email", normalizedEmail)
-    .maybeSingle()
+  let user: { id: string; email: string } | null = null
+
+  try {
+    const { data, error } = await supabaseAdmin
+      .from("users")
+      .select("id,email")
+      .eq("email", normalizedEmail)
+      .maybeSingle()
+
+    if (error) {
+      return NextResponse.json(
+        { error: dataErrorMessage(error, "users") },
+        { status: 500 }
+      )
+    }
+
+    user = data
+  } catch (error) {
+    return NextResponse.json(
+      { error: dataErrorMessage(error, "users") },
+      { status: 500 }
+    )
+  }
 
   if (!user) {
     return NextResponse.json({ ok: true })
@@ -57,19 +75,22 @@ export async function POST(req: NextRequest) {
   const expiresAt = new Date(Date.now() + 45 * 60 * 1000).toISOString()
   const resetUrl = `${appUrl(req.nextUrl.origin)}/auth/reset-password?token=${token}`
 
-  const { error } = await supabaseAdmin.from("password_reset_tokens").insert({
-    user_id: user.id,
-    token_hash: hashToken(token),
-    expires_at: expiresAt,
-  })
+  try {
+    const { error } = await supabaseAdmin.from("password_reset_tokens").insert({
+      user_id: user.id,
+      token_hash: hashToken(token),
+      expires_at: expiresAt,
+    })
 
-  if (error) {
+    if (error) {
+      return NextResponse.json(
+        { error: dataErrorMessage(error, "password_reset_tokens") },
+        { status: 500 }
+      )
+    }
+  } catch (error) {
     return NextResponse.json(
-      {
-        error: isMissingTableError(error)
-          ? setupMessage("password_reset_tokens")
-          : error.message,
-      },
+      { error: dataErrorMessage(error, "password_reset_tokens") },
       { status: 500 }
     )
   }

@@ -11,12 +11,12 @@ type DashboardClientProps = {
   setupError?: string
 }
 
-type ToneName = "Professional" | "Warm" | "Direct" | "Executive"
+type ToneName = "Professional" | "Warm" | "Direct"
 
 const tones: Array<{
   name: ToneName
   detail: string
-  icon: "diamond" | "sun" | "send" | "crown"
+  icon: "diamond" | "sun" | "send"
 }> = [
   {
     name: "Professional",
@@ -241,6 +241,7 @@ function makePdf(text: string) {
 
 export function DashboardClient({
   initialBriefs,
+  plan,
   profile,
   settings,
   setupError,
@@ -260,7 +261,15 @@ export function DashboardClient({
   const [message, setMessage] = useState("")
   const [error, setError] = useState(setupError || "")
 
-  const displayPlan = "ULTRA"
+  const planTier = plan === "ultra" ? "ULTRA" : plan === "pro" ? "PRO" : "Regular"
+  const planLimit = plan === "ultra" ? 35 : plan === "pro" ? 20 : 8
+  const planUsed = Math.min(100, Math.round((briefs.length / planLimit) * 100))
+  const planCopy =
+    plan === "ultra"
+      ? "Your Ultra workspace is active. Generate premium cover letters with the full workflow."
+      : plan === "pro"
+        ? "Your Pro workspace is active. Build stronger letters with a smoother weekly workflow."
+        : "Your workspace is active. Create focused cover letter briefs and upgrade when you need more."
   const generatedLetter = useMemo(() => {
     if (!role && !company) {
       return sampleLetter
@@ -341,16 +350,16 @@ export function DashboardClient({
         <div className="cover-plan-content">
           <div className="cover-section-row">
             <div>
-              <h2>{displayPlan} plan</h2>
-              <p>Your paid workspace is active. Generate unlimited, premium cover letters.</p>
+              <h2>{planTier} plan</h2>
+              <p>{planCopy}</p>
             </div>
           </div>
           <div className="cover-plan-meter">
             <span />
           </div>
           <div className="cover-plan-meta">
-            <strong>63% <span>of plan used</span></strong>
-            <span>Renews Jun 15, 2025</span>
+            <strong>{planUsed}% <span>of plan used</span></strong>
+            <span>{plan === "free" ? "Upgrade anytime" : "Manage renewal in billing"}</span>
           </div>
         </div>
       </section>
@@ -399,7 +408,7 @@ export function DashboardClient({
           </div>
         </div>
         <p className="cover-panel-copy">
-          Save a structured brief now. AI generation can plug into this exact workflow later.
+          Save a structured brief now. ForgeLetter uses it to shape a specific, evidence-led cover letter.
         </p>
 
         {message ? <div className="cover-success">{message}</div> : null}

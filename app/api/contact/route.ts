@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import {
+  dataErrorMessage,
   getCurrentAppUser,
-  isMissingTableError,
-  setupMessage,
 } from "@/lib/app-data"
 import { supabaseAdmin } from "@/lib/supabase"
 
@@ -63,18 +62,21 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  const { error } = await supabaseAdmin.from("contact_messages").insert({
-    user_id: user?.id || null,
-    ...payload,
-  })
+  try {
+    const { error } = await supabaseAdmin.from("contact_messages").insert({
+      user_id: user?.id || null,
+      ...payload,
+    })
 
-  if (error && !isMissingTableError(error)) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
-  }
-
-  if (error && isMissingTableError(error)) {
+    if (error) {
+      return NextResponse.json(
+        { error: dataErrorMessage(error, "contact_messages") },
+        { status: 500 }
+      )
+    }
+  } catch (error) {
     return NextResponse.json(
-      { error: setupMessage("contact_messages") },
+      { error: dataErrorMessage(error, "contact_messages") },
       { status: 500 }
     )
   }
