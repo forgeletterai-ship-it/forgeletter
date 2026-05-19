@@ -2,13 +2,15 @@
 
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { FormEvent, useState } from "react"
+import { FormEvent, useEffect, useMemo, useState } from "react"
 import { signIn } from "next-auth/react"
 import { Brand } from "@/components/Brand"
 
 type LoginClientProps = {
   googleEnabled: boolean
   facebookEnabled: boolean
+  autoProvider?: "google" | "facebook" | null
+  initialCallbackUrl?: string
 }
 
 function GoogleIcon() {
@@ -37,9 +39,14 @@ function GoogleIcon() {
 export default function LoginClient({
   googleEnabled,
   facebookEnabled,
+  autoProvider = null,
+  initialCallbackUrl,
 }: LoginClientProps) {
   const router = useRouter()
-  const callbackUrl = "/dashboard"
+  const callbackUrl = useMemo(
+    () => normalizeCallbackUrl(initialCallbackUrl),
+    [initialCallbackUrl]
+  )
 
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -48,6 +55,26 @@ export default function LoginClient({
     "" | "google" | "facebook"
   >("")
   const [loadingCredentials, setLoadingCredentials] = useState(false)
+  const [autoStarted, setAutoStarted] = useState(false)
+
+  useEffect(() => {
+    if (autoStarted || loadingProvider || loadingCredentials) return
+    if (autoProvider === "google" && googleEnabled) {
+      setAutoStarted(true)
+      void handleSocialLogin("google")
+    }
+    if (autoProvider === "facebook" && facebookEnabled) {
+      setAutoStarted(true)
+      void handleSocialLogin("facebook")
+    }
+  }, [
+    autoProvider,
+    autoStarted,
+    facebookEnabled,
+    googleEnabled,
+    loadingCredentials,
+    loadingProvider,
+  ])
 
   async function handleSocialLogin(provider: "google" | "facebook") {
     try {
@@ -57,6 +84,8 @@ export default function LoginClient({
     } catch {
       setError("Something went wrong. Please try again.")
       setLoadingProvider("")
+      setAutoStarted(false)
+      router.replace("/auth/login")
     }
   }
 
@@ -203,4 +232,23 @@ export default function LoginClient({
       </section>
     </main>
   )
+}
+
+function normalizeCallbackUrl(value?: string) {
+  if (!value) return "/dashboard"
+
+  if (value.startsWith("/") && !value.startsWith("//")) {
+    return value
+  }
+
+  try {
+    const url = new URL(value)
+    if (url.origin === "https://forgeletter.vercel.app") {
+      return `${url.pathname}${url.search}${url.hash}` || "/dashboard"
+    }
+  } catch {
+    return "/dashboard"
+  }
+
+  return "/dashboard"
 }

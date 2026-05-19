@@ -2,7 +2,15 @@ import LoginClient from "./LoginClient"
 
 export const dynamic = "force-dynamic"
 
-export default function LoginPage() {
+type LoginPageProps = {
+  searchParams?: Promise<{
+    provider?: string
+    callbackUrl?: string
+  }>
+}
+
+export default async function LoginPage({ searchParams }: LoginPageProps) {
+  const params = await searchParams
   const googleEnabled = Boolean(
     process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
   )
@@ -15,6 +23,12 @@ export default function LoginPage() {
     <LoginClient
       googleEnabled={googleEnabled}
       facebookEnabled={facebookEnabled}
+      autoProvider={
+        params?.provider === "google" || params?.provider === "facebook"
+          ? params.provider
+          : null
+      }
+      initialCallbackUrl={params?.callbackUrl}
     />
   )
 }

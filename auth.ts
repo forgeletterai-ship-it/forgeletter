@@ -6,6 +6,25 @@ import Facebook from "next-auth/providers/facebook"
 import { compare } from "bcryptjs"
 import { supabaseAdmin } from "./lib/supabase"
 
+const PRODUCTION_AUTH_URL = "https://forgeletter.vercel.app"
+
+function enforceProductionAuthUrl() {
+  if (process.env.NODE_ENV !== "production") return
+
+  const authUrl = process.env.AUTH_URL?.trim()
+  const nextAuthUrl = process.env.NEXTAUTH_URL?.trim()
+
+  if (!authUrl || authUrl.includes("localhost")) {
+    process.env.AUTH_URL = PRODUCTION_AUTH_URL
+  }
+
+  if (!nextAuthUrl || nextAuthUrl.includes("localhost")) {
+    process.env.NEXTAUTH_URL = PRODUCTION_AUTH_URL
+  }
+}
+
+enforceProductionAuthUrl()
+
 type AppAuthUser = {
   id: string
   plan: string | null
