@@ -12389,6 +12389,88 @@ button.tone-chip:hover {
   }
 }
 
+/* Keep workspace status metrics readable on laptop and tablet widths. */
+.cover-workspace .cover-status-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  align-items: stretch !important;
+}
+
+.cover-workspace .cover-status-item {
+  overflow: visible !important;
+  grid-template-columns: clamp(54px, 4.4vw, 72px) minmax(0, 1fr) !important;
+  column-gap: clamp(12px, 1vw, 18px) !important;
+  padding-inline: clamp(12px, 1.25vw, 24px) !important;
+  align-content: center !important;
+}
+
+.cover-workspace .cover-status-icon,
+.cover-workspace .cover-progress-ring {
+  width: clamp(54px, 4.4vw, 72px) !important;
+  height: clamp(54px, 4.4vw, 72px) !important;
+}
+
+.cover-workspace .cover-status-item strong {
+  font-size: clamp(28px, 2vw, 34px) !important;
+}
+
+.cover-workspace .cover-status-item > span:not(.cover-status-icon):not(.cover-progress-ring),
+.cover-workspace .cover-status-item small {
+  overflow-wrap: normal !important;
+  word-break: normal !important;
+  hyphens: none !important;
+}
+
+.cover-workspace .cover-status-item > span:not(.cover-status-icon):not(.cover-progress-ring) {
+  font-size: clamp(14px, 1vw, 15px) !important;
+  line-height: 1.18 !important;
+}
+
+.cover-workspace .cover-status-item small {
+  max-width: 19ch !important;
+  font-size: clamp(12px, 0.92vw, 13px) !important;
+  line-height: 1.32 !important;
+}
+
+@media (max-width: 1500px) and (min-width: 1181px) {
+  .cover-workspace {
+    grid-template-areas:
+      "plan plan"
+      "status status"
+      "draft letter" !important;
+  }
+
+  .cover-status-panel {
+    min-height: 0 !important;
+  }
+
+  .cover-workspace .cover-status-item {
+    min-height: 90px !important;
+  }
+}
+
+@media (max-width: 820px) {
+  .cover-workspace .cover-status-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .cover-workspace .cover-status-item {
+    min-height: 78px !important;
+    padding: 10px 0 !important;
+    grid-template-columns: 58px minmax(0, 1fr) !important;
+  }
+
+  .cover-workspace .cover-status-icon,
+  .cover-workspace .cover-progress-ring {
+    width: 56px !important;
+    height: 56px !important;
+  }
+
+  .cover-workspace .cover-status-item small {
+    max-width: none !important;
+  }
+}
+
 /* Profile page - structured career context editor */
 
 .pp {
