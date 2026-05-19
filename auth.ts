@@ -24,6 +24,22 @@ function isDuplicateError(error: unknown) {
   )
 }
 
+function logOAuthProvisioningError(stage: string, error: unknown) {
+  const details =
+    typeof error === "object" && error !== null
+      ? {
+          name: "name" in error ? (error as { name?: string }).name : undefined,
+          code: "code" in error ? (error as { code?: string }).code : undefined,
+          message:
+            "message" in error
+              ? (error as { message?: string }).message
+              : String(error),
+        }
+      : { message: String(error) }
+
+  console.error(`[auth] OAuth provisioning failed during ${stage}`, details)
+}
+
 async function findUserByEmail(email: string) {
   const { data, error } = await supabaseAdmin
     .from("users")
@@ -55,7 +71,7 @@ async function ensureOAuthUser({
   const existing = await findUserByEmail(normalizedEmail)
 
   if (existing) {
-    await supabaseAdmin
+    const { error: updateError } = await supabaseAdmin
       .from("users")
       .update({
         name: name || normalizedEmail.split("@")[0],
@@ -64,6 +80,10 @@ async function ensureOAuthUser({
         provider_id: providerAccountId,
       })
       .eq("id", existing.id)
+
+    if (updateError) {
+      throw updateError
+    }
 
     return existing
   }
@@ -160,6 +180,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
   session: { strategy: "jwt" },
   providers,
+  logger: {
+    error(error) {
+      console.error("[auth] Auth.js error", error)
+    },
+    warn(code) {
+      console.warn("[auth] Auth.js warning", code)
+    },
+  },
   callbacks: {
     async signIn({ user, account }) {
       if (account?.provider === "google" || account?.provider === "facebook") {
@@ -178,8 +206,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           user.id = appUser.id
           user.email = normalizeEmail(email)
           ;(user as any).plan = appUser.plan || "free"
-        } catch {
-          return false
+        } catch (error) {
+          logOAuthProvisioningError("signIn", error)
+          user.email = normalizeEmail(email)
+          ;(user as any).plan = "free"
         }
       }
 
@@ -206,7 +236,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           token.id = appUser.id
           token.plan = appUser.plan || "free"
           token.email = normalizeEmail(email)
-        } catch {
+        } catch (error) {
+          logOAuthProvisioningError("jwt", error)
           token.plan ||= "free"
         }
       }
