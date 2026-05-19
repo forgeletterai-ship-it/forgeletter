@@ -1,4 +1,9 @@
 import Stripe from "stripe"
+import {
+  annualAmountCents,
+  type BillingPeriod,
+  type PaidPlanId,
+} from "@/lib/plans"
 
 let stripeClient: Stripe | null = null
 
@@ -16,28 +21,52 @@ export function getStripe() {
   return stripeClient
 }
 
-export type BillingPlan = "pro" | "ultra"
+export type BillingPlan = PaidPlanId
 export type OneTimeProduct = "single-letter-pack" | "cv-review" | "interview-prep"
 
 export const billingPlans: Record<
   BillingPlan,
   {
     name: string
-    priceIdEnv: string
-    unitAmount: number
+    priceIdEnv: Record<BillingPeriod, string>
+    unitAmount: Record<BillingPeriod, number>
     lookupKey: string
   }
 > = {
+  starter: {
+    name: "ForgeLetter Starter",
+    priceIdEnv: {
+      monthly: "STRIPE_STARTER_PRICE_ID",
+      annual: "STRIPE_STARTER_ANNUAL_PRICE_ID",
+    },
+    unitAmount: {
+      monthly: 999,
+      annual: annualAmountCents(999),
+    },
+    lookupKey: "forgeletter_starter_monthly",
+  },
   pro: {
     name: "ForgeLetter Pro",
-    priceIdEnv: "STRIPE_PRO_PRICE_ID",
-    unitAmount: 1999,
+    priceIdEnv: {
+      monthly: "STRIPE_PRO_PRICE_ID",
+      annual: "STRIPE_PRO_ANNUAL_PRICE_ID",
+    },
+    unitAmount: {
+      monthly: 1999,
+      annual: annualAmountCents(1999),
+    },
     lookupKey: "forgeletter_pro_monthly",
   },
   ultra: {
     name: "ForgeLetter Ultra",
-    priceIdEnv: "STRIPE_ULTRA_PRICE_ID",
-    unitAmount: 3499,
+    priceIdEnv: {
+      monthly: "STRIPE_ULTRA_PRICE_ID",
+      annual: "STRIPE_ULTRA_ANNUAL_PRICE_ID",
+    },
+    unitAmount: {
+      monthly: 3499,
+      annual: annualAmountCents(3499),
+    },
     lookupKey: "forgeletter_ultra_monthly",
   },
 }
@@ -71,9 +100,12 @@ export const oneTimeProducts: Record<
   },
 }
 
-export function getCheckoutLineItem(plan: BillingPlan): Stripe.Checkout.SessionCreateParams.LineItem {
+export function getCheckoutLineItem(
+  plan: BillingPlan,
+  period: BillingPeriod = "monthly"
+): Stripe.Checkout.SessionCreateParams.LineItem {
   const config = billingPlans[plan]
-  const price = process.env[config.priceIdEnv]
+  const price = process.env[config.priceIdEnv[period]]
 
   if (price) {
     return { price, quantity: 1 }
@@ -83,9 +115,9 @@ export function getCheckoutLineItem(plan: BillingPlan): Stripe.Checkout.SessionC
     quantity: 1,
     price_data: {
       currency: "eur",
-      unit_amount: config.unitAmount,
+      unit_amount: config.unitAmount[period],
       recurring: {
-        interval: "month",
+        interval: period === "annual" ? "year" : "month",
       },
       product_data: {
         name: config.name,

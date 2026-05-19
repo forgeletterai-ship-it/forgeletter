@@ -2,6 +2,7 @@ import {
   defaultProfile,
   defaultSettings,
   getApplicationBriefs,
+  getCurrentPeriodBriefCount,
   getCurrentAppUser,
   getUserProfile,
   getUserSettings,
@@ -11,27 +12,36 @@ import { DashboardClient } from "./DashboardClient"
 export default async function DashboardPage() {
   const { user } = await getCurrentAppUser()
   const userId = user?.id || ""
-  const [{ briefs, setupError: briefsError }, { profile, setupError: profileError }, { settings }] =
+  const plan = user?.plan || "free"
+  const [
+    { briefs, setupError: briefsError },
+    { profile, setupError: profileError },
+    { settings },
+    { count: periodBriefCount, setupError: usageError },
+  ] =
     userId
       ? await Promise.all([
           getApplicationBriefs(userId),
           getUserProfile(userId),
           getUserSettings(userId),
+          getCurrentPeriodBriefCount(userId, plan),
         ])
       : [
           { briefs: [], setupError: "Authentication required" },
           { profile: defaultProfile, setupError: "Authentication required" },
           { settings: defaultSettings },
+          { count: 0, setupError: "Authentication required" },
         ]
 
   return (
     <>
       <DashboardClient
         initialBriefs={briefs}
-        plan={user?.plan || "free"}
+        initialPeriodBriefCount={periodBriefCount}
+        plan={plan}
         profile={profile}
         settings={settings}
-        setupError={briefsError || profileError}
+        setupError={briefsError || profileError || usageError}
       />
     </>
   )

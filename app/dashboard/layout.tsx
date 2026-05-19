@@ -2,6 +2,7 @@ import { redirect } from "next/navigation"
 import type { ReactNode } from "react"
 import { auth, signOut } from "@/auth"
 import { getCurrentAppUser } from "@/lib/app-data"
+import { getBasePlan } from "@/lib/plans"
 import { DashboardNavigation } from "./DashboardNavigation"
 
 function getInitials(name: string) {
@@ -38,10 +39,17 @@ export default async function DashboardLayout({
     email?: string | null
   }
   const plan = appUser?.plan || "free"
+  const basePlan = getBasePlan(plan)
   const displayName = appUser?.name || sessionUser.name || "ForgeLetter user"
-  const planTier = plan === "ultra" ? "ultra" : plan === "pro" ? "pro" : "regular"
+  const planTier = basePlan === "ultra" ? "ultra" : basePlan === "pro" ? "pro" : "regular"
   const planLabel =
-    planTier === "regular" ? "Regular" : planTier === "pro" ? "PRO" : "ULTRA"
+    basePlan === "ultra"
+      ? "ULTRA"
+      : basePlan === "pro"
+        ? "PRO"
+        : basePlan === "starter"
+          ? "Starter"
+          : "Regular"
 
   async function logoutAction() {
     "use server"

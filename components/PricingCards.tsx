@@ -2,8 +2,12 @@
 
 import { useState } from "react"
 import Link from "next/link"
-
-type BillingPeriod = "monthly" | "annual"
+import {
+  getBasePlan,
+  getBillingPeriod,
+  type BillingPeriod,
+  type StoredPlanId,
+} from "@/lib/plans"
 
 const plans = [
   {
@@ -56,9 +60,9 @@ const plans = [
 export type PlanKey = (typeof plans)[number]["key"]
 
 type PricingCardsProps = {
-  currentPlan?: "free" | PlanKey
+  currentPlan?: StoredPlanId
   loadingPlan?: "" | PlanKey
-  onSelectPlan?: (plan: PlanKey) => void
+  onSelectPlan?: (plan: PlanKey, period: BillingPeriod) => void
 }
 
 const securityItems = [
@@ -163,10 +167,18 @@ export function PricingCards({
         {plans.map((plan) => {
           const isHighlighted = "highlight" in plan && plan.highlight
           const period = periods[plan.key]
+          const periodNoun = period === "annual" ? "year" : "month"
+          const lettersForPeriod = period === "annual" ? plan.letters * 12 : plan.letters
           const price = period === "monthly" ? plan.monthlyCents : annualPrice(plan.monthlyCents)
           const cadence = period === "monthly" ? "/ month" : "/ year"
-          const normalizedCurrentPlan = currentPlan === "free" ? "starter" : currentPlan
-          const isCurrentPlan = normalizedCurrentPlan === plan.key
+          const currentBasePlan = getBasePlan(currentPlan)
+          const currentPeriod = getBillingPeriod(currentPlan)
+          const isCurrentPlan = currentBasePlan === plan.key && currentPeriod === period
+          const features = plan.features.map((feature) =>
+            feature.includes("letters per month")
+              ? `${lettersForPeriod} letters per ${periodNoun}`
+              : feature
+          )
           const actionClass = `pricing-arch-button${
             isHighlighted ? " pricing-arch-button--gold" : ""
           }${isCurrentPlan ? " pricing-arch-button--current" : ""}`
@@ -201,9 +213,9 @@ export function PricingCards({
 
                 <p>{plan.body}</p>
 
-                <div className="pricing-plan-limit" aria-label={`${plan.letters} letters per month`}>
+                <div className="pricing-plan-limit" aria-label={`${lettersForPeriod} letters per ${periodNoun}`}>
                   <EnvelopeIcon />
-                  <span>{plan.letters} letters / month</span>
+                  <span>{lettersForPeriod} letters / {periodNoun}</span>
                 </div>
 
                 <div className="pricing-period-toggle" role="group" aria-label={`${plan.name} billing period`}>
@@ -233,7 +245,7 @@ export function PricingCards({
                 <div className="pricing-ai-label">Included features</div>
 
                 <ul className="pricing-arch-list">
-                  {plan.features.map((feature) => (
+                  {features.map((feature) => (
                     <li key={feature}>{feature}</li>
                   ))}
                 </ul>
@@ -243,7 +255,7 @@ export function PricingCards({
                     className={actionClass}
                     type="button"
                     disabled={Boolean(loadingPlan) || isCurrentPlan}
-                    onClick={() => onSelectPlan(plan.key)}
+                    onClick={() => onSelectPlan(plan.key, period)}
                   >
                     {actionLabel}
                   </button>

@@ -2,9 +2,10 @@
 
 import { useState } from "react"
 import { PricingCards, type PlanKey } from "@/components/PricingCards"
+import type { BillingPeriod, StoredPlanId } from "@/lib/plans"
 
 type BillingClientProps = {
-  currentPlan: "free" | "pro" | "ultra"
+  currentPlan: StoredPlanId
 }
 
 export function BillingClient({ currentPlan }: BillingClientProps) {
@@ -28,14 +29,7 @@ export function BillingClient({ currentPlan }: BillingClientProps) {
     }
   }
 
-  async function startCheckout(plan: PlanKey) {
-    if (plan === "starter") {
-      setLoadingPlan("starter")
-      await openPortal()
-      setLoadingPlan("")
-      return
-    }
-
+  async function startCheckout(plan: PlanKey, period: BillingPeriod) {
     setError("")
     setLoadingPlan(plan)
 
@@ -43,7 +37,7 @@ export function BillingClient({ currentPlan }: BillingClientProps) {
       const res = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan }),
+        body: JSON.stringify({ plan, period }),
       })
       const data = await readJsonResponse(res)
 
@@ -87,7 +81,7 @@ export function BillingClient({ currentPlan }: BillingClientProps) {
 
       <section className="dashboard-pricing-surface" aria-label="Subscription plans">
         <PricingCards
-          currentPlan={currentPlan === "free" ? "starter" : currentPlan}
+          currentPlan={currentPlan}
           loadingPlan={loadingPlan}
           onSelectPlan={startCheckout}
         />

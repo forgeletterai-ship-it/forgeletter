@@ -2,9 +2,11 @@
 
 import { useMemo, useState } from "react"
 import type { ApplicationBrief, UserProfile, UserSettings } from "@/lib/app-data"
+import { getPlanUsageDetails } from "@/lib/plans"
 
 type DashboardClientProps = {
   initialBriefs: ApplicationBrief[]
+  initialPeriodBriefCount: number
   plan: string
   profile: UserProfile
   settings: UserSettings
@@ -241,6 +243,7 @@ function makePdf(text: string) {
 
 export function DashboardClient({
   initialBriefs,
+  initialPeriodBriefCount,
   plan,
   profile,
   settings,
@@ -250,6 +253,7 @@ export function DashboardClient({
     ? (settings.default_tone as ToneName)
     : "Professional"
   const [briefs, setBriefs] = useState(initialBriefs)
+  const [periodBriefCount, setPeriodBriefCount] = useState(initialPeriodBriefCount)
   const [role, setRole] = useState(initialBriefs[0]?.role || "Senior Business Consultant")
   const [company, setCompany] = useState(initialBriefs[0]?.company || "Apple")
   const [tone, setTone] = useState<ToneName>(normalizedTone)
@@ -261,15 +265,7 @@ export function DashboardClient({
   const [message, setMessage] = useState("")
   const [error, setError] = useState(setupError || "")
 
-  const planTier = plan === "ultra" ? "ULTRA" : plan === "pro" ? "PRO" : "Regular"
-  const planLimit = plan === "ultra" ? 35 : plan === "pro" ? 20 : 8
-  const planUsed = Math.min(100, Math.round((briefs.length / planLimit) * 100))
-  const planCopy =
-    plan === "ultra"
-      ? "Your Ultra workspace is active. Generate premium cover letters with the full workflow."
-      : plan === "pro"
-        ? "Your Pro workspace is active. Build stronger letters with a smoother weekly workflow."
-        : "Your workspace is active. Create focused cover letter briefs and upgrade when you need more."
+  const planUsage = getPlanUsageDetails(plan, periodBriefCount)
   const generatedLetter = useMemo(() => {
     if (!role && !company) {
       return sampleLetter
@@ -304,6 +300,11 @@ export function DashboardClient({
       }
 
       setBriefs((current) => [data.brief, ...current])
+      if (typeof data.usage?.used === "number") {
+        setPeriodBriefCount(data.usage.used)
+      } else {
+        setPeriodBriefCount((current) => current + 1)
+      }
       setMessage("Brief saved to history.")
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not save the brief.")
@@ -350,16 +351,18 @@ export function DashboardClient({
         <div className="cover-plan-content">
           <div className="cover-section-row">
             <div>
-              <h2>{planTier} plan</h2>
-              <p>{planCopy}</p>
+              <h2>{planUsage.label} plan</h2>
+              <p>{planUsage.copy}</p>
             </div>
           </div>
           <div className="cover-plan-meter">
-            <span />
+            <span style={{ width: `${planUsage.usedPercent}%` }} />
           </div>
           <div className="cover-plan-meta">
-            <strong>{planUsed}% <span>of plan used</span></strong>
-            <span>{plan === "free" ? "Upgrade anytime" : "Manage renewal in billing"}</span>
+            <strong>{planUsage.remaining} <span>letters left</span></strong>
+            <span>
+              {planUsage.used} of {planUsage.limit} used this {planUsage.periodNoun}
+            </span>
           </div>
         </div>
       </section>

@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
 import Stripe from "stripe"
+import {
+  getStoredPlanId,
+  normalizeBillingPeriod,
+  normalizeStoredPlan,
+  type StoredPlanId,
+} from "@/lib/plans"
 import { customerSafeSupabaseError, supabaseAdmin } from "@/lib/supabase"
 import { getStripe, type BillingPlan } from "@/lib/stripe"
 
@@ -71,15 +77,21 @@ export async function POST(req: NextRequest) {
 
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const plan = session.metadata?.plan as BillingPlan | undefined
+  const period = normalizeBillingPeriod(session.metadata?.period)
+  const planId = normalizeStoredPlan(session.metadata?.planId || (plan ? getStoredPlanId(plan, period) : "free"))
   const email = session.metadata?.email || session.customer_details?.email
 
   if (!plan || !email) return
 
-  await updateUserPlan(email, plan)
+  await updateUserPlan(email, planId)
 }
 
 async function handleSubscriptionChange(subscription: Stripe.Subscription) {
   const plan = subscription.metadata?.plan as BillingPlan | undefined
+  const period =
+    subscription.metadata?.period ||
+    (subscription.items.data[0]?.price.recurring?.interval === "year" ? "annual" : "monthly")
+  const planId = normalizeStoredPlan(subscription.metadata?.planId || (plan ? getStoredPlanId(plan, normalizeBillingPeriod(period)) : "free"))
   const email = subscription.metadata?.email || (await getCustomerEmail(subscription.customer))
 
   if (!email) return
@@ -90,7 +102,7 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription) {
   }
 
   if (plan) {
-    await updateUserPlan(email, plan)
+    await updateUserPlan(email, planId)
   }
 }
 
@@ -108,7 +120,7 @@ async function getCustomerEmail(customer: string | Stripe.Customer | Stripe.Dele
   return stripeCustomer.email
 }
 
-async function updateUserPlan(email: string, plan: BillingPlan | "free") {
+async function updateUserPlan(email: string, plan: StoredPlanId) {
   try {
     const { error } = await supabaseAdmin
       .from("users")

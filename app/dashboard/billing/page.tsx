@@ -1,5 +1,6 @@
 import { BillingClient } from "./BillingClient"
 import { getCurrentAppUser } from "@/lib/app-data"
+import { formatPlanLabel } from "@/lib/plans"
 
 export default async function BillingPage() {
   const { user } = await getCurrentAppUser()
@@ -16,7 +17,7 @@ export default async function BillingPage() {
           </p>
         </div>
         <span className="status-pill active">
-          {user?.plan === "free" ? "Starter" : user?.plan.toUpperCase()}
+          {formatPlanLabel(user?.plan || "free")}
         </span>
       </div>
 

@@ -1,7 +1,13 @@
 import { auth } from "@/auth"
+import {
+  getBillingPeriod,
+  getCurrentPlanPeriodStart,
+  normalizeStoredPlan,
+  type StoredPlanId,
+} from "@/lib/plans"
 import { customerSafeSupabaseError, supabaseAdmin } from "@/lib/supabase"
 
-export type PlanId = "free" | "pro" | "ultra"
+export type PlanId = StoredPlanId
 
 export type AppUser = {
   id: string
@@ -54,7 +60,7 @@ export const defaultSettings: UserSettings = {
 }
 
 export function normalizePlan(plan: unknown): PlanId {
-  return plan === "pro" || plan === "ultra" ? plan : "free"
+  return normalizeStoredPlan(plan)
 }
 
 type DatabaseError = {
@@ -178,6 +184,32 @@ export async function getApplicationBriefs(userId: string) {
   } catch (error) {
     return {
       briefs: [] as ApplicationBrief[],
+      setupError: dataErrorMessage(error, "application_briefs"),
+    }
+  }
+}
+
+export async function getCurrentPeriodBriefCount(userId: string, plan: PlanId) {
+  try {
+    const period = getBillingPeriod(plan)
+    const periodStart = getCurrentPlanPeriodStart(period).toISOString()
+    const { count, error } = await supabaseAdmin
+      .from("application_briefs")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .gte("created_at", periodStart)
+
+    if (error) {
+      return {
+        count: 0,
+        setupError: dataErrorMessage(error, "application_briefs"),
+      }
+    }
+
+    return { count: count || 0 }
+  } catch (error) {
+    return {
+      count: 0,
       setupError: dataErrorMessage(error, "application_briefs"),
     }
   }

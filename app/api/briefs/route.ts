@@ -4,6 +4,11 @@ import {
   getApplicationBriefs,
   getCurrentAppUser,
 } from "@/lib/app-data"
+import {
+  getBillingPeriod,
+  getCurrentPlanPeriodStart,
+  getPlanUsageDetails,
+} from "@/lib/plans"
 import { supabaseAdmin } from "@/lib/supabase"
 
 const allowedTones = new Set(["Professional", "Warm", "Direct"])
@@ -52,6 +57,36 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    const billingPeriod = getBillingPeriod(user.plan)
+    const usageLimit = getPlanUsageDetails(user.plan, 0).limit
+    const periodStart = getCurrentPlanPeriodStart(billingPeriod).toISOString()
+    const { count, error: countError } = await supabaseAdmin
+      .from("application_briefs")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .gte("created_at", periodStart)
+
+    if (countError) {
+      return NextResponse.json(
+        { error: dataErrorMessage(countError, "application_briefs") },
+        { status: 500 }
+      )
+    }
+
+    const usedThisPeriod = count || 0
+
+    if (usedThisPeriod >= usageLimit) {
+      const usage = getPlanUsageDetails(user.plan, usedThisPeriod)
+
+      return NextResponse.json(
+        {
+          error: `You have used all ${usage.limit} letters for this ${usage.periodNoun}. Upgrade your plan or wait until your allowance resets.`,
+          usage,
+        },
+        { status: 402 }
+      )
+    }
+
     const { data, error: saveError } = await supabaseAdmin
       .from("application_briefs")
       .insert({
@@ -73,7 +108,10 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    return NextResponse.json({ brief: data })
+    return NextResponse.json({
+      brief: data,
+      usage: getPlanUsageDetails(user.plan, usedThisPeriod + 1),
+    })
   } catch (error) {
     return NextResponse.json(
       { error: dataErrorMessage(error, "application_briefs") },

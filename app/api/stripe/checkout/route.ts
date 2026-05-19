@@ -7,6 +7,7 @@ import {
   getStripe,
   type BillingPlan,
 } from "@/lib/stripe"
+import { getStoredPlanId, normalizeBillingPeriod } from "@/lib/plans"
 
 export async function POST(req: NextRequest) {
   try {
@@ -16,14 +17,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Authentication required" }, { status: 401 })
     }
 
-    const { plan } = (await req.json().catch(() => ({}))) as {
+    const { plan, period: requestedPeriod } = (await req.json().catch(() => ({}))) as {
       plan?: BillingPlan
+      period?: string
     }
 
     if (!plan || !(plan in billingPlans)) {
       return NextResponse.json({ error: "Invalid billing plan" }, { status: 400 })
     }
 
+    const period = normalizeBillingPeriod(requestedPeriod)
+    const planId = getStoredPlanId(plan, period)
     const user = session.user as {
       id?: string
       email?: string | null
@@ -34,7 +38,7 @@ export async function POST(req: NextRequest) {
 
     const checkoutSession = await stripe.checkout.sessions.create({
       mode: "subscription",
-      line_items: [getCheckoutLineItem(plan)],
+      line_items: [getCheckoutLineItem(plan, period)],
       customer_email: user.email || undefined,
       client_reference_id: user.id,
       success_url: `${appUrl}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
@@ -43,12 +47,16 @@ export async function POST(req: NextRequest) {
       billing_address_collection: "auto",
       metadata: {
         plan,
+        period,
+        planId,
         userId: user.id || "",
         email: user.email || "",
       },
       subscription_data: {
         metadata: {
           plan,
+          period,
+          planId,
           userId: user.id || "",
           email: user.email || "",
         },
