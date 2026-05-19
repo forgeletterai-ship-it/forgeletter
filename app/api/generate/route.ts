@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextRequest } from "next/server"
 import { generateCoverLetter } from "@/lib/agents"
 import type { Tier, Tone } from "@/lib/agents"
 import { dataErrorMessage, getCurrentAppUser } from "@/lib/app-data"
@@ -10,9 +10,9 @@ import {
 } from "@/lib/plans"
 import { supabaseAdmin } from "@/lib/supabase"
 
-// The 12-agent pipeline can take 30-120 seconds. Inline v1 sets the
-// route's max duration to the Vercel ceiling. When we add the queue,
-// this route just enqueues and returns immediately.
+// Inline pipeline streams its progress as SSE. Function runs until the
+// stream is closed (i.e. until the pipeline finishes), so we ask Vercel
+// for the maximum allowed duration on our plan.
 export const maxDuration = 300
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -23,10 +23,11 @@ const ALLOWED_TONES: Tone[] = ["professional", "confident", "warm", "concise"]
 
 function normalizeTone(input: unknown): Tone {
   const lower = String(input || "").trim().toLowerCase()
-  if (lower === "direct") return "confident" // map legacy app value
-  return (ALLOWED_TONES as readonly string[]).includes(lower)
-    ? (lower as Tone)
-    : "professional"
+  if (lower === "direct") return "confident"
+  if (lower === "professional" || lower === "confident" || lower === "warm" || lower === "concise") {
+    return lower
+  }
+  return "professional"
 }
 
 function planToTier(plan: string): Tier {
@@ -37,11 +38,36 @@ function planToTier(plan: string): Tier {
   return "starter"
 }
 
+function sseError(message: string, status: number): Response {
+  const encoder = new TextEncoder()
+  const stream = new ReadableStream({
+    start(controller) {
+      controller.enqueue(
+        encoder.encode(`data: ${JSON.stringify({ type: "error", message, status })}\n\n`)
+      )
+      controller.close()
+    },
+  })
+  return new Response(stream, {
+    status,
+    headers: sseHeaders(),
+  })
+}
+
+function sseHeaders(): Record<string, string> {
+  return {
+    "Content-Type": "text/event-stream",
+    "Cache-Control": "no-cache, no-transform",
+    Connection: "keep-alive",
+    "X-Accel-Buffering": "no",
+  }
+}
+
 export async function POST(req: NextRequest) {
   // 1. Auth
   const { user, error } = await getCurrentAppUser()
   if (!user) {
-    return NextResponse.json({ error: error ?? "Authentication required" }, { status: 401 })
+    return sseError(error ?? "Authentication required", 401)
   }
 
   // 2. Parse + validate body
@@ -60,21 +86,13 @@ export async function POST(req: NextRequest) {
   const tone = normalizeTone(body.tone)
 
   if (resumeText.length < MIN_RESUME_CHARS) {
-    return NextResponse.json(
-      { error: `Resume must be at least ${MIN_RESUME_CHARS} characters.` },
-      { status: 400 }
-    )
+    return sseError(`Resume must be at least ${MIN_RESUME_CHARS} characters.`, 400)
   }
   if (jobDescription.length < MIN_JD_CHARS) {
-    return NextResponse.json(
-      { error: `Job description must be at least ${MIN_JD_CHARS} characters.` },
-      { status: 400 }
-    )
+    return sseError(`Job description must be at least ${MIN_JD_CHARS} characters.`, 400)
   }
 
-  // 3. Quota check — count generations in the current billing period.
-  // We count from the new generated_letters table; the legacy
-  // application_briefs table is workspace-only and does not consume quota.
+  // 3. Quota check
   try {
     const period = getBillingPeriod(user.plan)
     const periodStart = getCurrentPlanPeriodStart(period).toISOString()
@@ -86,32 +104,21 @@ export async function POST(req: NextRequest) {
       .in("generation_status", ["queued", "running", "passed"])
 
     if (countError) {
-      return NextResponse.json(
-        { error: dataErrorMessage(countError, "generated_letters") },
-        { status: 500 }
-      )
+      return sseError(dataErrorMessage(countError, "generated_letters"), 500)
     }
 
     const usage = getPlanUsageDetails(user.plan, count || 0)
     if ((count || 0) >= usage.limit) {
-      return NextResponse.json(
-        {
-          error: `You have used all ${usage.limit} letters for this ${usage.periodNoun}. Upgrade your plan or wait until your allowance resets.`,
-          usage,
-          upgrade: true,
-        },
-        { status: 402 }
+      return sseError(
+        `You have used all ${usage.limit} letters for this ${usage.periodNoun}. Upgrade your plan or wait until your allowance resets.`,
+        402
       )
     }
   } catch (err) {
-    return NextResponse.json(
-      { error: dataErrorMessage(err, "generated_letters") },
-      { status: 500 }
-    )
+    return sseError(dataErrorMessage(err, "generated_letters"), 500)
   }
 
-  // 4. Create the generation row up front so it's tracked even if the
-  // pipeline crashes mid-flight.
+  // 4. Insert the generation row up front.
   const tier = planToTier(user.plan)
   const insertResult = await supabaseAdmin
     .from("generated_letters")
@@ -129,87 +136,126 @@ export async function POST(req: NextRequest) {
     .single()
 
   if (insertResult.error || !insertResult.data) {
-    return NextResponse.json(
-      { error: dataErrorMessage(insertResult.error, "generated_letters") },
-      { status: 500 }
-    )
+    return sseError(dataErrorMessage(insertResult.error, "generated_letters"), 500)
   }
 
   const generationId = insertResult.data.id as string
 
-  // 5. Run the pipeline inline. With the queue (Phase 2) this becomes
-  // `enqueue(...)` and we return generationId immediately.
-  try {
-    const result = await generateCoverLetter(
-      {
-        resumeText,
-        jobDescription,
-        jobTitle,
-        companyName,
-        tone,
-        tier,
-        userId: user.id,
-        generationId,
-      },
-      supabaseAdmin,
-      undefined // no progress callback in inline v1; SSE wires this later
-    )
+  // 5. Stream the pipeline progress as SSE.
+  const encoder = new TextEncoder()
+  let closed = false
 
-    // 6. Persist result on the generation row.
-    const { error: updateError } = await supabaseAdmin
-      .from("generated_letters")
-      .update({
-        final_cover_letter: result.finalLetter,
-        final_score: result.finalScore,
-        hallucination_risk: result.hallucinationRisk,
-        ats_score: result.atsScore ?? null,
-        ats_verdict: result.atsVerdict ?? null,
-        ats_covered_keywords: result.atsCoveredKeywords ?? [],
-        ats_missing_keywords: result.atsMissingKeywords ?? [],
-        rewrite_cycles: result.rewriteCycles,
-        agents_run: result.agentsRun,
-        generation_status: result.status,
-        failure_reason: result.failureReason ?? null,
-        total_duration_ms: result.totalDurationMs,
-        completed_at: new Date().toISOString(),
-      })
-      .eq("id", generationId)
+  const stream = new ReadableStream({
+    async start(controller) {
+      const send = (payload: unknown) => {
+        if (closed) return
+        try {
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify(payload)}\n\n`)
+          )
+        } catch {
+          // controller closed mid-write — pipeline keeps running and persists results
+        }
+      }
 
-    if (updateError) {
-      console.warn("[/api/generate] failed to persist result row:", updateError)
-    }
+      send({ type: "init", generationId, tier, tone })
 
-    return NextResponse.json({
-      generationId,
-      status: result.status,
-      finalLetter: result.finalLetter,
-      finalScore: result.finalScore,
-      atsScore: result.atsScore,
-      atsVerdict: result.atsVerdict,
-      atsCoveredKeywords: result.atsCoveredKeywords,
-      atsMissingKeywords: result.atsMissingKeywords,
-      hallucinationRisk: result.hallucinationRisk,
-      rewriteCycles: result.rewriteCycles,
-      agentsRun: result.agentsRun,
-      durationMs: result.totalDurationMs,
-      failureReason: result.failureReason,
-    })
-  } catch (err) {
-    // Best-effort: mark as failed before surfacing the error
-    await supabaseAdmin
-      .from("generated_letters")
-      .update({
-        generation_status: "failed",
-        failure_reason: err instanceof Error ? err.message : "Pipeline crashed",
-        completed_at: new Date().toISOString(),
-      })
-      .eq("id", generationId)
-      .then(() => undefined, () => undefined)
+      try {
+        const result = await generateCoverLetter(
+          {
+            resumeText,
+            jobDescription,
+            jobTitle,
+            companyName,
+            tone,
+            tier,
+            userId: user.id,
+            generationId,
+          },
+          supabaseAdmin,
+          async (event) => {
+            send({ type: "progress", ...event })
+          }
+        )
 
-    const message =
-      err instanceof Error && err.message.includes("ANTHROPIC_API_KEY")
-        ? "AI engine is not configured. Please contact support."
-        : "Your letter could not be completed. Please try again — your quota has not been used."
-    return NextResponse.json({ error: message, generationId }, { status: 500 })
-  }
+        const { error: updateError } = await supabaseAdmin
+          .from("generated_letters")
+          .update({
+            final_cover_letter: result.finalLetter,
+            final_score: result.finalScore,
+            hallucination_risk: result.hallucinationRisk,
+            ats_score: result.atsScore ?? null,
+            ats_verdict: result.atsVerdict ?? null,
+            ats_covered_keywords: result.atsCoveredKeywords ?? [],
+            ats_missing_keywords: result.atsMissingKeywords ?? [],
+            rewrite_cycles: result.rewriteCycles,
+            agents_run: result.agentsRun,
+            generation_status: result.status,
+            failure_reason: result.failureReason ?? null,
+            total_duration_ms: result.totalDurationMs,
+            completed_at: new Date().toISOString(),
+          })
+          .eq("id", generationId)
+
+        if (updateError) {
+          console.warn("[/api/generate] persist failed:", updateError)
+        }
+
+        send({
+          type: "complete",
+          generationId,
+          status: result.status,
+          finalLetter: result.finalLetter,
+          finalScore: result.finalScore,
+          atsScore: result.atsScore,
+          atsVerdict: result.atsVerdict,
+          atsCoveredKeywords: result.atsCoveredKeywords,
+          atsMissingKeywords: result.atsMissingKeywords,
+          hallucinationRisk: result.hallucinationRisk,
+          rewriteCycles: result.rewriteCycles,
+          agentsRun: result.agentsRun,
+          durationMs: result.totalDurationMs,
+          failureReason: result.failureReason,
+        })
+      } catch (err) {
+        await supabaseAdmin
+          .from("generated_letters")
+          .update({
+            generation_status: "failed",
+            failure_reason: err instanceof Error ? err.message : "Pipeline crashed",
+            completed_at: new Date().toISOString(),
+          })
+          .eq("id", generationId)
+          .then(
+            () => undefined,
+            () => undefined
+          )
+
+        const message =
+          err instanceof Error && err.message.includes("ANTHROPIC_API_KEY")
+            ? "AI engine is not configured. Please contact support."
+            : "Your letter could not be completed. Please try again — your quota has not been used."
+
+        send({ type: "error", message, generationId })
+      } finally {
+        if (!closed) {
+          closed = true
+          try {
+            controller.close()
+          } catch {
+            // already closed
+          }
+        }
+      }
+    },
+
+    cancel() {
+      // Client disconnected. Mark closed so we stop writing; the pipeline
+      // continues until the orchestrator finishes, and the row is updated
+      // when it does — the user can still find the result on their dashboard.
+      closed = true
+    },
+  })
+
+  return new Response(stream, { headers: sseHeaders() })
 }
