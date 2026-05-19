@@ -15,12 +15,22 @@ const plans = [
     key: "starter",
     body: "For building your first applications with a focused monthly plan.",
     letters: 8,
+    rewrites: 0,
     monthlyCents: 999,
     features: [
-      "8 letters per month",
       "Both templates",
       "Photo upload",
+      "Basic history",
     ],
+    agents: [
+      "Resume Analyst",
+      "Job Analyst",
+      "Example Retrieval",
+      "Writer Agent",
+      "Hallucination Check",
+      "Quality Gate",
+    ],
+    rewriteCopy: "Tone rewrites use another letter from your allowance.",
     cta: "Choose Starter",
     href: "/auth/signup",
   },
@@ -29,13 +39,24 @@ const plans = [
     key: "pro",
     body: "For active job seekers who want a smoother weekly workflow.",
     letters: 20,
+    rewrites: 1,
     monthlyCents: 1999,
     features: [
-      "20 letters per month",
       "ATS score",
       "LinkedIn import",
-      "1 rewrite",
+      "1 tone rewrite included",
     ],
+    agents: [
+      "Resume Analyst",
+      "Job Analyst",
+      "Match Analyst",
+      "Example Retrieval",
+      "Writer Agent",
+      "Tone Adapter",
+      "ATS Agent",
+      "Quality Gate",
+    ],
+    rewriteCopy: "1 different-tone rewrite is included before another letter is used.",
     cta: "Choose Pro",
     href: "/auth/signup",
     highlight: true,
@@ -45,13 +66,28 @@ const plans = [
     key: "ultra",
     body: "For high-volume applications and international searches.",
     letters: 35,
+    rewrites: 3,
     monthlyCents: 3499,
     features: [
-      "35 letters per month",
       "All 12 agents",
-      "3 rewrites",
+      "3 tone rewrites included",
       "Full pipeline",
     ],
+    agents: [
+      "Input Cleaner",
+      "Resume Analyst",
+      "Job Analyst",
+      "Match Analyst",
+      "Evidence Mapper",
+      "Example Retrieval",
+      "Writer Agent",
+      "Tone Adapter",
+      "ATS Agent",
+      "HM Critic",
+      "Final Editor",
+      "Quality Gate",
+    ],
+    rewriteCopy: "3 different-tone rewrites are included before another letter is used.",
     cta: "Choose Ultra",
     href: "/auth/signup",
   },
@@ -249,6 +285,25 @@ export function PricingCards({
                     <li key={feature}>{feature}</li>
                   ))}
                 </ul>
+
+                <div className="pricing-ai-label pricing-ai-label--agents">
+                  AI agents included
+                </div>
+
+                <ul className="pricing-agent-list" aria-label={`${plan.name} included AI agents`}>
+                  {plan.agents.map((agent) => (
+                    <li key={agent}>{agent}</li>
+                  ))}
+                </ul>
+
+                <div className="pricing-rewrite-note">
+                  <strong>
+                    {plan.rewrites === 0
+                      ? "No included rewrites"
+                      : `${plan.rewrites} included ${plan.rewrites === 1 ? "rewrite" : "rewrites"}`}
+                  </strong>
+                  <span>{plan.rewriteCopy}</span>
+                </div>
 
                 {onSelectPlan ? (
                   <button
