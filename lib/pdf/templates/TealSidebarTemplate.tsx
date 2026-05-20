@@ -98,17 +98,31 @@ const sb = StyleSheet.create({
   },
   photoWrap: {
     position: "absolute",
-    top: 75,
-    left: SIDEBAR_W / 2 - 55,
-    width: 110,
-    height: 110,
+    top: 92,
+    left: SIDEBAR_W / 2 - 52,
+    width: 104,
+    height: 104,
+  },
+  photoRingOuter: {
+    // A second, larger gold ring sitting concentric to the photo —
+    // matches the reference where the photo has a delicate inner +
+    // outer gold ring giving it a more refined "framed" look.
+    position: "absolute",
+    top: -8,
+    left: -8,
+    width: 120,
+    height: 120,
+    borderRadius: 999,
+    borderWidth: 0.8,
+    borderColor: COLORS.gold,
+    opacity: 0.7,
   },
   photoRing: {
     position: "absolute",
     top: 0,
     left: 0,
-    width: 110,
-    height: 110,
+    width: 104,
+    height: 104,
     borderRadius: 999,
     borderWidth: 2.5,
     borderColor: COLORS.gold,
@@ -117,15 +131,15 @@ const sb = StyleSheet.create({
     position: "absolute",
     top: 6,
     left: 6,
-    width: 98,
-    height: 98,
+    width: 92,
+    height: 92,
     borderRadius: 999,
     backgroundColor: "#D4CCC0",
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
   },
-  photoImg: { width: 98, height: 98, objectFit: "cover" },
+  photoImg: { width: 92, height: 92, objectFit: "cover" },
   initials: {
     fontFamily: "Inter",
     fontWeight: "bold",
@@ -192,43 +206,133 @@ const sb = StyleSheet.create({
 })
 
 function TopShapes() {
-  // Two cream cloud shapes at the top of the sidebar. They form a
-  // soft frame around the photo circle (which sits at y=75-185
-  // inside this 200pt-tall area).
+  // Premium organic header composition.
+  //
+  // Design intent: a layered cream "bloom" composition framing the
+  // sidebar's upper area. Built up with three cream layers (different
+  // opacities for depth) and three refined gold accent curves +
+  // a small partial-ring accent.
+  //
+  // Each Bezier uses 8+ control points so the curves are continuously
+  // smooth (no audible inflection corners) — the previous version's
+  // shapes looked angular because they had only 3-4 control points
+  // per path.
+  const W = SIDEBAR_W
   return (
     <View style={sb.topShapesWrap}>
-      <Svg width={SIDEBAR_W} height={200} viewBox={`0 0 ${SIDEBAR_W} 200`}>
-        {/* Large cream cloud from top-left.
-            Extends right to ~125pt and down to ~155pt, sweeping in a
-            big curve that frames the left side of the photo. */}
+      <Svg width={W} height={200} viewBox={`0 0 ${W} 200`}>
+        {/* ── Layer 1: warm peach undertone (deep back) ─────────────
+            Gives the composition warmth without dominating. */}
         <Path
-          d={`M 0 0 L 125 0 C 122 25, 115 55, 100 80 C 85 110, 65 135, 35 145 C 12 152, 0 130, 0 95 Z`}
+          d={`M 0 0
+              L 138 0
+              C 138 16, 134 30, 126 44
+              C 116 60, 102 74, 86 86
+              C 64 102, 38 110, 18 106
+              C 4 102, 0 92, 0 78
+              Z`}
+          fill="#E8D9BC"
+          fillOpacity={0.85}
+        />
+
+        {/* ── Layer 2: main cream bloom (left, dominant) ────────────
+            The largest, most prominent cream shape — sits on top
+            of the peach undertone for a soft layered effect. */}
+        <Path
+          d={`M 0 0
+              L 130 0
+              C 130 14, 126 28, 119 42
+              C 110 56, 98 70, 84 81
+              C 64 96, 42 102, 24 98
+              C 8 94, 0 84, 0 70
+              L 0 0 Z`}
           fill={COLORS.cream}
         />
-        {/* Cream curve from top-right.
-            Curves in and down from top-right, framing the right side
-            of the photo. */}
+
+        {/* ── Layer 3: cream accent (right) ─────────────────────────
+            Complementary smaller shape — curves in from top-right. */}
         <Path
-          d={`M ${SIDEBAR_W} 0 L 115 0 C 122 30, 145 55, 175 75 C 195 88, ${SIDEBAR_W} 80, ${SIDEBAR_W} 50 Z`}
+          d={`M ${W} 0
+              L 102 0
+              C 106 14, 115 28, 128 42
+              C 144 56, 162 65, 180 68
+              C 194 70, ${W - 6} 67, ${W} 56
+              L ${W} 0 Z`}
           fill={COLORS.cream}
         />
-        {/* Gold accent stroke tracing the inner edge of the left cloud */}
+
+        {/* ── Layer 4: subtle cream highlight (top center) ──────────
+            Bridges the two main shapes for a unified look. */}
         <Path
-          d={`M 0 95 C 5 125, 25 148, 50 145 C 75 140, 92 120, 105 90 C 115 65, 122 35, 122 5`}
+          d={`M 92 0
+              L 108 0
+              C 110 12, 109 26, 105 38
+              C 101 48, 95 48, 91 38
+              C 88 26, 88 12, 92 0
+              Z`}
+          fill="#F2E8D2"
+          fillOpacity={0.95}
+        />
+
+        {/* ── Gold accent 1: refined curve tracing left bloom ──────
+            Long sweeping gold line with strokeLinecap rounded for
+            elegant endpoints. */}
+        <Path
+          d={`M 0 72
+              C 6 92, 22 102, 44 100
+              C 64 96, 82 88, 96 76
+              C 110 64, 120 48, 126 30
+              C 130 18, 132 8, 132 2`}
           stroke={COLORS.gold}
-          strokeWidth={1}
+          strokeWidth={1.1}
+          fill="none"
+          strokeLinecap="round"
+        />
+
+        {/* ── Gold accent 2: refined curve on right accent ─────────
+            Mirrors the left gold accent, creating compositional
+            balance. */}
+        <Path
+          d={`M 105 4
+              C 110 18, 119 30, 132 42
+              C 148 56, 166 66, 184 68
+              C 196 69, ${W - 6} 65, ${W - 1} 56`}
+          stroke={COLORS.gold}
+          strokeWidth={1.1}
+          fill="none"
+          strokeLinecap="round"
+        />
+
+        {/* ── Gold accent 3: small decorative ring on upper-right ──
+            Adds intricacy. Looks like an intentional designer
+            mark rather than a random doodle. */}
+        <Path
+          d={`M 168 82
+              C 178 78, 188 84, 188 95
+              C 188 106, 178 110, 168 106
+              C 160 102, 158 90, 168 82
+              Z`}
+          stroke={COLORS.gold}
+          strokeWidth={0.9}
           fill="none"
         />
-        {/* Gold accent stroke on the right cloud */}
+
+        {/* ── Small gold accent dot ───────────────────────────────
+            Tiny detail that signals craftsmanship. */}
         <Path
-          d={`M 117 5 C 125 30, 145 55, 173 73 C 188 80, ${SIDEBAR_W - 3} 76, ${SIDEBAR_W} 55`}
-          stroke={COLORS.gold}
-          strokeWidth={1}
-          fill="none"
+          d={`M 148 20
+              m -1.7 0
+              a 1.7 1.7 0 1 0 3.4 0
+              a 1.7 1.7 0 1 0 -3.4 0`}
+          fill={COLORS.gold}
         />
-        {/* Tiny gold accent dot on top, like the reference */}
+
+        {/* ── Tiny secondary accent dot ───────────────────────────*/}
         <Path
-          d={`M 145 20 m -1.5 0 a 1.5 1.5 0 1 0 3 0 a 1.5 1.5 0 1 0 -3 0`}
+          d={`M 88 6
+              m -1 0
+              a 1 1 0 1 0 2 0
+              a 1 1 0 1 0 -2 0`}
           fill={COLORS.gold}
         />
       </Svg>
@@ -245,6 +349,9 @@ function PhotoCircle({
 }) {
   return (
     <View style={sb.photoWrap}>
+      {/* Outer thin gold ring (decorative, sits ~8pt outside the photo) */}
+      <View style={sb.photoRingOuter} />
+      {/* Main gold ring */}
       <View style={sb.photoRing} />
       <View style={sb.photoInner}>
         {photoDataUrl ? (
