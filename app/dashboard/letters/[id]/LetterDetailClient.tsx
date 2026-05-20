@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useCallback, useState } from "react"
 import { ATSScoreCard, type ATSData, type ATSVerdict } from "@/components/ATSScoreCard"
+import { TemplatePickerModal } from "@/components/TemplatePickerModal"
 
 interface Letter {
   id: string
@@ -39,6 +40,7 @@ export function LetterDetailClient({
   const [copyStatus, setCopyStatus] = useState<"idle" | "copied">("idle")
   const [deleting, setDeleting] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [showPdfPicker, setShowPdfPicker] = useState(false)
 
   const onSave = useCallback(async () => {
     setSaveStatus("saving")
@@ -151,9 +153,13 @@ export function LetterDetailClient({
                     ? "Save failed"
                     : "Save changes"}
             </button>
-            <a className="button-secondary" href={`/api/letters/${letter.id}/pdf`}>
+            <button
+              type="button"
+              className="button-secondary"
+              onClick={() => setShowPdfPicker(true)}
+            >
               Download PDF
-            </a>
+            </button>
             <button
               className="button-ghost danger-link"
               onClick={() => setShowDeleteConfirm(true)}
@@ -183,6 +189,13 @@ export function LetterDetailClient({
           </ul>
         </details>
       </div>
+
+      {showPdfPicker && (
+        <TemplatePickerModal
+          letterId={letter.id}
+          onClose={() => setShowPdfPicker(false)}
+        />
+      )}
 
       {showDeleteConfirm && (
         <div

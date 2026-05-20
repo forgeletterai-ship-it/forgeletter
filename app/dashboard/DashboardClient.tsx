@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useMemo, useRef, useState } from "react"
+import { TemplatePickerModal } from "@/components/TemplatePickerModal"
 import type { ApplicationBrief, UserProfile, UserSettings } from "@/lib/app-data"
 import { getPlanUsageDetails } from "@/lib/plans"
 
@@ -259,6 +260,9 @@ export function DashboardClient({
   const [genErrorMsg, setGenErrorMsg] = useState<string | null>(null)
   const abortRef = useRef<AbortController | null>(null)
 
+  // PDF template picker
+  const [showPdfPicker, setShowPdfPicker] = useState(false)
+
   const planUsage = getPlanUsageDetails(plan, periodBriefCount)
   const isBasicTier = plan === "free" || plan.startsWith("starter")
 
@@ -467,7 +471,7 @@ export function DashboardClient({
       setError("Generate a letter first.")
       return
     }
-    window.location.href = `/api/letters/${latestLetter.id}/pdf`
+    setShowPdfPicker(true)
   }
 
   // ---- Render helpers for letter panel ----
@@ -789,6 +793,14 @@ export function DashboardClient({
           onViewLetter={() => setPhase("idle")}
           score={latestLetter?.finalScore}
           atsScore={latestLetter?.atsScore ?? null}
+        />
+      ) : null}
+
+      {showPdfPicker && latestLetter ? (
+        <TemplatePickerModal
+          letterId={latestLetter.id}
+          defaultName={profile.professional_headline ? undefined : undefined}
+          onClose={() => setShowPdfPicker(false)}
         />
       ) : null}
     </div>
