@@ -26,10 +26,10 @@ const styles = StyleSheet.create({
   page: {
     backgroundColor: COLORS.cream,
     fontFamily: "Inter",
-    fontSize: 10.5,
+    fontSize: 10,
     color: COLORS.ink,
-    paddingTop: 56,
-    paddingBottom: 60,
+    paddingTop: 44,
+    paddingBottom: 48,
     paddingLeft: 0,
     paddingRight: 0,
   },
@@ -43,53 +43,53 @@ const styles = StyleSheet.create({
   },
   divider: {
     position: "absolute",
-    top: 56,
+    top: 50,
     left: LEFT_W,
     width: 0.8,
-    height: PAGE_H - 112,
+    height: PAGE_H - 100,
     backgroundColor: COLORS.gold,
     opacity: 0.6,
   },
   bodyColumn: {
-    marginLeft: LEFT_W + 30,
-    marginRight: 48,
+    marginLeft: LEFT_W + 28,
+    marginRight: 42,
   },
   dateLine: {
-    fontSize: 10.5,
+    fontSize: 10,
     color: COLORS.ink,
-    marginBottom: 18,
+    marginBottom: 14,
     fontWeight: "bold",
   },
   recipientBlock: {
-    fontSize: 10.5,
-    lineHeight: 1.5,
+    fontSize: 10,
+    lineHeight: 1.4,
     color: COLORS.ink,
-    marginBottom: 22,
+    marginBottom: 16,
   },
   greeting: {
-    fontSize: 11,
+    fontSize: 10.5,
     color: COLORS.ink,
-    marginBottom: 12,
+    marginBottom: 10,
     fontWeight: "bold",
   },
   bodyParagraph: {
-    fontSize: 10.5,
-    lineHeight: 1.55,
+    fontSize: 10,
+    lineHeight: 1.48,
     color: COLORS.inkSoft,
-    marginBottom: 10,
+    marginBottom: 7,
   },
   signoff: {
-    fontSize: 11,
+    fontSize: 10.5,
     color: COLORS.ink,
-    marginTop: 18,
+    marginTop: 14,
   },
   signatureCursive: {
     fontFamily: "DancingScript",
     fontWeight: "bold",
-    fontSize: 32,
+    fontSize: 28,
     color: COLORS.gold,
-    marginTop: 8,
-    marginBottom: 4,
+    marginTop: 6,
+    marginBottom: 2,
   },
   signedNameSmall: {
     fontSize: 9,
@@ -109,7 +109,7 @@ const left = StyleSheet.create({
   },
   photoWrap: {
     position: "absolute",
-    top: 95,
+    top: 115,
     left: LEFT_W / 2 - 48,
     width: 96,
     height: 96,
@@ -364,7 +364,7 @@ export function CreamEditorialTemplate(props: LetterTemplateProps) {
           : "Cover Letter"
       }
     >
-      <Page size="A4" style={styles.page} wrap>
+      <Page size="A4" style={styles.page} wrap={false}>
         {/* === Left decoration column, fixed (repeats per page) === */}
         <View fixed style={styles.leftColumn}>
           <OrganicBlobs />
@@ -397,8 +397,8 @@ export function CreamEditorialTemplate(props: LetterTemplateProps) {
         {/* Vertical gold divider between columns — also fixed */}
         <View fixed style={styles.divider} />
 
-        {/* === Body column === */}
-        <View style={styles.bodyColumn}>
+        {/* === Body column. wrap=false guarantees single-page output === */}
+        <View style={styles.bodyColumn} wrap={false}>
           <Text style={styles.dateLine}>Date: {formatDate(props.date)}</Text>
 
           {hasRecipient ? (

@@ -26,10 +26,10 @@ const styles = StyleSheet.create({
   page: {
     backgroundColor: COLORS.paper,
     fontFamily: "Inter",
-    fontSize: 10.5,
+    fontSize: 10,
     color: COLORS.ink,
-    paddingTop: 56,
-    paddingBottom: 56,
+    paddingTop: 44,
+    paddingBottom: 44,
     paddingLeft: 0,
     paddingRight: 0,
   },
@@ -44,42 +44,44 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.teal,
   },
   // Body content lives in its own column with marginLeft so it never
-  // collides with the sidebar.
+  // collides with the sidebar. wrap={false} on this View prevents the
+  // letter from spilling onto a second page; for unusually long letters
+  // the body is clipped on the first page rather than splitting.
   bodyColumn: {
-    marginLeft: SIDEBAR_W + 36,
-    marginRight: 48,
+    marginLeft: SIDEBAR_W + 32,
+    marginRight: 42,
   },
   recipientBlock: {
-    fontSize: 10.5,
-    lineHeight: 1.5,
+    fontSize: 10,
+    lineHeight: 1.4,
     color: COLORS.ink,
-    marginBottom: 22,
+    marginBottom: 16,
   },
   greeting: {
-    fontSize: 11,
+    fontSize: 10.5,
     color: COLORS.ink,
-    marginBottom: 14,
+    marginBottom: 11,
   },
   bodyParagraph: {
-    fontSize: 10.5,
-    lineHeight: 1.55,
+    fontSize: 10,
+    lineHeight: 1.48,
     color: COLORS.inkSoft,
-    marginBottom: 10,
+    marginBottom: 7,
   },
   signoff: {
-    fontSize: 11,
+    fontSize: 10.5,
     color: COLORS.ink,
-    marginTop: 16,
+    marginTop: 12,
   },
   signedName: {
-    fontSize: 11,
+    fontSize: 10.5,
     color: COLORS.ink,
-    marginTop: 32,
+    marginTop: 22,
   },
   enclosure: {
-    fontSize: 10,
+    fontSize: 9.5,
     color: COLORS.muted,
-    marginTop: 18,
+    marginTop: 12,
   },
 })
 
@@ -92,11 +94,11 @@ const sb = StyleSheet.create({
     top: 0,
     left: 0,
     width: SIDEBAR_W,
-    height: 175,
+    height: 200,
   },
   photoWrap: {
     position: "absolute",
-    top: 50,
+    top: 75,
     left: SIDEBAR_W / 2 - 55,
     width: 110,
     height: 110,
@@ -190,32 +192,44 @@ const sb = StyleSheet.create({
 })
 
 function TopShapes() {
+  // Two cream cloud shapes at the top of the sidebar. They form a
+  // soft frame around the photo circle (which sits at y=75-185
+  // inside this 200pt-tall area).
   return (
     <View style={sb.topShapesWrap}>
-      <Svg width={SIDEBAR_W} height={175} viewBox={`0 0 ${SIDEBAR_W} 175`}>
-        {/* Large cream cloud from top-left, curving down and right */}
+      <Svg width={SIDEBAR_W} height={200} viewBox={`0 0 ${SIDEBAR_W} 200`}>
+        {/* Large cream cloud from top-left.
+            Extends right to ~125pt and down to ~155pt, sweeping in a
+            big curve that frames the left side of the photo. */}
         <Path
-          d={`M 0 0 L 110 0 C 95 30, 90 65, 65 80 C 35 95, 5 75, 0 50 Z`}
+          d={`M 0 0 L 125 0 C 122 25, 115 55, 100 80 C 85 110, 65 135, 35 145 C 12 152, 0 130, 0 95 Z`}
           fill={COLORS.cream}
         />
-        {/* Smaller cream curve from top-right */}
+        {/* Cream curve from top-right.
+            Curves in and down from top-right, framing the right side
+            of the photo. */}
         <Path
-          d={`M ${SIDEBAR_W} 0 L 130 0 C 138 22, 158 38, ${SIDEBAR_W - 12} 55 C ${SIDEBAR_W - 4} 50, ${SIDEBAR_W} 28, ${SIDEBAR_W} 0 Z`}
+          d={`M ${SIDEBAR_W} 0 L 115 0 C 122 30, 145 55, 175 75 C 195 88, ${SIDEBAR_W} 80, ${SIDEBAR_W} 50 Z`}
           fill={COLORS.cream}
         />
-        {/* Subtle gold accent stroke on the left cloud */}
+        {/* Gold accent stroke tracing the inner edge of the left cloud */}
         <Path
-          d={`M 0 50 C 8 75, 35 95, 65 80 C 90 65, 95 30, 108 5`}
+          d={`M 0 95 C 5 125, 25 148, 50 145 C 75 140, 92 120, 105 90 C 115 65, 122 35, 122 5`}
           stroke={COLORS.gold}
-          strokeWidth={0.9}
+          strokeWidth={1}
           fill="none"
         />
-        {/* Subtle gold accent on the right curve */}
+        {/* Gold accent stroke on the right cloud */}
         <Path
-          d={`M 132 5 C 142 25, 160 40, ${SIDEBAR_W - 8} 52`}
+          d={`M 117 5 C 125 30, 145 55, 173 73 C 188 80, ${SIDEBAR_W - 3} 76, ${SIDEBAR_W} 55`}
           stroke={COLORS.gold}
-          strokeWidth={0.9}
+          strokeWidth={1}
           fill="none"
+        />
+        {/* Tiny gold accent dot on top, like the reference */}
+        <Path
+          d={`M 145 20 m -1.5 0 a 1.5 1.5 0 1 0 3 0 a 1.5 1.5 0 1 0 -3 0`}
+          fill={COLORS.gold}
         />
       </Svg>
     </View>
@@ -367,7 +381,7 @@ export function TealSidebarTemplate(props: LetterTemplateProps) {
           : "Cover Letter"
       }
     >
-      <Page size="A4" style={styles.page} wrap>
+      <Page size="A4" style={styles.page} wrap={false}>
         {/* === Fixed sidebar, repeats on every page === */}
         <View fixed style={styles.sidebar}>
           <TopShapes />
@@ -401,8 +415,8 @@ export function TealSidebarTemplate(props: LetterTemplateProps) {
           <BottomWaves />
         </View>
 
-        {/* === Body column (flows naturally, paginates) === */}
-        <View style={styles.bodyColumn}>
+        {/* === Body column. wrap=false guarantees single-page output === */}
+        <View style={styles.bodyColumn} wrap={false}>
           <View style={styles.recipientBlock}>
             {recipient.map((line, i) => (
               <Text key={i}>{line}</Text>
