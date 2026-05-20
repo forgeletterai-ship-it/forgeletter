@@ -1,6 +1,8 @@
 import {
+  Circle,
   Document,
   Image as PdfImage,
+  Line,
   Page,
   Path,
   StyleSheet,
@@ -206,135 +208,53 @@ const sb = StyleSheet.create({
 })
 
 function TopShapes() {
-  // Premium organic header composition.
+  // Premium editorial header — adapted directly from the user-provided
+  // SVG (the 600x240 reference). Elements used:
+  //   1. Top-left composite emblem (gold ring + filled teal disc +
+  //      inner gold ring + 2 short accent ticks)
+  //   2. Top-right cream organic curve coming in from the corner,
+  //      with a gold ring + filled gold dot at its center
+  //   3. Three small gold dots in a row (placed lower as a brand mark)
   //
-  // Design intent: a layered cream "bloom" composition framing the
-  // sidebar's upper area. Built up with three cream layers (different
-  // opacities for depth) and three refined gold accent curves +
-  // a small partial-ring accent.
-  //
-  // Each Bezier uses 8+ control points so the curves are continuously
-  // smooth (no audible inflection corners) — the previous version's
-  // shapes looked angular because they had only 3-4 control points
-  // per path.
+  // Scaled to fit the 215pt sidebar instead of the original 600pt band.
   const W = SIDEBAR_W
   return (
     <View style={sb.topShapesWrap}>
       <Svg width={W} height={200} viewBox={`0 0 ${W} 200`}>
-        {/* ── Layer 1: warm peach undertone (deep back) ─────────────
-            Gives the composition warmth without dominating. */}
-        <Path
-          d={`M 0 0
-              L 138 0
-              C 138 16, 134 30, 126 44
-              C 116 60, 102 74, 86 86
-              C 64 102, 38 110, 18 106
-              C 4 102, 0 92, 0 78
-              Z`}
-          fill="#E8D9BC"
-          fillOpacity={0.85}
-        />
+        {/* ===== TOP-LEFT EMBLEM ===== */}
+        {/* Outer gold ring */}
+        <Circle cx={42} cy={42} r={30} stroke={COLORS.gold} strokeWidth={1.3} fill="none" />
+        {/* Filled cream disc (sits against the dark teal sidebar) */}
+        <Circle cx={42} cy={42} r={20} fill={COLORS.cream} />
+        {/* Inner gold ring */}
+        <Circle cx={42} cy={42} r={9} stroke={COLORS.gold} strokeWidth={0.8} fill="none" />
+        {/* Short accent ticks (left + top) */}
+        <Line x1={6} y1={42} x2={20} y2={42} stroke={COLORS.gold} strokeWidth={0.9} />
+        <Line x1={42} y1={6} x2={42} y2={20} stroke={COLORS.gold} strokeWidth={0.9} />
 
-        {/* ── Layer 2: main cream bloom (left, dominant) ────────────
-            The largest, most prominent cream shape — sits on top
-            of the peach undertone for a soft layered effect. */}
+        {/* ===== TOP-RIGHT CREAM CURVE FROM CORNER =====
+            Quadratic Bezier sweeping in from the top-right corner.
+            Soft cream fill against the dark teal sidebar. */}
         <Path
-          d={`M 0 0
-              L 130 0
-              C 130 14, 126 28, 119 42
-              C 110 56, 98 70, 84 81
-              C 64 96, 42 102, 24 98
-              C 8 94, 0 84, 0 70
-              L 0 0 Z`}
+          d={`M ${W} 0 Q ${W} 0, ${W} 38 Q ${W} 70, ${W - 35} 70 Q ${W} 50, ${W} 0 Z`}
           fill={COLORS.cream}
         />
-
-        {/* ── Layer 3: cream accent (right) ─────────────────────────
-            Complementary smaller shape — curves in from top-right. */}
-        <Path
-          d={`M ${W} 0
-              L 102 0
-              C 106 14, 115 28, 128 42
-              C 144 56, 162 65, 180 68
-              C 194 70, ${W - 6} 67, ${W} 56
-              L ${W} 0 Z`}
-          fill={COLORS.cream}
-        />
-
-        {/* ── Layer 4: subtle cream highlight (top center) ──────────
-            Bridges the two main shapes for a unified look. */}
-        <Path
-          d={`M 92 0
-              L 108 0
-              C 110 12, 109 26, 105 38
-              C 101 48, 95 48, 91 38
-              C 88 26, 88 12, 92 0
-              Z`}
-          fill="#F2E8D2"
-          fillOpacity={0.95}
-        />
-
-        {/* ── Gold accent 1: refined curve tracing left bloom ──────
-            Long sweeping gold line with strokeLinecap rounded for
-            elegant endpoints. */}
-        <Path
-          d={`M 0 72
-              C 6 92, 22 102, 44 100
-              C 64 96, 82 88, 96 76
-              C 110 64, 120 48, 126 30
-              C 130 18, 132 8, 132 2`}
+        {/* Gold ring centered on the corner-curve focal point */}
+        <Circle
+          cx={W - 18}
+          cy={32}
+          r={14}
           stroke={COLORS.gold}
-          strokeWidth={1.1}
-          fill="none"
-          strokeLinecap="round"
-        />
-
-        {/* ── Gold accent 2: refined curve on right accent ─────────
-            Mirrors the left gold accent, creating compositional
-            balance. */}
-        <Path
-          d={`M 105 4
-              C 110 18, 119 30, 132 42
-              C 148 56, 166 66, 184 68
-              C 196 69, ${W - 6} 65, ${W - 1} 56`}
-          stroke={COLORS.gold}
-          strokeWidth={1.1}
-          fill="none"
-          strokeLinecap="round"
-        />
-
-        {/* ── Gold accent 3: small decorative ring on upper-right ──
-            Adds intricacy. Looks like an intentional designer
-            mark rather than a random doodle. */}
-        <Path
-          d={`M 168 82
-              C 178 78, 188 84, 188 95
-              C 188 106, 178 110, 168 106
-              C 160 102, 158 90, 168 82
-              Z`}
-          stroke={COLORS.gold}
-          strokeWidth={0.9}
+          strokeWidth={1}
           fill="none"
         />
+        {/* Filled gold dot inside the ring — strong focal accent */}
+        <Circle cx={W - 18} cy={32} r={4} fill={COLORS.gold} />
 
-        {/* ── Small gold accent dot ───────────────────────────────
-            Tiny detail that signals craftsmanship. */}
-        <Path
-          d={`M 148 20
-              m -1.7 0
-              a 1.7 1.7 0 1 0 3.4 0
-              a 1.7 1.7 0 1 0 -3.4 0`}
-          fill={COLORS.gold}
-        />
-
-        {/* ── Tiny secondary accent dot ───────────────────────────*/}
-        <Path
-          d={`M 88 6
-              m -1 0
-              a 1 1 0 1 0 2 0
-              a 1 1 0 1 0 -2 0`}
-          fill={COLORS.gold}
-        />
+        {/* ===== THREE GOLD DOTS — brand mark accent ===== */}
+        <Circle cx={20} cy={165} r={2.4} fill={COLORS.gold} />
+        <Circle cx={36} cy={165} r={2.4} fill={COLORS.gold} />
+        <Circle cx={52} cy={165} r={2.4} fill={COLORS.gold} />
       </Svg>
     </View>
   )
@@ -365,11 +285,25 @@ function PhotoCircle({
 }
 
 function Ornament() {
+  // Center divider — directly adapted from the user-provided SVG.
+  // Long horizontal gold line + center medallion (gold ring + filled
+  // gold dot) + short accent ticks just outside the main line.
+  const W = 170
+  const CY = 8
   return (
-    <Svg width={150} height={14} viewBox="0 0 150 14">
-      <Path d="M 0 7 L 67 7" stroke={COLORS.gold} strokeWidth={0.8} fill="none" />
-      <Path d="M 75 2 L 80 7 L 75 12 L 70 7 Z" fill={COLORS.gold} />
-      <Path d="M 83 7 L 150 7" stroke={COLORS.gold} strokeWidth={0.8} fill="none" />
+    <Svg width={W} height={16} viewBox={`0 0 ${W} 16`}>
+      {/* Short accent tick (left) */}
+      <Line x1={0} y1={CY} x2={6} y2={CY} stroke={COLORS.gold} strokeWidth={0.8} />
+      {/* Long horizontal gold line — left half */}
+      <Line x1={10} y1={CY} x2={W / 2 - 9} y2={CY} stroke={COLORS.gold} strokeWidth={0.8} />
+      {/* Long horizontal gold line — right half */}
+      <Line x1={W / 2 + 9} y1={CY} x2={W - 10} y2={CY} stroke={COLORS.gold} strokeWidth={0.8} />
+      {/* Short accent tick (right) */}
+      <Line x1={W - 6} y1={CY} x2={W} y2={CY} stroke={COLORS.gold} strokeWidth={0.8} />
+      {/* Center medallion — outer ring */}
+      <Circle cx={W / 2} cy={CY} r={6} stroke={COLORS.gold} strokeWidth={1} fill="none" />
+      {/* Center medallion — filled dot */}
+      <Circle cx={W / 2} cy={CY} r={2.4} fill={COLORS.gold} />
     </Svg>
   )
 }
