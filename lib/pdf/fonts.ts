@@ -2,16 +2,19 @@ import fs from "node:fs"
 import path from "node:path"
 import { Font } from "@react-pdf/renderer"
 
-// @react-pdf/renderer accepts Buffers for `src` at runtime even though
-// its TypeScript types only declare `string`. Reading the file at module
-// load and passing the buffer avoids a cold-start network fetch and keeps
-// the font bundled with the serverless function (Next.js file-tracing
-// follows fs.readFileSync calls).
+// We read each TTF at module load and convert it to a base64 data-URL
+// string. Why not pass the raw Buffer:
+// @react-pdf/renderer's internal font loader has code paths that call
+// `.substring()` on the src to detect data URLs; Buffer doesn't have
+// that method and the renderer throws
+//   "TypeError: dataUrl.substring is not a function"
+// inside its serverless function. A base64 string sidesteps the issue.
 let registered = false
 
-function readFontSafe(relativePath: string): Buffer | null {
+function readFontAsDataUrl(relativePath: string): string | null {
   try {
-    return fs.readFileSync(path.resolve(process.cwd(), relativePath))
+    const buffer = fs.readFileSync(path.resolve(process.cwd(), relativePath))
+    return `data:font/ttf;base64,${buffer.toString("base64")}`
   } catch {
     return null
   }
@@ -21,16 +24,16 @@ export function registerPdfFonts() {
   if (registered) return
   registered = true
 
-  const cormorantItalic = readFontSafe("lib/pdf/fonts/CormorantGaramond-Italic.ttf")
-  const dancingScript = readFontSafe("lib/pdf/fonts/DancingScript-Bold.ttf")
-  const inter = readFontSafe("lib/pdf/fonts/Inter.ttf")
+  const cormorantItalic = readFontAsDataUrl("lib/pdf/fonts/CormorantGaramond-Italic.ttf")
+  const dancingScript = readFontAsDataUrl("lib/pdf/fonts/DancingScript-Bold.ttf")
+  const inter = readFontAsDataUrl("lib/pdf/fonts/Inter.ttf")
 
   if (cormorantItalic) {
     Font.register({
       family: "CormorantGaramond",
       fonts: [
-        { src: cormorantItalic as unknown as string, fontStyle: "italic", fontWeight: "normal" },
-        { src: cormorantItalic as unknown as string, fontStyle: "italic", fontWeight: "bold" },
+        { src: cormorantItalic, fontStyle: "italic", fontWeight: "normal" },
+        { src: cormorantItalic, fontStyle: "italic", fontWeight: "bold" },
       ],
     })
   }
@@ -38,18 +41,18 @@ export function registerPdfFonts() {
   if (dancingScript) {
     Font.register({
       family: "DancingScript",
-      fonts: [{ src: dancingScript as unknown as string, fontWeight: "bold" }],
+      fonts: [{ src: dancingScript, fontWeight: "bold" }],
     })
   }
 
   if (inter) {
     // Variable font — supports Latin, Latin Extended, Cyrillic, Greek, Vietnamese.
-    // Single TTF used for both weights since it's variable (100-900).
+    // Same data URL for both weights since it's variable (100-900).
     Font.register({
       family: "Inter",
       fonts: [
-        { src: inter as unknown as string, fontWeight: "normal" },
-        { src: inter as unknown as string, fontWeight: "bold" },
+        { src: inter, fontWeight: "normal" },
+        { src: inter, fontWeight: "bold" },
       ],
     })
   }
