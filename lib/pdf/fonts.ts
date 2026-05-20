@@ -23,6 +23,7 @@ export function registerPdfFonts() {
 
   const cormorantItalic = readFontSafe("lib/pdf/fonts/CormorantGaramond-Italic.ttf")
   const dancingScript = readFontSafe("lib/pdf/fonts/DancingScript-Bold.ttf")
+  const inter = readFontSafe("lib/pdf/fonts/Inter.ttf")
 
   if (cormorantItalic) {
     Font.register({
@@ -41,8 +42,17 @@ export function registerPdfFonts() {
     })
   }
 
-  // @react-pdf/renderer ships Helvetica + Times + Courier built-in,
-  // so no further work needed for the body text.
+  if (inter) {
+    // Variable font — supports Latin, Latin Extended, Cyrillic, Greek, Vietnamese.
+    // Single TTF used for both weights since it's variable (100-900).
+    Font.register({
+      family: "Inter",
+      fonts: [
+        { src: inter as unknown as string, fontWeight: "normal" },
+        { src: inter as unknown as string, fontWeight: "bold" },
+      ],
+    })
+  }
 
   // Disable hyphenation — looks bad in formal letter body.
   Font.registerHyphenationCallback((word) => [word])
