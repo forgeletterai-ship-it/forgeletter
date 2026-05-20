@@ -1,4 +1,3 @@
-import Link from "next/link"
 import {
   defaultProfile,
   defaultSettings,
@@ -8,7 +7,51 @@ import {
   getUserProfile,
   getUserSettings,
 } from "@/lib/app-data"
-import { DashboardClient } from "./DashboardClient"
+import { supabaseAdmin } from "@/lib/supabase"
+import { DashboardClient, type LatestLetter } from "./DashboardClient"
+
+export const dynamic = "force-dynamic"
+
+async function getLatestLetter(userId: string): Promise<LatestLetter | null> {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from("generated_letters")
+      .select(
+        "id,final_cover_letter,final_score,ats_score,ats_verdict,ats_covered_keywords,ats_missing_keywords,hallucination_risk,rewrite_cycles,agents_run,job_title,company_name,tone,tier,generation_status,failure_reason,created_at"
+      )
+      .eq("user_id", userId)
+      .in("generation_status", ["passed", "failed"])
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (error || !data || !data.final_cover_letter) {
+      return null
+    }
+
+    return {
+      id: data.id,
+      finalCoverLetter: data.final_cover_letter,
+      finalScore: data.final_score ?? 0,
+      atsScore: data.ats_score,
+      atsVerdict: data.ats_verdict,
+      atsCoveredKeywords: data.ats_covered_keywords ?? [],
+      atsMissingKeywords: data.ats_missing_keywords ?? [],
+      hallucinationRisk: data.hallucination_risk,
+      rewriteCycles: data.rewrite_cycles ?? 0,
+      agentsRun: data.agents_run ?? [],
+      jobTitle: data.job_title,
+      companyName: data.company_name,
+      tone: data.tone,
+      tier: data.tier,
+      generationStatus: data.generation_status,
+      failureReason: data.failure_reason,
+      createdAt: data.created_at,
+    }
+  } catch {
+    return null
+  }
+}
 
 export default async function DashboardPage() {
   const { user } = await getCurrentAppUser()
@@ -19,68 +62,32 @@ export default async function DashboardPage() {
     { profile, setupError: profileError },
     { settings },
     { count: periodBriefCount, setupError: usageError },
-  ] =
-    userId
-      ? await Promise.all([
-          getApplicationBriefs(userId),
-          getUserProfile(userId),
-          getUserSettings(userId),
-          getCurrentPeriodBriefCount(userId, plan),
-        ])
-      : [
-          { briefs: [], setupError: "Authentication required" },
-          { profile: defaultProfile, setupError: "Authentication required" },
-          { settings: defaultSettings },
-          { count: 0, setupError: "Authentication required" },
-        ]
+    latestLetter,
+  ] = userId
+    ? await Promise.all([
+        getApplicationBriefs(userId),
+        getUserProfile(userId),
+        getUserSettings(userId),
+        getCurrentPeriodBriefCount(userId, plan),
+        getLatestLetter(userId),
+      ])
+    : [
+        { briefs: [], setupError: "Authentication required" },
+        { profile: defaultProfile, setupError: "Authentication required" },
+        { settings: defaultSettings },
+        { count: 0, setupError: "Authentication required" },
+        null,
+      ]
 
   return (
-    <>
-      <div
-        style={{
-          maxWidth: 1180,
-          margin: "20px auto 0",
-          padding: "0 20px",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: 16,
-            padding: "14px 18px",
-            borderRadius: 10,
-            border: "1px solid var(--line)",
-            background:
-              "linear-gradient(135deg, rgba(199,154,54,0.10), rgba(36,107,111,0.06))",
-            flexWrap: "wrap",
-          }}
-        >
-          <div style={{ minWidth: 0 }}>
-            <strong style={{ fontSize: 15 }}>The 12-agent AI engine is live.</strong>
-            <span style={{ color: "var(--muted)", marginLeft: 8 }}>
-              Generate a quality-graded cover letter end-to-end in under 90 seconds.
-            </span>
-          </div>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <Link className="button" href="/dashboard/generate">
-              New letter →
-            </Link>
-            <Link className="button-secondary" href="/dashboard/letters">
-              My letters
-            </Link>
-          </div>
-        </div>
-      </div>
-      <DashboardClient
-        initialBriefs={briefs}
-        initialPeriodBriefCount={periodBriefCount}
-        plan={plan}
-        profile={profile}
-        settings={settings}
-        setupError={briefsError || profileError || usageError}
-      />
-    </>
+    <DashboardClient
+      initialBriefs={briefs}
+      initialPeriodBriefCount={periodBriefCount}
+      plan={plan}
+      profile={profile}
+      settings={settings}
+      setupError={briefsError || profileError || usageError}
+      initialLatestLetter={latestLetter}
+    />
   )
 }
