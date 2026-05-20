@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { useCallback, useMemo, useRef, useState } from "react"
 import { ATSScoreCard, type ATSData } from "@/components/ATSScoreCard"
+import { TemplatePickerModal } from "@/components/TemplatePickerModal"
 
 type Tone = "professional" | "confident" | "warm" | "concise"
 type Step = 1 | 2 | 3
@@ -80,6 +81,7 @@ export function GenerateClient(props: Props) {
   const [editedLetter, setEditedLetter] = useState("")
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle")
   const [copyStatus, setCopyStatus] = useState<"idle" | "copied">("idle")
+  const [showPdfPicker, setShowPdfPicker] = useState(false)
   const abortRef = useRef<AbortController | null>(null)
 
   const lettersLeft = Math.max(0, props.lettersLimit - props.lettersUsed)
@@ -463,17 +465,14 @@ export function GenerateClient(props: Props) {
                       ? "Save failed"
                       : "Save changes"}
               </button>
-              <a
+              <button
+                type="button"
                 className="button-secondary"
-                href={`/api/letters/${result.generationId}/pdf`}
-                onClick={(e) => {
-                  if (saveStatus === "saving") {
-                    e.preventDefault()
-                  }
-                }}
+                onClick={() => setShowPdfPicker(true)}
+                disabled={saveStatus === "saving"}
               >
                 Download PDF
-              </a>
+              </button>
               <Link className="button-ghost" href="/dashboard/letters">
                 All my letters
               </Link>
@@ -517,6 +516,14 @@ export function GenerateClient(props: Props) {
           </button>
         </div>
       )}
+
+      {showPdfPicker && result ? (
+        <TemplatePickerModal
+          letterId={result.generationId}
+          defaultName={props.defaultName}
+          onClose={() => setShowPdfPicker(false)}
+        />
+      ) : null}
     </div>
   )
 }
