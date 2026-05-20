@@ -19,6 +19,7 @@ import {
 
 registerPdfFonts()
 
+const PAGE_H = 842
 const LEFT_W = 218
 
 const styles = StyleSheet.create({
@@ -27,24 +28,36 @@ const styles = StyleSheet.create({
     fontFamily: "Inter",
     fontSize: 10.5,
     color: COLORS.ink,
-    paddingTop: 54,
+    paddingTop: 56,
     paddingBottom: 60,
-    paddingLeft: LEFT_W + 26,
-    paddingRight: 46,
+    paddingLeft: 0,
+    paddingRight: 0,
   },
-  dividerLine: {
+  // Left decorations column — absolute, repeats every page via `fixed`.
+  leftColumn: {
     position: "absolute",
+    top: 0,
+    left: 0,
+    width: LEFT_W,
+    height: PAGE_H,
+  },
+  divider: {
+    position: "absolute",
+    top: 56,
     left: LEFT_W,
-    top: 50,
-    width: 0.7,
-    bottom: 50,
+    width: 0.8,
+    height: PAGE_H - 112,
     backgroundColor: COLORS.gold,
-    opacity: 0.55,
+    opacity: 0.6,
+  },
+  bodyColumn: {
+    marginLeft: LEFT_W + 30,
+    marginRight: 48,
   },
   dateLine: {
     fontSize: 10.5,
     color: COLORS.ink,
-    marginBottom: 16,
+    marginBottom: 18,
     fontWeight: "bold",
   },
   recipientBlock: {
@@ -64,19 +77,18 @@ const styles = StyleSheet.create({
     lineHeight: 1.55,
     color: COLORS.inkSoft,
     marginBottom: 10,
-    textAlign: "left",
   },
   signoff: {
     fontSize: 11,
     color: COLORS.ink,
-    marginTop: 16,
+    marginTop: 18,
   },
   signatureCursive: {
     fontFamily: "DancingScript",
     fontWeight: "bold",
-    fontSize: 30,
+    fontSize: 32,
     color: COLORS.gold,
-    marginTop: 6,
+    marginTop: 8,
     marginBottom: 4,
   },
   signedNameSmall: {
@@ -87,27 +99,27 @@ const styles = StyleSheet.create({
   },
 })
 
-const leftStyles = StyleSheet.create({
-  blobWrap: {
+const left = StyleSheet.create({
+  blobsWrap: {
     position: "absolute",
     top: 50,
     left: 0,
     width: LEFT_W,
-    height: 200,
+    height: 220,
   },
   photoWrap: {
     position: "absolute",
-    top: 90,
-    left: LEFT_W / 2 - 47,
-    width: 94,
-    height: 94,
+    top: 95,
+    left: LEFT_W / 2 - 48,
+    width: 96,
+    height: 96,
   },
   photoRing: {
     position: "absolute",
     top: 0,
     left: 0,
-    width: 94,
-    height: 94,
+    width: 96,
+    height: 96,
     borderRadius: 999,
     borderWidth: 2.2,
     borderColor: COLORS.gold,
@@ -116,19 +128,15 @@ const leftStyles = StyleSheet.create({
     position: "absolute",
     top: 5,
     left: 5,
-    width: 84,
-    height: 84,
+    width: 86,
+    height: 86,
     borderRadius: 999,
-    backgroundColor: "#D6CFC4",
+    backgroundColor: "#D4CCC0",
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
   },
-  photoImg: {
-    width: 84,
-    height: 84,
-    objectFit: "cover",
-  },
+  photoImg: { width: 86, height: 86, objectFit: "cover" },
   initials: {
     fontFamily: "Inter",
     fontWeight: "bold",
@@ -136,31 +144,33 @@ const leftStyles = StyleSheet.create({
     color: COLORS.teal,
     letterSpacing: -1,
   },
-  name: {
+  nameWrap: {
     position: "absolute",
-    top: 270,
-    left: 10,
-    right: 10,
+    top: 280,
+    left: 8,
+    width: LEFT_W - 16,
+    alignItems: "center",
+  },
+  name: {
     fontFamily: "CormorantGaramond",
     fontStyle: "italic",
     fontSize: 30,
     color: COLORS.teal,
     textAlign: "center",
-    letterSpacing: 0.2,
     lineHeight: 1.1,
   },
   ornamentWrap: {
     position: "absolute",
-    top: 320,
+    top: 332,
     left: 0,
-    right: 0,
+    width: LEFT_W,
     alignItems: "center",
   },
   contactList: {
     position: "absolute",
-    top: 360,
-    left: 24,
-    right: 16,
+    top: 372,
+    left: 26,
+    width: LEFT_W - 38,
   },
   contactRow: {
     flexDirection: "row",
@@ -184,6 +194,55 @@ const leftStyles = StyleSheet.create({
   },
 })
 
+function OrganicBlobs() {
+  const W = LEFT_W
+  return (
+    <View style={left.blobsWrap}>
+      <Svg width={W} height={220} viewBox={`0 0 ${W} 220`}>
+        {/* Sage back blob (large, soft, behind everything) */}
+        <Path
+          d={`M ${W * 0.06} 110 C ${W * 0.02} 60, ${W * 0.22} 30, ${W * 0.5} 35 C ${W * 0.82} 40, ${W * 0.98} 65, ${W * 0.92} 115 C ${W * 0.86} 165, ${W * 0.6} 195, ${W * 0.35} 185 C ${W * 0.1} 175, ${W * 0.08} 150, ${W * 0.06} 110 Z`}
+          fill={COLORS.sage}
+          fillOpacity={0.4}
+        />
+        {/* Cream/peach mid blob behind teal for depth */}
+        <Path
+          d={`M ${W * 0.12} 80 C ${W * 0.22} 45, ${W * 0.55} 38, ${W * 0.74} 55 C ${W * 0.9} 75, ${W * 0.82} 130, ${W * 0.62} 148 C ${W * 0.38} 165, ${W * 0.12} 140, ${W * 0.12} 80 Z`}
+          fill="#EBDFC5"
+        />
+        {/* Dark teal main blob */}
+        <Path
+          d={`M ${W * 0.2} 62 C ${W * 0.4} 32, ${W * 0.72} 38, ${W * 0.88} 70 C ${W * 0.98} 100, ${W * 0.84} 155, ${W * 0.58} 170 C ${W * 0.28} 180, ${W * 0.08} 150, ${W * 0.14} 108 C ${W * 0.16} 88, ${W * 0.18} 72, ${W * 0.2} 62 Z`}
+          fill={COLORS.teal}
+        />
+        {/* Sage accent splash on the upper-right */}
+        <Path
+          d={`M ${W * 0.62} 28 C ${W * 0.8} 22, ${W * 0.96} 30, ${W * 0.92} 52 C ${W * 0.86} 72, ${W * 0.72} 65, ${W * 0.62} 28 Z`}
+          fill={COLORS.sage}
+        />
+        {/* Thin gold accent strokes */}
+        <Path
+          d={`M ${W * 0.1} 110 C ${W * 0.1} 60, ${W * 0.48} 25, ${W * 0.72} 42`}
+          stroke={COLORS.gold}
+          strokeWidth={0.9}
+          fill="none"
+        />
+        <Path
+          d={`M ${W * 0.86} 80 C ${W * 0.92} 100, ${W * 0.88} 145, ${W * 0.72} 160`}
+          stroke={COLORS.gold}
+          strokeWidth={0.9}
+          fill="none"
+        />
+        {/* Small gold dot */}
+        <Path
+          d={`M ${W * 0.4} 28 m -2 0 a 2 2 0 1 0 4 0 a 2 2 0 1 0 -4 0`}
+          fill={COLORS.gold}
+        />
+      </Svg>
+    </View>
+  )
+}
+
 function PhotoCircle({
   photoDataUrl,
   initials,
@@ -192,87 +251,15 @@ function PhotoCircle({
   initials: string
 }) {
   return (
-    <View style={leftStyles.photoWrap}>
-      <View style={leftStyles.photoRing} />
-      <View style={leftStyles.photoInner}>
+    <View style={left.photoWrap}>
+      <View style={left.photoRing} />
+      <View style={left.photoInner}>
         {photoDataUrl ? (
-          <PdfImage src={photoDataUrl} style={leftStyles.photoImg} />
+          <PdfImage src={photoDataUrl} style={left.photoImg} />
         ) : (
-          <Text style={leftStyles.initials}>{initials}</Text>
+          <Text style={left.initials}>{initials}</Text>
         )}
       </View>
-    </View>
-  )
-}
-
-function OrganicBlobs() {
-  // Composition of organic shapes framing the photo:
-  // - large dark teal blob in the middle
-  // - sage shape on the left/back
-  // - smaller sage accent top-right
-  // - thin gold ring overlay
-  const W = LEFT_W
-  return (
-    <View style={leftStyles.blobWrap}>
-      <Svg width={W} height={200} viewBox={`0 0 ${W} 200`}>
-        {/* Sage back blob (large, soft, behind everything) */}
-        <Path
-          d={`M ${W * 0.04} 90
-              C ${W * 0.0} 50, ${W * 0.2} 25, ${W * 0.45} 30
-              C ${W * 0.75} 35, ${W * 0.95} 55, ${W * 0.92} 100
-              C ${W * 0.88} 145, ${W * 0.6} 175, ${W * 0.35} 165
-              C ${W * 0.1} 158, ${W * 0.05} 130, ${W * 0.04} 90 Z`}
-          fill={COLORS.sage}
-          fillOpacity={0.45}
-        />
-        {/* Cream/peach softer blob behind the teal one for depth */}
-        <Path
-          d={`M ${W * 0.1} 65
-              C ${W * 0.2} 35, ${W * 0.5} 30, ${W * 0.7} 50
-              C ${W * 0.85} 70, ${W * 0.78} 115, ${W * 0.6} 130
-              C ${W * 0.35} 145, ${W * 0.1} 120, ${W * 0.1} 65 Z`}
-          fill="#EBDFC5"
-        />
-        {/* Dark teal main blob — the prominent shape */}
-        <Path
-          d={`M ${W * 0.18} 50
-              C ${W * 0.36} 22, ${W * 0.7} 28, ${W * 0.86} 60
-              C ${W * 0.96} 90, ${W * 0.82} 140, ${W * 0.55} 152
-              C ${W * 0.25} 160, ${W * 0.05} 130, ${W * 0.12} 92
-              C ${W * 0.14} 75, ${W * 0.15} 60, ${W * 0.18} 50 Z`}
-          fill={COLORS.teal}
-        />
-        {/* Sage accent — small splash on the upper-right */}
-        <Path
-          d={`M ${W * 0.62} 18
-              C ${W * 0.78} 12, ${W * 0.94} 22, ${W * 0.92} 42
-              C ${W * 0.88} 60, ${W * 0.7} 58, ${W * 0.62} 18 Z`}
-          fill={COLORS.sage}
-        />
-        {/* Thin gold accent stroke — partial ring over composition */}
-        <Path
-          d={`M ${W * 0.08} 95
-              C ${W * 0.08} 50, ${W * 0.45} 18, ${W * 0.7} 35`}
-          stroke={COLORS.gold}
-          strokeWidth={0.9}
-          fill="none"
-        />
-        <Path
-          d={`M ${W * 0.85} 70
-              C ${W * 0.9} 90, ${W * 0.86} 130, ${W * 0.7} 145`}
-          stroke={COLORS.gold}
-          strokeWidth={0.9}
-          fill="none"
-        />
-        {/* Small gold accent dot */}
-        <Path
-          d={`M ${W * 0.4} 18
-              m -2 0
-              a 2 2 0 1 0 4 0
-              a 2 2 0 1 0 -4 0`}
-          fill={COLORS.gold}
-        />
-      </Svg>
     </View>
   )
 }
@@ -280,9 +267,9 @@ function OrganicBlobs() {
 function Ornament() {
   return (
     <Svg width={130} height={14} viewBox="0 0 130 14">
-      <Path d="M0,7 L58,7" stroke={COLORS.gold} strokeWidth={0.8} fill="none" />
-      <Path d="M65,2 L71,7 L65,12 L59,7 Z" fill={COLORS.gold} />
-      <Path d="M73,7 L130,7" stroke={COLORS.gold} strokeWidth={0.8} fill="none" />
+      <Path d="M 0 7 L 58 7" stroke={COLORS.gold} strokeWidth={0.8} fill="none" />
+      <Path d="M 65 2 L 71 7 L 65 12 L 59 7 Z" fill={COLORS.gold} />
+      <Path d="M 73 7 L 130 7" stroke={COLORS.gold} strokeWidth={0.8} fill="none" />
     </Svg>
   )
 }
@@ -291,13 +278,13 @@ function IconPin() {
   return (
     <Svg width={13} height={13} viewBox="0 0 24 24">
       <Path
-        d="M12 22s-7-7.4-7-13a7 7 0 0 1 14 0c0 5.6-7 13-7 13z"
+        d="M 12 22 C 5 14, 5 9, 5 9 C 5 5.1, 8.1 2, 12 2 C 15.9 2, 19 5.1, 19 9 C 19 9, 19 14, 12 22 Z"
         stroke={COLORS.cream}
         strokeWidth={1.6}
         fill="none"
       />
       <Path
-        d="M12 11.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"
+        d="M 12 11.5 A 2.5 2.5 0 1 0 12 6.5 A 2.5 2.5 0 0 0 12 11.5 Z"
         stroke={COLORS.cream}
         strokeWidth={1.4}
         fill="none"
@@ -310,7 +297,7 @@ function IconPhone() {
   return (
     <Svg width={13} height={13} viewBox="0 0 24 24">
       <Path
-        d="M5 4h3l2 4-2 1.4a12 12 0 0 0 6.6 6.6L16 14l4 2v3a2 2 0 0 1-2 2A14 14 0 0 1 3 6a2 2 0 0 1 2-2z"
+        d="M 5 4 L 8 4 L 10 8 L 8 9.4 C 9.6 12.5, 11.5 14.4, 14.6 16 L 16 14 L 20 16 L 20 19 C 20 20.1, 19.1 21, 18 21 C 9.7 21, 3 14.3, 3 6 C 3 4.9, 3.9 4, 5 4 Z"
         stroke={COLORS.cream}
         strokeWidth={1.6}
         fill="none"
@@ -323,8 +310,8 @@ function IconPhone() {
 function IconMail() {
   return (
     <Svg width={13} height={13} viewBox="0 0 24 24">
-      <Path d="M3 6h18v12H3z" stroke={COLORS.cream} strokeWidth={1.6} fill="none" />
-      <Path d="M3 7l9 6.5 9-6.5" stroke={COLORS.cream} strokeWidth={1.6} fill="none" />
+      <Path d="M 3 6 L 21 6 L 21 18 L 3 18 Z" stroke={COLORS.cream} strokeWidth={1.6} fill="none" />
+      <Path d="M 3 7 L 12 13.5 L 21 7" stroke={COLORS.cream} strokeWidth={1.6} fill="none" />
     </Svg>
   )
 }
@@ -333,91 +320,23 @@ function IconGlobe() {
   return (
     <Svg width={13} height={13} viewBox="0 0 24 24">
       <Path
-        d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"
+        d="M 12 2 A 10 10 0 1 0 12 22 A 10 10 0 0 0 12 2 Z"
         stroke={COLORS.cream}
         strokeWidth={1.6}
         fill="none"
       />
-      <Path d="M2 12h20" stroke={COLORS.cream} strokeWidth={1.4} fill="none" />
-      <Path
-        d="M12 2c3 2.5 4.5 6 4.5 10S15 19.5 12 22"
-        stroke={COLORS.cream}
-        strokeWidth={1.4}
-        fill="none"
-      />
-      <Path
-        d="M12 2c-3 2.5-4.5 6-4.5 10S9 19.5 12 22"
-        stroke={COLORS.cream}
-        strokeWidth={1.4}
-        fill="none"
-      />
+      <Path d="M 2 12 L 22 12" stroke={COLORS.cream} strokeWidth={1.4} fill="none" />
+      <Path d="M 12 2 C 15 5, 16.5 8.5, 16.5 12 C 16.5 15.5, 15 19, 12 22" stroke={COLORS.cream} strokeWidth={1.4} fill="none" />
+      <Path d="M 12 2 C 9 5, 7.5 8.5, 7.5 12 C 7.5 15.5, 9 19, 12 22" stroke={COLORS.cream} strokeWidth={1.4} fill="none" />
     </Svg>
   )
 }
 
-function LeftDecorations({
-  candidateName,
-  photoDataUrl,
-  initials,
-  candidatePhone,
-  candidateEmail,
-  candidateLocation,
-  candidateWebsite,
-}: {
-  candidateName: string
-  photoDataUrl: string | null
-  initials: string
-  candidatePhone?: string
-  candidateEmail: string
-  candidateLocation?: string
-  candidateWebsite?: string
-}) {
+function ContactRow({ icon, text }: { icon: React.ReactNode; text: string }) {
   return (
-    <View fixed>
-      <View style={styles.dividerLine} />
-      <OrganicBlobs />
-      <PhotoCircle photoDataUrl={photoDataUrl} initials={initials} />
-
-      <Text style={leftStyles.name}>{candidateName || "Your Name"}</Text>
-
-      <View style={leftStyles.ornamentWrap}>
-        <Ornament />
-      </View>
-
-      <View style={leftStyles.contactList}>
-        {candidatePhone ? (
-          <View style={leftStyles.contactRow}>
-            <View style={leftStyles.iconCircle}>
-              <IconPhone />
-            </View>
-            <Text style={leftStyles.contactText}>{candidatePhone}</Text>
-          </View>
-        ) : null}
-        {candidateEmail ? (
-          <View style={leftStyles.contactRow}>
-            <View style={leftStyles.iconCircle}>
-              <IconMail />
-            </View>
-            <Text style={leftStyles.contactText}>{candidateEmail}</Text>
-          </View>
-        ) : null}
-        {candidateLocation ? (
-          <View style={leftStyles.contactRow}>
-            <View style={leftStyles.iconCircle}>
-              <IconPin />
-            </View>
-            <Text style={leftStyles.contactText}>{candidateLocation}</Text>
-          </View>
-        ) : null}
-        {candidateWebsite ? (
-          <View style={leftStyles.contactRow}>
-            <View style={leftStyles.iconCircle}>
-              <IconGlobe />
-            </View>
-            <Text style={leftStyles.contactText}>{candidateWebsite}</Text>
-          </View>
-        ) : null}
-      </View>
+    <View style={left.contactRow}>
+      <View style={left.iconCircle}>{icon}</View>
+      <Text style={left.contactText}>{text}</Text>
     </View>
   )
 }
@@ -426,15 +345,15 @@ export function CreamEditorialTemplate(props: LetterTemplateProps) {
   const parsed = parseLetter(props.letterBody, props.candidateName)
   const initials = getInitials(props.candidateName)
 
-  const recipientLines: string[] = []
-  if (props.companyName) recipientLines.push(props.companyName)
+  const recipient: string[] = []
+  if (props.companyName) recipient.push(props.companyName)
   if (props.recipientAddress) {
     for (const line of props.recipientAddress.split(/\n/)) {
       const t = line.trim()
-      if (t) recipientLines.push(t)
+      if (t) recipient.push(t)
     }
   }
-  const hasRecipient = recipientLines.length > 0
+  const hasRecipient = recipient.length > 0
 
   return (
     <Document
@@ -446,40 +365,65 @@ export function CreamEditorialTemplate(props: LetterTemplateProps) {
       }
     >
       <Page size="A4" style={styles.page} wrap>
-        <LeftDecorations
-          candidateName={props.candidateName}
-          photoDataUrl={props.photoDataUrl}
-          initials={initials}
-          candidatePhone={props.candidatePhone}
-          candidateEmail={props.candidateEmail}
-          candidateLocation={props.candidateLocation}
-          candidateWebsite={props.candidateWebsite}
-        />
+        {/* === Left decoration column, fixed (repeats per page) === */}
+        <View fixed style={styles.leftColumn}>
+          <OrganicBlobs />
+          <PhotoCircle photoDataUrl={props.photoDataUrl} initials={initials} />
 
-        <Text style={styles.dateLine}>Date: {formatDate(props.date)}</Text>
-
-        {hasRecipient ? (
-          <View style={styles.recipientBlock}>
-            {recipientLines.map((line, i) => (
-              <Text key={i}>{line}</Text>
-            ))}
+          <View style={left.nameWrap}>
+            <Text style={left.name}>{props.candidateName || "Your Name"}</Text>
           </View>
-        ) : null}
 
-        <Text style={styles.greeting}>{parsed.greeting}</Text>
+          <View style={left.ornamentWrap}>
+            <Ornament />
+          </View>
 
-        {parsed.paragraphs.map((p, i) => (
-          <Text key={i} style={styles.bodyParagraph}>
-            {p}
+          <View style={left.contactList}>
+            {props.candidatePhone ? (
+              <ContactRow icon={<IconPhone />} text={props.candidatePhone} />
+            ) : null}
+            {props.candidateEmail ? (
+              <ContactRow icon={<IconMail />} text={props.candidateEmail} />
+            ) : null}
+            {props.candidateLocation ? (
+              <ContactRow icon={<IconPin />} text={props.candidateLocation} />
+            ) : null}
+            {props.candidateWebsite ? (
+              <ContactRow icon={<IconGlobe />} text={props.candidateWebsite} />
+            ) : null}
+          </View>
+        </View>
+
+        {/* Vertical gold divider between columns — also fixed */}
+        <View fixed style={styles.divider} />
+
+        {/* === Body column === */}
+        <View style={styles.bodyColumn}>
+          <Text style={styles.dateLine}>Date: {formatDate(props.date)}</Text>
+
+          {hasRecipient ? (
+            <View style={styles.recipientBlock}>
+              {recipient.map((line, i) => (
+                <Text key={i}>{line}</Text>
+              ))}
+            </View>
+          ) : null}
+
+          <Text style={styles.greeting}>{parsed.greeting}</Text>
+
+          {parsed.paragraphs.map((p, i) => (
+            <Text key={i} style={styles.bodyParagraph}>
+              {p}
+            </Text>
+          ))}
+
+          <Text style={styles.signoff}>{parsed.signoff}</Text>
+
+          <Text style={styles.signatureCursive}>{parsed.signedName}</Text>
+          <Text style={styles.signedNameSmall}>
+            {(parsed.signedName || props.candidateName || "").toUpperCase()}
           </Text>
-        ))}
-
-        <Text style={styles.signoff}>{parsed.signoff}</Text>
-
-        <Text style={styles.signatureCursive}>{parsed.signedName}</Text>
-        <Text style={styles.signedNameSmall}>
-          {(parsed.signedName || props.candidateName || "").toUpperCase()}
-        </Text>
+        </View>
       </Page>
     </Document>
   )
