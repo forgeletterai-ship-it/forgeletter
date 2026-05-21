@@ -37,12 +37,18 @@ const styles = StyleSheet.create({
     paddingRight: 0,
   },
   // Left decorations column — absolute, repeats every page via `fixed`.
+  // backgroundColor explicitly set to cream so the cream colour is
+  // painted directly behind the image. Without this, some PDF viewers
+  // render the image's transparent pixels as their default transparent
+  // representation (checkerboard) instead of blending with the page's
+  // backgroundColor — the cream "shows through" reliably this way.
   leftColumn: {
     position: "absolute",
     top: 0,
     left: 0,
     width: LEFT_W,
     height: PAGE_H,
+    backgroundColor: COLORS.cream,
   },
   divider: {
     position: "absolute",
