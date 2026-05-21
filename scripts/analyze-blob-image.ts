@@ -1,8 +1,12 @@
 /**
- * Finds the cream photo placeholder by flood-filling outward from
- * the image center, looking for the connected region of near-white
- * pixels. This handles the case where white highlights elsewhere
- * in the design would confuse a centroid approach.
+ * Finds the photo placeholder by flood-filling outward from the
+ * image center, looking for any "non-background" region that's
+ * connected (whether it's a white cream center or a gray silhouette
+ * placeholder).
+ *
+ * The seed walks toward whatever's at the geometric center. We then
+ * flood-fill all pixels within a tight color tolerance to map out
+ * the placeholder's bounding box.
  */
 import fs from "node:fs"
 import { PNG } from "pngjs"
@@ -12,42 +16,33 @@ const W = png.width
 const H = png.height
 const data = png.data
 
-// Try multiple seed points until we find one in a white region
-function isWhite(x: number, y: number, threshold = 240): boolean {
-  if (x < 0 || y < 0 || x >= W || y >= H) return false
+function getRGB(x: number, y: number): [number, number, number, number] {
   const i = (y * W + x) * 4
-  if (data[i + 3] === 0) return false // transparent
-  return data[i] >= threshold && data[i + 1] >= threshold && data[i + 2] >= threshold
+  return [data[i], data[i + 1], data[i + 2], data[i + 3]]
 }
 
-// Sample center first, then nearby points
-const seedCandidates: Array<[number, number]> = [
-  [Math.floor(W / 2), Math.floor(H / 2)],
-  [Math.floor(W * 0.45), Math.floor(H * 0.45)],
-  [Math.floor(W * 0.5), Math.floor(H * 0.45)],
-  [Math.floor(W * 0.5), Math.floor(H * 0.5)],
-  [Math.floor(W * 0.55), Math.floor(H * 0.5)],
-]
-
-let seed: [number, number] | null = null
-for (const cand of seedCandidates) {
-  console.log(`Trying seed (${cand[0]}, ${cand[1]}): R=${data[(cand[1] * W + cand[0]) * 4]}, G=${data[(cand[1] * W + cand[0]) * 4 + 1]}, B=${data[(cand[1] * W + cand[0]) * 4 + 2]}, A=${data[(cand[1] * W + cand[0]) * 4 + 3]}`)
-  if (isWhite(cand[0], cand[1], 230)) {
-    seed = cand
-    break
-  }
+function isSimilar(x: number, y: number, r: number, g: number, b: number, tol: number) {
+  if (x < 0 || y < 0 || x >= W || y >= H) return false
+  const [pr, pg, pb, pa] = getRGB(x, y)
+  if (pa === 0) return false
+  return (
+    Math.abs(pr - r) <= tol &&
+    Math.abs(pg - g) <= tol &&
+    Math.abs(pb - b) <= tol
+  )
 }
 
-if (!seed) {
-  console.log("No white seed found in candidate positions.")
-  process.exit(1)
-}
+// Take the pixel at the geometric center as the seed colour.
+const seedX = Math.floor(W / 2)
+const seedY = Math.floor(H / 2)
+const [sR, sG, sB] = getRGB(seedX, seedY)
 
-console.log(`\nSeed found at (${seed[0]}, ${seed[1]})`)
+console.log(`Seed pixel at center (${seedX}, ${seedY}): RGB(${sR}, ${sG}, ${sB})`)
 
-// Flood fill from the seed to find all connected near-white pixels
+// Flood-fill all pixels within tolerance of the seed colour.
+const tol = 10
 const visited = new Uint8Array(W * H)
-const stack: Array<[number, number]> = [seed]
+const stack: Array<[number, number]> = [[seedX, seedY]]
 let count = 0
 let minX = W
 let maxX = 0
@@ -58,10 +53,9 @@ let sumY = 0
 
 while (stack.length > 0) {
   const [x, y] = stack.pop()!
-  if (x < 0 || y < 0 || x >= W || y >= H) continue
   const idx = y * W + x
   if (visited[idx]) continue
-  if (!isWhite(x, y, 230)) continue
+  if (!isSimilar(x, y, sR, sG, sB, tol)) continue
   visited[idx] = 1
   count++
   sumX += x
@@ -82,7 +76,7 @@ const bboxW = maxX - minX
 const bboxH = maxY - minY
 const radius = Math.min(bboxW, bboxH) / 2
 
-console.log(`\nCream center region:`)
+console.log(`\nConnected placeholder region (seed colour RGB(${sR}, ${sG}, ${sB}) ±${tol}):`)
 console.log(`  Pixel count:    ${count}`)
 console.log(`  Bounding box:   (${minX}, ${minY}) to (${maxX}, ${maxY})`)
 console.log(`  Centroid:       (${cx.toFixed(1)}, ${cy.toFixed(1)})`)
@@ -93,7 +87,19 @@ console.log(`  Radius (min/2): ${radius}px = ${((radius / W) * 100).toFixed(2)}%
 const renderedW = 218
 const renderedH = renderedW * (H / W)
 console.log(`\nFor a ${renderedW}pt-wide render (height ${renderedH.toFixed(1)}pt):`)
-console.log(`  Photo center X:    ${(renderedW * (cx / W)).toFixed(1)} pt`)
-console.log(`  Photo center Y:    ${(renderedH * (cy / H)).toFixed(1)} pt (within image)`)
-console.log(`  Cream diameter:    ${((2 * radius * renderedW) / W).toFixed(1)} pt`)
-console.log(`  Suggested photo:   ${(((2 * radius * renderedW) / W) * 0.85).toFixed(1)} pt (85% of cream diameter)`)
+console.log(`  Photo center X:        ${(renderedW * (cx / W)).toFixed(1)} pt`)
+console.log(`  Photo center Y in img: ${(renderedH * (cy / H)).toFixed(1)} pt`)
+console.log(`  Placeholder diameter:  ${((2 * radius * renderedW) / W).toFixed(1)} pt`)
+console.log(`  Suggested photo size:  ${(((2 * radius * renderedW) / W) * 0.97).toFixed(1)} pt (97% — fills placeholder cleanly)`)
+
+// Also sample several background corners to detect the page-cream colour
+console.log(`\nBackground corner samples (use this for COLORS.cream):`)
+for (const [x, y] of [
+  [5, 5],
+  [W - 6, 5],
+  [5, H - 6],
+  [W - 6, H - 6],
+]) {
+  const [r, g, b] = getRGB(x, y)
+  console.log(`  (${x}, ${y}): RGB(${r}, ${g}, ${b}) = #${[r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("").toUpperCase()}`)
+}
