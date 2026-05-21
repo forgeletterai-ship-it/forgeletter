@@ -1,6 +1,8 @@
 import {
+  Circle,
   Document,
   Image as PdfImage,
+  Line,
   Page,
   Path,
   StyleSheet,
@@ -8,6 +10,7 @@ import {
   Text,
   View,
 } from "@react-pdf/renderer"
+import { getPdfAssets } from "../assets"
 import { registerPdfFonts } from "../fonts"
 import {
   COLORS,
@@ -99,54 +102,62 @@ const styles = StyleSheet.create({
   },
 })
 
+// Image dimensions: 1342 x 1172 (aspect ratio ~1.145).
+// Rendered at full column width LEFT_W (218pt), height becomes
+// 218 * 1172/1342 = 190.4pt.
+// The cream center where the photo sits is at roughly
+// (42% from left, 47% from top) of the image:
+//   center X in image coords  ≈ 218 * 0.42 = 91.6pt
+//   center Y in image coords  ≈ 190 * 0.47 = 89.3pt
+const BLOBS_IMG_TOP = 40
+const BLOBS_IMG_WIDTH = LEFT_W
+const BLOBS_IMG_HEIGHT = Math.round(LEFT_W * (1172 / 1342))
+const PHOTO_CENTER_X = Math.round(LEFT_W * 0.42)
+const PHOTO_CENTER_Y_IN_IMG = Math.round(BLOBS_IMG_HEIGHT * 0.47)
+const PHOTO_SIZE = 72
+
 const left = StyleSheet.create({
-  blobsWrap: {
+  blobsImage: {
     position: "absolute",
-    top: 50,
+    top: BLOBS_IMG_TOP,
     left: 0,
-    width: LEFT_W,
-    height: 220,
+    width: BLOBS_IMG_WIDTH,
+    height: BLOBS_IMG_HEIGHT,
+    objectFit: "contain",
   },
+  // Photo overlays the cream center of the image. Position is
+  // computed from the constants above so the photo lands precisely
+  // over the cream/white circle the image was designed with.
   photoWrap: {
     position: "absolute",
-    top: 115,
-    left: LEFT_W / 2 - 48,
-    width: 96,
-    height: 96,
-  },
-  photoRing: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    width: 96,
-    height: 96,
-    borderRadius: 999,
-    borderWidth: 2.2,
-    borderColor: COLORS.gold,
+    top: BLOBS_IMG_TOP + PHOTO_CENTER_Y_IN_IMG - PHOTO_SIZE / 2,
+    left: PHOTO_CENTER_X - PHOTO_SIZE / 2,
+    width: PHOTO_SIZE,
+    height: PHOTO_SIZE,
   },
   photoInner: {
     position: "absolute",
-    top: 5,
-    left: 5,
-    width: 86,
-    height: 86,
+    top: 0,
+    left: 0,
+    width: PHOTO_SIZE,
+    height: PHOTO_SIZE,
     borderRadius: 999,
-    backgroundColor: "#D4CCC0",
+    backgroundColor: COLORS.creamLight,
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
   },
-  photoImg: { width: 86, height: 86, objectFit: "cover" },
+  photoImg: { width: PHOTO_SIZE, height: PHOTO_SIZE, objectFit: "cover" },
   initials: {
     fontFamily: "Inter",
     fontWeight: "bold",
-    fontSize: 28,
+    fontSize: 26,
     color: COLORS.teal,
     letterSpacing: -1,
   },
   nameWrap: {
     position: "absolute",
-    top: 280,
+    top: BLOBS_IMG_TOP + BLOBS_IMG_HEIGHT + 40,
     left: 8,
     width: LEFT_W - 16,
     alignItems: "center",
@@ -154,21 +165,21 @@ const left = StyleSheet.create({
   name: {
     fontFamily: "CormorantGaramond",
     fontStyle: "italic",
-    fontSize: 30,
+    fontSize: 28,
     color: COLORS.teal,
     textAlign: "center",
     lineHeight: 1.1,
   },
   ornamentWrap: {
     position: "absolute",
-    top: 332,
+    top: BLOBS_IMG_TOP + BLOBS_IMG_HEIGHT + 88,
     left: 0,
     width: LEFT_W,
     alignItems: "center",
   },
   contactList: {
     position: "absolute",
-    top: 372,
+    top: BLOBS_IMG_TOP + BLOBS_IMG_HEIGHT + 124,
     left: 26,
     width: LEFT_W - 38,
   },
@@ -194,53 +205,17 @@ const left = StyleSheet.create({
   },
 })
 
-function OrganicBlobs() {
-  const W = LEFT_W
-  return (
-    <View style={left.blobsWrap}>
-      <Svg width={W} height={220} viewBox={`0 0 ${W} 220`}>
-        {/* Sage back blob (large, soft, behind everything) */}
-        <Path
-          d={`M ${W * 0.06} 110 C ${W * 0.02} 60, ${W * 0.22} 30, ${W * 0.5} 35 C ${W * 0.82} 40, ${W * 0.98} 65, ${W * 0.92} 115 C ${W * 0.86} 165, ${W * 0.6} 195, ${W * 0.35} 185 C ${W * 0.1} 175, ${W * 0.08} 150, ${W * 0.06} 110 Z`}
-          fill={COLORS.sage}
-          fillOpacity={0.4}
-        />
-        {/* Cream/peach mid blob behind teal for depth */}
-        <Path
-          d={`M ${W * 0.12} 80 C ${W * 0.22} 45, ${W * 0.55} 38, ${W * 0.74} 55 C ${W * 0.9} 75, ${W * 0.82} 130, ${W * 0.62} 148 C ${W * 0.38} 165, ${W * 0.12} 140, ${W * 0.12} 80 Z`}
-          fill="#EBDFC5"
-        />
-        {/* Dark teal main blob */}
-        <Path
-          d={`M ${W * 0.2} 62 C ${W * 0.4} 32, ${W * 0.72} 38, ${W * 0.88} 70 C ${W * 0.98} 100, ${W * 0.84} 155, ${W * 0.58} 170 C ${W * 0.28} 180, ${W * 0.08} 150, ${W * 0.14} 108 C ${W * 0.16} 88, ${W * 0.18} 72, ${W * 0.2} 62 Z`}
-          fill={COLORS.teal}
-        />
-        {/* Sage accent splash on the upper-right */}
-        <Path
-          d={`M ${W * 0.62} 28 C ${W * 0.8} 22, ${W * 0.96} 30, ${W * 0.92} 52 C ${W * 0.86} 72, ${W * 0.72} 65, ${W * 0.62} 28 Z`}
-          fill={COLORS.sage}
-        />
-        {/* Thin gold accent strokes */}
-        <Path
-          d={`M ${W * 0.1} 110 C ${W * 0.1} 60, ${W * 0.48} 25, ${W * 0.72} 42`}
-          stroke={COLORS.gold}
-          strokeWidth={0.9}
-          fill="none"
-        />
-        <Path
-          d={`M ${W * 0.86} 80 C ${W * 0.92} 100, ${W * 0.88} 145, ${W * 0.72} 160`}
-          stroke={COLORS.gold}
-          strokeWidth={0.9}
-          fill="none"
-        />
-        {/* Small gold dot */}
-        <Path
-          d={`M ${W * 0.4} 28 m -2 0 a 2 2 0 1 0 4 0 a 2 2 0 1 0 -4 0`}
-          fill={COLORS.gold}
-        />
-      </Svg>
-    </View>
-  )
+function BlobsImage() {
+  // Decorative blob composition is now a real PNG image — much
+  // better than hand-coded Bezier paths. The PNG is loaded from
+  // disk at module init and embedded as a base64 data URL.
+  const assets = getPdfAssets()
+  if (!assets.creamEditorialBlobs) {
+    // Asset missing — render nothing rather than crashing. The
+    // letter still works, just without the decorative composition.
+    return null
+  }
+  return <PdfImage src={assets.creamEditorialBlobs} style={left.blobsImage} />
 }
 
 function PhotoCircle({
@@ -250,9 +225,11 @@ function PhotoCircle({
   photoDataUrl: string | null
   initials: string
 }) {
+  // No additional gold ring here — the underlying blob image
+  // already has one drawn around the cream center. Adding another
+  // ring would create an awkward double-ring effect.
   return (
     <View style={left.photoWrap}>
-      <View style={left.photoRing} />
       <View style={left.photoInner}>
         {photoDataUrl ? (
           <PdfImage src={photoDataUrl} style={left.photoImg} />
@@ -265,11 +242,19 @@ function PhotoCircle({
 }
 
 function Ornament() {
+  // Long horizontal gold line with center medallion + accent ticks.
+  // Same design as the Teal Sidebar's ornament for visual consistency
+  // across both templates.
+  const W = 150
+  const CY = 8
   return (
-    <Svg width={130} height={14} viewBox="0 0 130 14">
-      <Path d="M 0 7 L 58 7" stroke={COLORS.gold} strokeWidth={0.8} fill="none" />
-      <Path d="M 65 2 L 71 7 L 65 12 L 59 7 Z" fill={COLORS.gold} />
-      <Path d="M 73 7 L 130 7" stroke={COLORS.gold} strokeWidth={0.8} fill="none" />
+    <Svg width={W} height={16} viewBox={`0 0 ${W} 16`}>
+      <Line x1={0} y1={CY} x2={6} y2={CY} stroke={COLORS.gold} strokeWidth={0.8} />
+      <Line x1={10} y1={CY} x2={W / 2 - 9} y2={CY} stroke={COLORS.gold} strokeWidth={0.8} />
+      <Line x1={W / 2 + 9} y1={CY} x2={W - 10} y2={CY} stroke={COLORS.gold} strokeWidth={0.8} />
+      <Line x1={W - 6} y1={CY} x2={W} y2={CY} stroke={COLORS.gold} strokeWidth={0.8} />
+      <Circle cx={W / 2} cy={CY} r={6} stroke={COLORS.gold} strokeWidth={1} fill="none" />
+      <Circle cx={W / 2} cy={CY} r={2.4} fill={COLORS.gold} />
     </Svg>
   )
 }
@@ -367,7 +352,7 @@ export function CreamEditorialTemplate(props: LetterTemplateProps) {
       <Page size="A4" style={styles.page} wrap={false}>
         {/* === Left decoration column, fixed (repeats per page) === */}
         <View fixed style={styles.leftColumn}>
-          <OrganicBlobs />
+          <BlobsImage />
           <PhotoCircle photoDataUrl={props.photoDataUrl} initials={initials} />
 
           <View style={left.nameWrap}>

@@ -6,7 +6,10 @@ const nextConfig: NextConfig = {
   // Without this, the PDF font TTFs ship to local dev but not to
   // Vercel's serverless function bundle, and PDF generation fails.
   outputFileTracingIncludes: {
-    "/api/letters/[id]/pdf": ["./lib/pdf/fonts/**/*"],
+    "/api/letters/[id]/pdf": [
+      "./lib/pdf/fonts/**/*",
+      "./lib/pdf/assets/**/*",
+    ],
   },
 }
 
