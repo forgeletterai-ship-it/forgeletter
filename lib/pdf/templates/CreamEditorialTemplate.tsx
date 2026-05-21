@@ -110,14 +110,16 @@ const styles = StyleSheet.create({
 
 // Image dimensions: 1448 x 1086 (~1.333 aspect, wider than tall).
 // Rendered at full column width LEFT_W (218pt), height = 163.5pt.
-// Photo placeholder is a grey circle at (48.1%, 58.2%) of the image
-// with diameter ~70pt (measured by analyze-blob-image.ts).
+// Photo *circle* (the full white area, not the grey silhouette inside
+// it) is centred at (48.2%, 50.8%) of the image with diameter ~95pt
+// — measured by analyze-blob-image.ts which finds the full white
+// region including the inner gray silhouette placeholder.
 const BLOBS_IMG_TOP = 40
 const BLOBS_IMG_WIDTH = LEFT_W
 const BLOBS_IMG_HEIGHT = Math.round(LEFT_W * (1086 / 1448))
-const PHOTO_CENTER_X = Math.round(LEFT_W * 0.481)
-const PHOTO_CENTER_Y_IN_IMG = Math.round(BLOBS_IMG_HEIGHT * 0.582)
-const PHOTO_SIZE = 67
+const PHOTO_CENTER_X = Math.round(LEFT_W * 0.482)
+const PHOTO_CENTER_Y_IN_IMG = Math.round(BLOBS_IMG_HEIGHT * 0.508)
+const PHOTO_SIZE = 94
 
 const left = StyleSheet.create({
   blobsImage: {
@@ -154,7 +156,7 @@ const left = StyleSheet.create({
   initials: {
     fontFamily: "Inter",
     fontWeight: "bold",
-    fontSize: 22,
+    fontSize: 32,
     color: COLORS.teal,
     letterSpacing: -1,
   },
