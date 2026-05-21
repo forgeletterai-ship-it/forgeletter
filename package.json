@@ -28,9 +28,11 @@
     "@tailwindcss/postcss": "^4",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",
+    "@types/pngjs": "^6.0.5",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "dotenv": "^17.4.2",
+    "pngjs": "^7.0.0",
     "tailwindcss": "^4",
     "tsx": "^4.22.3",
     "typescript": "^5"
