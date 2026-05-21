@@ -3,8 +3,11 @@ export const COLORS = {
   tealLight: "#1A5253",
   gold: "#C9A961",
   goldLight: "#DBC084",
-  cream: "#EFE6D2",
-  creamLight: "#F5EDDC",
+  // Cream and creamLight match the cream-editorial-blobs PNG's
+  // background colour exactly, so the image blends seamlessly with
+  // the page (no visible image-rectangle edge).
+  cream: "#FCF7EF",
+  creamLight: "#FDFAF4",
   sage: "#8FBAB0",
   paper: "#FFFFFF",
   ink: "#1C1A17",

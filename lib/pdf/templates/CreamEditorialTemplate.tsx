@@ -108,18 +108,16 @@ const styles = StyleSheet.create({
   },
 })
 
-// Image dimensions: 1254 x 1254 (perfectly square).
-// Rendered at full column width LEFT_W (218pt), so height also 218pt.
-// Cream-center coordinates measured by analyze-blob-image.ts (flood-
-// fills the white region inside the design):
-//   centroid = (49.3%, 46.8%) of image
-//   inner cream diameter = 24.9% of image width = ~108pt
+// Image dimensions: 1448 x 1086 (~1.333 aspect, wider than tall).
+// Rendered at full column width LEFT_W (218pt), height = 163.5pt.
+// Photo placeholder is a grey circle at (48.1%, 58.2%) of the image
+// with diameter ~70pt (measured by analyze-blob-image.ts).
 const BLOBS_IMG_TOP = 40
 const BLOBS_IMG_WIDTH = LEFT_W
-const BLOBS_IMG_HEIGHT = Math.round(LEFT_W * (1254 / 1254))
-const PHOTO_CENTER_X = Math.round(LEFT_W * 0.493)
-const PHOTO_CENTER_Y_IN_IMG = Math.round(BLOBS_IMG_HEIGHT * 0.468)
-const PHOTO_SIZE = 92
+const BLOBS_IMG_HEIGHT = Math.round(LEFT_W * (1086 / 1448))
+const PHOTO_CENTER_X = Math.round(LEFT_W * 0.481)
+const PHOTO_CENTER_Y_IN_IMG = Math.round(BLOBS_IMG_HEIGHT * 0.582)
+const PHOTO_SIZE = 67
 
 const left = StyleSheet.create({
   blobsImage: {
@@ -156,7 +154,7 @@ const left = StyleSheet.create({
   initials: {
     fontFamily: "Inter",
     fontWeight: "bold",
-    fontSize: 32,
+    fontSize: 22,
     color: COLORS.teal,
     letterSpacing: -1,
   },
