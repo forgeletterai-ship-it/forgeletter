@@ -102,19 +102,18 @@ const styles = StyleSheet.create({
   },
 })
 
-// Image dimensions: 1342 x 1172 (aspect ratio ~1.145).
-// Rendered at full column width LEFT_W (218pt), height becomes
-// 218 * 1172/1342 = 190.4pt.
-// Cream-center coordinates measured by the analyze-blob-image.ts
-// script (flood-fills the white region inside the design):
-//   centroid = (49.0%, 49.2%) of image
-//   inner cream diameter = 24.18% of image width = ~105pt
+// Image dimensions: 1254 x 1254 (perfectly square).
+// Rendered at full column width LEFT_W (218pt), so height also 218pt.
+// Cream-center coordinates measured by analyze-blob-image.ts (flood-
+// fills the white region inside the design):
+//   centroid = (49.3%, 46.8%) of image
+//   inner cream diameter = 24.9% of image width = ~108pt
 const BLOBS_IMG_TOP = 40
 const BLOBS_IMG_WIDTH = LEFT_W
-const BLOBS_IMG_HEIGHT = Math.round(LEFT_W * (1172 / 1342))
-const PHOTO_CENTER_X = Math.round(LEFT_W * 0.49)
-const PHOTO_CENTER_Y_IN_IMG = Math.round(BLOBS_IMG_HEIGHT * 0.492)
-const PHOTO_SIZE = 90
+const BLOBS_IMG_HEIGHT = Math.round(LEFT_W * (1254 / 1254))
+const PHOTO_CENTER_X = Math.round(LEFT_W * 0.493)
+const PHOTO_CENTER_Y_IN_IMG = Math.round(BLOBS_IMG_HEIGHT * 0.468)
+const PHOTO_SIZE = 92
 
 const left = StyleSheet.create({
   blobsImage: {
