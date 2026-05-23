@@ -1,8 +1,16 @@
 "use client"
 
 import { useCallback, useMemo, useRef, useState } from "react"
+import {
+  ExperienceMultiSelect,
+  QUALIFICATIONS_ROW_ID,
+} from "@/components/ExperienceMultiSelect"
 import { TemplatePickerModal } from "@/components/TemplatePickerModal"
 import type { ApplicationBrief, UserProfile, UserSettings } from "@/lib/app-data"
+import {
+  buildResumeTextFromProfile,
+  defaultSelectedExperienceIds,
+} from "@/lib/experience-resume"
 import { getPlanUsageDetails } from "@/lib/plans"
 
 export interface LatestLetter {
@@ -241,9 +249,18 @@ export function DashboardClient({
   const [company, setCompany] = useState(initialBriefs[0]?.company || "")
   const [tone, setTone] = useState<ToneName>(normalizedTone)
   const [jobDescription, setJobDescription] = useState(initialBriefs[0]?.job_description || "")
-  const [candidateExperience, setCandidateExperience] = useState(
-    initialBriefs[0]?.candidate_experience || profile.key_achievements || profile.strengths || ""
-  )
+  // Default selection: every saved experience block is checked.
+  // The Qualifications & achievements row is always-on inside the
+  // component and isn't tracked in this state.
+  const [selectedExperienceIds, setSelectedExperienceIds] = useState<string[]>(() => {
+    const fromBrief = initialBriefs[0]?.selected_experience_ids
+    if (Array.isArray(fromBrief) && fromBrief.length > 0) {
+      const validIds = new Set(profile.experience_blocks.map((b) => b.id))
+      const filtered = fromBrief.filter((id) => validIds.has(id))
+      if (filtered.length > 0) return filtered
+    }
+    return defaultSelectedExperienceIds(profile)
+  })
   const [message, setMessage] = useState("")
   const [error, setError] = useState(setupError || "")
 
@@ -284,13 +301,23 @@ export function DashboardClient({
     setError("")
     setGenErrorMsg(null)
 
+    // Build the resume text from the selected experience blocks +
+    // always-on qualifications/skills. Unselected entries are never
+    // included — the agent pipeline only sees what the user chose.
+    const resumeText = buildResumeTextFromProfile({
+      profile,
+      selectedExperienceIds,
+    }).trim()
+
     // Client-side validation matching the API contract.
     if (jobDescription.trim().length < 200) {
       setError(`Job description needs at least 200 characters (you have ${jobDescription.trim().length}).`)
       return
     }
-    if (candidateExperience.trim().length < 200) {
-      setError(`Candidate experience needs at least 200 characters (you have ${candidateExperience.trim().length}).`)
+    if (resumeText.length < 200) {
+      setError(
+        "Your selected experience is too short to write a strong letter. Add more detail to your profile entries, or select more experiences to include."
+      )
       return
     }
 
@@ -304,7 +331,8 @@ export function DashboardClient({
           company,
           tone,
           job_description: jobDescription,
-          candidate_experience: candidateExperience,
+          candidate_experience: resumeText,
+          selected_experience_ids: selectedExperienceIds,
         }),
       })
       const briefData = await briefRes.json()
@@ -331,11 +359,12 @@ export function DashboardClient({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          resumeText: candidateExperience.trim(),
+          resumeText,
           jobDescription: jobDescription.trim(),
           jobTitle: role.trim() || undefined,
           companyName: company.trim() || undefined,
           tone: toneForApi(tone),
+          selectedExperienceIds,
         }),
         signal: controller.signal,
       })
@@ -630,17 +659,14 @@ export function DashboardClient({
         </div>
 
         <div className="cover-field">
-          <label htmlFor="cover-experience">Your resume / experience</label>
-          <div className="cover-textarea-shell">
-            <textarea
-              id="cover-experience"
-              maxLength={8000}
-              value={candidateExperience}
-              onChange={(event) => setCandidateExperience(event.target.value)}
-              placeholder="Paste your full resume — work history, measurable achievements, tools, skills."
-            />
-            <span>{candidateExperience.length}/8000</span>
-          </div>
+          <label id="cover-experience-label">Experiences to include</label>
+          <ExperienceMultiSelect
+            labelId="cover-experience-label"
+            blocks={profile.experience_blocks}
+            selectedIds={selectedExperienceIds}
+            onChange={setSelectedExperienceIds}
+            profileExperienceHref="/dashboard/profile"
+          />
         </div>
 
         <button

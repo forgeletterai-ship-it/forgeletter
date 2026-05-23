@@ -14185,3 +14185,205 @@ button.tone-chip:hover {
     padding-top: 24px;
   }
 }
+
+/* ============================================================
+   ExperienceMultiSelect — closed bar + open panel with checkbox
+   rows. Matches the cover-* form tokens used elsewhere on the
+   Draft Inputs form.
+   ============================================================ */
+.exp-ms {
+  position: relative;
+  width: 100%;
+  font-family: inherit;
+}
+
+.exp-ms-bar {
+  width: 100%;
+  height: 50px;
+  padding: 0 14px 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: rgba(255, 253, 247, 0.9);
+  border: 1px solid var(--cover-line);
+  border-radius: 8px;
+  box-shadow:
+    0 8px 20px rgba(75, 48, 22, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  color: var(--cover-ink);
+  font-size: 15px;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+
+.exp-ms-bar:hover {
+  border-color: var(--cover-line-strong);
+}
+
+.exp-ms-bar:focus-visible,
+.exp-ms-bar.is-open {
+  outline: none;
+  border-color: rgba(7, 133, 143, 0.52);
+  box-shadow:
+    0 0 0 3px rgba(7, 133, 143, 0.1),
+    0 8px 20px rgba(75, 48, 22, 0.06);
+}
+
+.exp-ms-bar-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.exp-ms-bar-text.is-placeholder {
+  color: rgba(95, 89, 82, 0.76);
+}
+
+.exp-ms-chev {
+  flex-shrink: 0;
+  color: #105250;
+  transition: transform 160ms ease;
+}
+
+.exp-ms-chev.is-open {
+  transform: rotate(180deg);
+}
+
+.exp-ms-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 30;
+  background: #FEFBF6;
+  border: 1px solid var(--cover-line-strong);
+  border-radius: 10px;
+  box-shadow:
+    0 18px 40px rgba(40, 22, 8, 0.16),
+    0 2px 6px rgba(40, 22, 8, 0.06);
+  padding: 6px;
+  max-height: 320px;
+  overflow-y: auto;
+  outline: none;
+}
+
+.exp-ms-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 7px;
+  cursor: pointer;
+  user-select: none;
+  outline: none;
+  color: var(--cover-ink);
+  transition: background-color 100ms ease;
+}
+
+.exp-ms-row:hover,
+.exp-ms-row:focus-visible {
+  background-color: rgba(199, 155, 60, 0.10);
+}
+
+.exp-ms-row:focus-visible {
+  box-shadow: inset 0 0 0 2px rgba(7, 133, 143, 0.55);
+}
+
+.exp-ms-row.is-checked {
+  background-color: rgba(199, 155, 60, 0.06);
+}
+
+.exp-ms-row--forced {
+  cursor: default;
+  margin-top: 4px;
+  border-top: 1px solid rgba(199, 155, 60, 0.22);
+  padding-top: 12px;
+  background: linear-gradient(180deg, transparent 0%, rgba(16, 82, 80, 0.04) 100%);
+}
+
+.exp-ms-row--forced:hover,
+.exp-ms-row--forced:focus-visible {
+  background-color: rgba(16, 82, 80, 0.06);
+  box-shadow: none;
+}
+
+.exp-ms-check {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  border: 1.5px solid var(--cover-line-strong);
+  border-radius: 4px;
+  background: #fff;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.exp-ms-check.is-checked {
+  background: #C79B3C;
+  border-color: #C79B3C;
+}
+
+.exp-ms-check--forced {
+  background: #105250;
+  border-color: #105250;
+  color: #E0C47C;
+}
+
+.exp-ms-row-label {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.exp-ms-row-kind {
+  flex-shrink: 0;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: rgba(199, 155, 60, 0.14);
+  color: #7a5415;
+}
+
+.exp-ms-row-kind--forced {
+  background: #105250;
+  color: #E0C47C;
+}
+
+.exp-ms-empty {
+  padding: 16px 14px 8px;
+}
+
+.exp-ms-empty-title {
+  margin: 0 0 4px;
+  font-weight: 700;
+  color: var(--cover-ink);
+}
+
+.exp-ms-empty-copy {
+  margin: 0 0 10px;
+  color: var(--cover-soft);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.exp-ms-empty-link {
+  display: inline-block;
+  font-size: 13px;
+  font-weight: 700;
+  color: #105250;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  margin-bottom: 8px;
+}
