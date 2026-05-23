@@ -260,7 +260,7 @@ body{background:#efe9dd;font-family:var(--sans);color:var(--txt);display:flex;al
 <script>
 const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s),sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const stage=$('#stage'),cursor=$('#cursor');
-function fit(){const sc=Math.min(innerWidth/1280,innerHeight/720);stage.style.transform=`scale(${sc})`}addEventListener('resize',fit);fit();
+function fit(){const wrap=document.querySelector('.stage-wrap');const w=(wrap&&wrap.clientWidth)||innerWidth||1280;const h=(wrap&&wrap.clientHeight)||innerHeight||720;const sc=Math.min(w/1280,h/720);stage.style.transform=`scale(${sc})`}addEventListener('resize',fit);addEventListener('load',fit);requestAnimationFrame(fit);if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fit);try{new ResizeObserver(fit).observe(document.body);new ResizeObserver(fit).observe(document.documentElement)}catch(e){}[50,150,300,600,1200].forEach(ms=>setTimeout(fit,ms));fit();
 $$('#sc-exp input,#p-desc').forEach(i=>{if(i.dataset.ph)i.setAttribute('placeholder',i.dataset.ph);i.readOnly=true});
 function moveTo(el,dx=0,dy=0){const s=stage.getBoundingClientRect(),r=el.getBoundingClientRect(),sc=s.width/1280;cursor.style.transform=`translate(${(r.left-s.left)/sc+r.width/sc/2+dx}px,${(r.top-s.top)/sc+r.height/sc/2+dy}px)`}
 async function click(){cursor.classList.remove('click');void cursor.offsetWidth;cursor.classList.add('click');await sleep(170)}
@@ -273,6 +273,7 @@ function scrollExpTo(el){const inner=$('#expInner');const t=Math.max(0,el.offset
 let running=false;
 async function run(){
   if(running)return;running=true;
+  fit();
   // reset
   $$('#sc-exp input').forEach(i=>i.value='');$('#p-desc').value='';
   $('#f-sector').innerHTML='<span class="ph">Select...</span><svg width="10" height="6"><path d="M0 0l5 5 5-5" fill="none" stroke="#555" stroke-width="1.4"/></svg>';$('#f-sector').style.color='';

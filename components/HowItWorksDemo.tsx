@@ -7,24 +7,25 @@ import Image from "next/image"
  * Embedded animated walkthrough on the landing page's "How it works"
  * section.
  *
- * The animation file at /public/forgeletter_demo.html is self-contained
- * (its own CSS reset, JS, and fonts) and is loaded byte-identical to
- * the original — we don't touch it. The iframe isolates its globals.
+ * The wrapper gives the iframe a real, stable 16:9 box via
+ * aspect-ratio (with padding-top: 56.25% fallback via @supports in
+ * globals.css). The iframe inside fills the box at width:100%
+ * height:100%. That stable measurable box is exactly what the
+ * demo's fit() function needs to compute the right scale.
  *
- * The iframe src is set directly on render (NOT lazy via
- * IntersectionObserver) so it always loads on page render; we just add
- * loading="lazy" so the browser can defer the network fetch until the
- * frame is near the viewport.
+ * The iframe src is set directly on render (no IntersectionObserver,
+ * no swap-to-about:blank). loading="lazy" lets the browser defer the
+ * network fetch when the frame is far off-screen, but otherwise the
+ * iframe is just a normal iframe.
  *
- * The wrapper height is enforced by both:
- *   - aspect-ratio: 16 / 9 (modern browsers — Chrome 88+, Firefox 89+,
- *     Safari 15+)
- *   - padding-top: 56.25% (universal fallback applied via @supports not)
- * Either way the box is a real 16:9 rectangle on first paint, so the
- * iframe is never 0px tall.
+ * The demo HTML file itself is hardened to re-measure aggressively:
+ * fit() runs on requestAnimationFrame, document.fonts.ready, window
+ * load, a ResizeObserver on body+documentElement, five staggered
+ * setTimeout calls (50/150/300/600/1200ms), and at the top of every
+ * animation loop iteration. Any iframe-height settling pattern is
+ * caught.
  *
- * Accessibility: prefers-reduced-motion users see a static panel with
- * an explicit Play button rather than the auto-loading animation.
+ * Accessibility: prefers-reduced-motion shows a static fallback panel.
  */
 
 const DEMO_SRC = "/forgeletter_demo.html"
@@ -59,11 +60,15 @@ export function HowItWorksDemo({ maxWidthPx = 1200, radiusPx = 14 }: Props) {
         width: "100%",
         maxWidth: maxWidthPx,
         margin: "0 auto",
+        position: "relative",
         borderRadius: radiusPx,
         overflow: "hidden",
         boxShadow:
           "0 18px 36px -16px rgba(40, 26, 12, 0.22), 0 2px 8px -4px rgba(40, 26, 12, 0.08)",
         background: "#efe9dd",
+        // aspect-ratio (modern) / padding-top: 56.25% (fallback) are
+        // applied via the .how-it-works-demo class in globals.css so
+        // we don't accidentally double-apply both methods here.
       }}
       role="region"
       aria-label="ForgeLetter how-it-works animation"
@@ -75,6 +80,9 @@ export function HowItWorksDemo({ maxWidthPx = 1200, radiusPx = 14 }: Props) {
           src={DEMO_SRC}
           title="Animated walkthrough of how ForgeLetter works"
           loading="lazy"
+          // position:absolute so the iframe fills the wrapper whether
+          // the wrapper's height comes from aspect-ratio (modern) or
+          // padding-top:56.25% (fallback).
           style={{
             position: "absolute",
             inset: 0,
