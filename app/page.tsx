@@ -1,36 +1,10 @@
 import Link from "next/link"
 import { AnimatedSeparator } from "@/components/AnimatedSeparator"
 import { ExampleShowcase } from "@/components/ExampleShowcase"
+import { HowItWorksDemo } from "@/components/HowItWorksDemo"
 import { PricingCards } from "@/components/PricingCards"
 import { PublicFooter, PublicNav } from "@/components/PublicChrome"
 import { ResourceSlider } from "@/components/ResourceSlider"
-
-const steps = [
-  {
-    n: "01",
-    title: "Select your role",
-    body: "Paste the job description, company details, and requirements so the engine understands the opportunity.",
-    dark: false,
-  },
-  {
-    n: "02",
-    title: "Add your context",
-    body: "Share your experience, achievements, strengths, and goals to shape a more personal draft.",
-    dark: false,
-  },
-  {
-    n: "03",
-    title: "Choose the tone",
-    body: "Set the voice - professional, warm, or direct - so every letter matches the role.",
-    dark: false,
-  },
-  {
-    n: "04",
-    title: "Review and send",
-    body: "Refine your letter, choose your template, and download a polished PDF ready to submit.",
-    dark: true,
-  },
-] as const
 
 const engineFeatures = [
   {
@@ -357,69 +331,24 @@ export default function HomePage() {
           <div className="marble-glow glow-right" />
           <div className="marble-glow glow-bottom" />
 
-          <div className="intro-copy">
-            <div className="kicker">How it works</div>
-            <h2 id="workflow-heading">
-              From job description to <span className="headline-teal">interview-ready</span>
-              <br />
-              letter in under 3 minutes.
-            </h2>
-            <p>
-              A guided AI workflow that helps you move from job description
-              <br className="desktop" />
-              to polished final letter with clarity, speed, and premium presentation.
-            </p>
-          </div>
+          <div className="workflow-visual__grid">
+            <div className="intro-copy">
+              <div className="kicker">How it works</div>
+              <h2 id="workflow-heading">
+                From job description to <span className="headline-teal">interview-ready</span>
+                <br />
+                letter in under 3 minutes.
+              </h2>
+              <p>
+                A guided AI workflow that helps you move from job description
+                <br className="desktop" />
+                to polished final letter with clarity, speed, and premium presentation.
+              </p>
+            </div>
 
-          <div className="premium-rail-wrap" aria-hidden="true">
-            <svg className="premium-rail" viewBox="0 0 1600 470" preserveAspectRatio="none">
-              <defs>
-                <linearGradient id="railTeal" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#1f7375" />
-                  <stop offset="24%" stopColor="#287f7d" />
-                  <stop offset="52%" stopColor="#2c8783" />
-                  <stop offset="76%" stopColor="#267d7a" />
-                  <stop offset="100%" stopColor="#1d7073" />
-                </linearGradient>
-                <linearGradient id="railGold" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#eabf6f" />
-                  <stop offset="30%" stopColor="#f8c76a" />
-                  <stop offset="58%" stopColor="#ffc86d" />
-                  <stop offset="100%" stopColor="#eabf6f" />
-                </linearGradient>
-              </defs>
-
-              <path
-                className="rail-shadow"
-                d="M0 390 H380 C430 390 420 350 470 350 H780 C830 350 820 250 870 250 H1145 C1195 250 1185 160 1235 160 H1600"
-              />
-              <path
-                className="rail-base"
-                d="M0 390 H380 C430 390 420 350 470 350 H780 C830 350 820 250 870 250 H1145 C1195 250 1185 160 1235 160 H1600"
-              />
-              <path
-                className="rail-gold"
-                d="M0 390 H380 C430 390 420 350 470 350 H780 C830 350 820 250 870 250 H1145 C1195 250 1185 160 1235 160 H1600"
-              />
-              <path
-                className="rail-highlight"
-                d="M0 382 H380 C430 382 420 342 470 342 H780 C830 342 820 242 870 242 H1145 C1195 242 1185 152 1235 152 H1600"
-              />
-            </svg>
-          </div>
-
-          <div className="step-grid">
-            {steps.map((step, index) => (
-              <article
-                className={`step-card card-${index + 1} ${step.dark ? "dark" : "light"}`}
-                key={step.n}
-              >
-                <div className="step-number">{step.n}</div>
-                <div className="small-rule" />
-                <h3>{step.title}</h3>
-                <p>{step.body}</p>
-              </article>
-            ))}
+            <div className="workflow-visual__demo">
+              <HowItWorksDemo />
+            </div>
           </div>
         </section>
 
