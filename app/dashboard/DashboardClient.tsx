@@ -41,6 +41,10 @@ type DashboardClientProps = {
   settings: UserSettings
   setupError?: string
   initialLatestLetter: LatestLetter | null
+  /** True if the Supabase schema has the experience_blocks column.
+   *  When false, the multi-select shows the empty state with a hint
+   *  that the database migration is pending. */
+  experiencePersistenceAvailable?: boolean
 }
 
 type ToneName = "Professional" | "Warm" | "Direct"
@@ -239,6 +243,7 @@ export function DashboardClient({
   settings,
   setupError,
   initialLatestLetter,
+  experiencePersistenceAvailable = true,
 }: DashboardClientProps) {
   const normalizedTone = tones.some((item) => item.name === settings.default_tone)
     ? (settings.default_tone as ToneName)
@@ -666,6 +671,7 @@ export function DashboardClient({
             selectedIds={selectedExperienceIds}
             onChange={setSelectedExperienceIds}
             profileExperienceHref="/dashboard/profile"
+            persistenceAvailable={experiencePersistenceAvailable}
           />
         </div>
 

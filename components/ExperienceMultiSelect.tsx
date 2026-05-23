@@ -31,6 +31,13 @@ interface Props {
   label?: string
   /** id used for the visible label so we can hook aria-labelledby */
   labelId?: string
+  /**
+   * False if the Supabase schema migration hasn't run yet — the
+   * empty-state copy shifts to explain that experiences won't appear
+   * here until the DB is updated, rather than implying the user
+   * forgot to add them.
+   */
+  persistenceAvailable?: boolean
 }
 
 interface Row {
@@ -47,6 +54,7 @@ export function ExperienceMultiSelect({
   profileExperienceHref = "/dashboard/profile#experience",
   label = "Experiences to include",
   labelId,
+  persistenceAvailable = true,
 }: Props) {
   const [open, setOpen] = useState(false)
   const [focusedIndex, setFocusedIndex] = useState(0)
@@ -221,17 +229,33 @@ export function ExperienceMultiSelect({
         >
           {blocksEmpty ? (
             <div className="exp-ms-empty">
-              <p className="exp-ms-empty-title">No saved experiences yet</p>
-              <p className="exp-ms-empty-copy">
-                Add Employer, Internship or University entries on your profile,
-                then come back here to choose which to include.
-              </p>
+              {persistenceAvailable ? (
+                <>
+                  <p className="exp-ms-empty-title">No saved experiences yet</p>
+                  <p className="exp-ms-empty-copy">
+                    Add Employer, Internship or University entries on your profile,
+                    then come back here to choose which to include.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="exp-ms-empty-title">Experience storage not enabled</p>
+                  <p className="exp-ms-empty-copy">
+                    Your database needs the experience-persistence migration
+                    (docs/supabase-experience-blocks.sql) to remember saved
+                    experiences. Until then, generation still works from your
+                    qualifications and skills.
+                  </p>
+                </>
+              )}
               <Link
                 className="exp-ms-empty-link"
                 href={profileExperienceHref}
                 onClick={() => setOpen(false)}
               >
-                Add experiences on your profile →
+                {persistenceAvailable
+                  ? "Add experiences on your profile →"
+                  : "Open profile →"}
               </Link>
               <div
                 className="exp-ms-row exp-ms-row--forced"

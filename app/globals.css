@@ -14387,3 +14387,27 @@ button.tone-chip:hover {
   text-underline-offset: 3px;
   margin-bottom: 8px;
 }
+
+/* Non-blocking info banner shown on the profile page when the
+   experience-persistence migration hasn't been applied yet. */
+.pp-info-banner {
+  margin: 12px 0 18px;
+  padding: 14px 16px;
+  border: 1px solid rgba(199, 155, 60, 0.36);
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(254, 251, 246, 0.7), rgba(199, 155, 60, 0.08));
+  color: #5d4a1f;
+  font-size: 13px;
+  line-height: 1.55;
+}
+.pp-info-banner strong {
+  color: #3a2e0f;
+}
+.pp-info-banner code {
+  background: rgba(16, 82, 80, 0.08);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  color: #105250;
+}

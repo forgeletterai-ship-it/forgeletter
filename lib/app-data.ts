@@ -7,6 +7,102 @@ import {
 } from "@/lib/plans"
 import { customerSafeSupabaseError, supabaseAdmin } from "@/lib/supabase"
 
+/**
+ * Schema capability detection.
+ *
+ * The migration in docs/supabase-experience-blocks.sql adds three
+ * column groups to the database. If the user hasn't run it yet, queries
+ * that reference those columns fail and the app blows up with a generic
+ * "We could not complete that workspace action" error.
+ *
+ * Instead of that, we detect once per cold start which columns exist
+ * and gracefully degrade — read/write only the columns that are
+ * actually present. Result: the app keeps working with or without the
+ * migration; structured experience persistence simply waits until the
+ * migration runs.
+ */
+export interface SupabaseSchemaCapabilities {
+  userProfileExperienceBlocks: boolean
+  applicationBriefsSelectedExperienceIds: boolean
+  generatedLettersSelectedExperienceIds: boolean
+}
+
+const FULL_CAPABILITIES: SupabaseSchemaCapabilities = {
+  userProfileExperienceBlocks: true,
+  applicationBriefsSelectedExperienceIds: true,
+  generatedLettersSelectedExperienceIds: true,
+}
+
+const LEGACY_CAPABILITIES: SupabaseSchemaCapabilities = {
+  userProfileExperienceBlocks: false,
+  applicationBriefsSelectedExperienceIds: false,
+  generatedLettersSelectedExperienceIds: false,
+}
+
+let schemaCache: Promise<SupabaseSchemaCapabilities> | null = null
+
+function looksLikeMissingColumn(err: { code?: string | null; message?: string | null } | null): boolean {
+  if (!err) return false
+  const code = err.code || ""
+  if (code === "42703" || code === "PGRST204") return true
+  const msg = err.message || ""
+  if (/column .* does not exist/i.test(msg)) return true
+  if (/could not find the .* column/i.test(msg)) return true
+  return false
+}
+
+async function probeColumn(table: string, column: string): Promise<boolean> {
+  try {
+    const { error } = await supabaseAdmin
+      .from(table)
+      .select(column)
+      .limit(1)
+    if (!error) return true
+    if (looksLikeMissingColumn(error)) return false
+    // Any other error (e.g. missing table) — treat as "not available" too.
+    return false
+  } catch {
+    return false
+  }
+}
+
+export async function getSupabaseSchemaCapabilities(): Promise<SupabaseSchemaCapabilities> {
+  if (!schemaCache) {
+    schemaCache = (async () => {
+      try {
+        const [userProfileBlocks, briefIds, letterIds] = await Promise.all([
+          probeColumn("user_profiles", "experience_blocks"),
+          probeColumn("application_briefs", "selected_experience_ids"),
+          probeColumn("generated_letters", "selected_experience_ids"),
+        ])
+        if (!userProfileBlocks && !briefIds && !letterIds) {
+          console.warn(
+            "[schema] Experience-persistence columns are missing — run docs/supabase-experience-blocks.sql to enable structured experience storage."
+          )
+        }
+        return {
+          userProfileExperienceBlocks: userProfileBlocks,
+          applicationBriefsSelectedExperienceIds: briefIds,
+          generatedLettersSelectedExperienceIds: letterIds,
+        }
+      } catch (err) {
+        console.warn("[schema] Probe failed; assuming legacy schema:", err)
+        return LEGACY_CAPABILITIES
+      }
+    })()
+  }
+  return schemaCache
+}
+
+/** Test/recovery hook: lets us re-detect on demand (used in tests + when admin reruns migration). */
+export function resetSchemaCapabilitiesCache(): void {
+  schemaCache = null
+}
+
+// Marked exported for explicit reset in tests.
+export const __SCHEMA_FULL = FULL_CAPABILITIES
+export const __SCHEMA_LEGACY = LEGACY_CAPABILITIES
+
 export type PlanId = StoredPlanId
 
 export type AppUser = {
@@ -208,24 +304,54 @@ export async function getCurrentAppUser(): Promise<{
   }
 }
 
-export async function getUserProfile(userId: string) {
-  try {
-    const { data, error } = await supabaseAdmin
-      .from("user_profiles")
-      .select(
-        "professional_headline,target_roles,industries,key_achievements,strengths,experience_blocks,qualifications,notes"
-      )
-      .eq("user_id", userId)
-      .maybeSingle()
+async function selectUserProfileRow(
+  userId: string,
+  columns: string
+): Promise<{
+  data: Record<string, unknown> | null
+  error: { code?: string | null; message?: string | null } | null
+}> {
+  const { data, error } = await supabaseAdmin
+    .from("user_profiles")
+    .select(columns)
+    .eq("user_id", userId)
+    .maybeSingle()
+  return { data: data as Record<string, unknown> | null, error }
+}
 
-    if (error) {
+export async function getUserProfile(userId: string) {
+  const capabilities = await getSupabaseSchemaCapabilities()
+  const fullCols =
+    "professional_headline,target_roles,industries,key_achievements,strengths,experience_blocks,qualifications,notes"
+  const legacyCols =
+    "professional_headline,target_roles,industries,key_achievements,strengths"
+
+  try {
+    let result = await selectUserProfileRow(
+      userId,
+      capabilities.userProfileExperienceBlocks ? fullCols : legacyCols
+    )
+
+    // Defensive: if a probe said the columns exist but the actual query
+    // says otherwise (race during a partial migration), retry with the
+    // legacy column set so we never break the page.
+    if (result.error && looksLikeMissingColumn(result.error)) {
+      console.warn(
+        "[getUserProfile] new columns failed mid-flight; falling back to legacy columns:",
+        result.error
+      )
+      resetSchemaCapabilitiesCache()
+      result = await selectUserProfileRow(userId, legacyCols)
+    }
+
+    if (result.error) {
       return {
         profile: defaultProfile,
-        setupError: dataErrorMessage(error, "user_profiles"),
+        setupError: dataErrorMessage(result.error, "user_profiles"),
       }
     }
 
-    const raw = data ?? {}
+    const raw = result.data ?? {}
     const merged: UserProfile = {
       ...defaultProfile,
       ...(raw as Record<string, unknown>),
@@ -247,6 +373,8 @@ export async function getUserProfile(userId: string) {
 
 export async function getApplicationBriefs(userId: string) {
   try {
+    // SELECT * is safe whether the new column exists or not — missing
+    // columns simply won't be in the row payload.
     const { data, error } = await supabaseAdmin
       .from("application_briefs")
       .select("*")
