@@ -123,9 +123,13 @@ export function HowItWorksDemo({ maxWidthPx = 1200, radiusPx = 14 }: Props) {
     position: "relative",
     borderRadius: radiusPx,
     overflow: "hidden",
+    // Light, subtle elevation — no heavy frame. The demo's own body
+    // background fills the wrapper edge-to-edge.
     boxShadow:
-      "0 22px 50px rgba(15, 61, 62, 0.22), 0 4px 14px rgba(15, 61, 62, 0.08)",
-    background: "#0F3D3E",
+      "0 18px 36px -16px rgba(40, 26, 12, 0.22), 0 2px 8px -4px rgba(40, 26, 12, 0.08)",
+    // Match the demo's body background colour so any pixel gap at the
+    // edges blends invisibly. The iframe sits inside this directly.
+    background: "#efe9dd",
   }
 
   const showFallback = prefersReducedMotion && !userOptedIn

@@ -10148,8 +10148,11 @@ button.tone-chip:hover {
   position: relative;
   z-index: 5;
   display: grid;
-  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
-  gap: clamp(28px, 4vw, 64px);
+  /* Title column is comfortably proportioned to its content; the
+     demo gets the remaining space and is allowed to expand up to its
+     own max-width inside. */
+  grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.3fr);
+  gap: clamp(28px, 4vw, 56px);
   align-items: center;
   max-width: 1500px;
   margin: 0 auto;
@@ -10160,7 +10163,28 @@ button.tone-chip:hover {
   min-width: 0;
 }
 
-@media (max-width: 960px) {
+/* Tighten the headline at intermediate widths so the demo column
+   doesn't get squeezed. The original 58-86px clamp was tuned for the
+   single-column layout the cards used. */
+.workflow-visual__grid .intro-copy h2 {
+  font-size: clamp(38px, 4vw, 72px);
+}
+
+.workflow-visual__grid .intro-copy p {
+  font-size: clamp(15px, 1.1vw, 18px);
+}
+
+@media (max-width: 1100px) {
+  .workflow-visual__grid {
+    grid-template-columns: minmax(0, 0.55fr) minmax(0, 1.45fr);
+    gap: 32px;
+  }
+  .workflow-visual__grid .intro-copy h2 {
+    font-size: clamp(34px, 3.4vw, 52px);
+  }
+}
+
+@media (max-width: 860px) {
   .workflow-visual {
     padding: 56px 24px 64px;
   }
@@ -10171,9 +10195,13 @@ button.tone-chip:hover {
   }
   .workflow-visual__grid .intro-copy {
     margin: 0 auto;
+    max-width: 620px;
   }
   .workflow-visual__grid .kicker {
     justify-content: center;
+  }
+  .workflow-visual__grid .intro-copy h2 {
+    font-size: clamp(34px, 7vw, 48px);
   }
 }
 
