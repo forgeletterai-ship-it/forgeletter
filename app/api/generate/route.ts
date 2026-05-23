@@ -77,6 +77,7 @@ export async function POST(req: NextRequest) {
     jobTitle?: unknown
     companyName?: unknown
     tone?: unknown
+    selectedExperienceIds?: unknown
   }
 
   const resumeText = String(body.resumeText || "").trim()
@@ -84,6 +85,11 @@ export async function POST(req: NextRequest) {
   const jobTitle = body.jobTitle ? String(body.jobTitle).trim() : undefined
   const companyName = body.companyName ? String(body.companyName).trim() : undefined
   const tone = normalizeTone(body.tone)
+  const selectedExperienceIds: string[] = Array.isArray(body.selectedExperienceIds)
+    ? (body.selectedExperienceIds as unknown[])
+        .filter((id): id is string => typeof id === "string" && id.length > 0)
+        .slice(0, 40)
+    : []
 
   if (resumeText.length < MIN_RESUME_CHARS) {
     return sseError(`Resume must be at least ${MIN_RESUME_CHARS} characters.`, 400)
@@ -130,6 +136,7 @@ export async function POST(req: NextRequest) {
       company_name: companyName ?? null,
       tone,
       tier,
+      selected_experience_ids: selectedExperienceIds,
       generation_status: "running",
     })
     .select("id")

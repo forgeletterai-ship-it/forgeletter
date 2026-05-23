@@ -259,9 +259,11 @@ function createDefaultDraft(initialProfile?: UserProfile): ProfileDraft {
     skills:
       initialProfile?.strengths ||
       "HubSpot, Marketo, SQL, A/B testing, lifecycle marketing, paid social",
-    qualifications: "",
-    notes: "",
-    blocks: [],
+    qualifications: initialProfile?.qualifications ?? "",
+    notes: initialProfile?.notes ?? "",
+    // Saved structured blocks are loaded here so the user sees what
+    // they previously entered instead of starting empty each visit.
+    blocks: (initialProfile?.experience_blocks ?? []) as ProfileBlock[],
   }
 }
 
@@ -325,8 +327,14 @@ function buildPayload(profile: ProfileDraft, initialProfile: UserProfile): UserP
     target_roles:
       initialProfile.target_roles || `${selectedSeniorityLabel(profile.seniority)} roles`,
     industries: sectors || initialProfile.industries,
+    // Keep the legacy serialized text in key_achievements for backward
+    // compatibility with anything that still reads it, but the source
+    // of truth is now experience_blocks below.
     key_achievements: serializeExperience(profile),
     strengths: profile.skills,
+    experience_blocks: profile.blocks,
+    qualifications: profile.qualifications,
+    notes: profile.notes,
   }
 }
 

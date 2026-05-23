@@ -17,12 +17,28 @@ export type AppUser = {
   plan: PlanId
 }
 
+// Experience types + display helpers live in their own zero-dep module
+// so client components and unit tests can import them without pulling
+// in NextAuth / Supabase.
+export {
+  type ExperienceAchievement,
+  type ExperienceBlock,
+  type ExperienceBlockType,
+  experienceBlockKind,
+  experienceBlockLabel,
+} from "@/lib/experience-types"
+
+import type { ExperienceAchievement, ExperienceBlock } from "@/lib/experience-types"
+
 export type UserProfile = {
   professional_headline: string
   target_roles: string
   industries: string
   key_achievements: string
   strengths: string
+  experience_blocks: ExperienceBlock[]
+  qualifications: string
+  notes: string
 }
 
 export type ApplicationBrief = {
@@ -33,6 +49,9 @@ export type ApplicationBrief = {
   tone: string
   job_description: string
   candidate_experience: string
+  /** Experience block ids the user opted to include for this brief.
+   *  Empty array = use the user's full saved experience set. */
+  selected_experience_ids: string[]
   generated_letter: string | null
   status: "draft" | "brief_ready" | "generated" | "archived"
   created_at: string
@@ -51,6 +70,56 @@ export const defaultProfile: UserProfile = {
   industries: "",
   key_achievements: "",
   strengths: "",
+  experience_blocks: [],
+  qualifications: "",
+  notes: "",
+}
+
+/** Coerces JSONB from Supabase into a typed ExperienceBlock array. */
+function normalizeExperienceBlocks(raw: unknown): ExperienceBlock[] {
+  if (!Array.isArray(raw)) return []
+  return raw
+    .map((entry): ExperienceBlock | null => {
+      if (!entry || typeof entry !== "object") return null
+      const e = entry as Record<string, unknown>
+      const type =
+        e.type === "employer" || e.type === "internship" || e.type === "university"
+          ? e.type
+          : null
+      if (!type) return null
+      const id = typeof e.id === "string" ? e.id : ""
+      if (!id) return null
+      const achievementsRaw = Array.isArray(e.achievements) ? e.achievements : []
+      const achievements: ExperienceAchievement[] = achievementsRaw
+        .map((a): ExperienceAchievement | null => {
+          if (!a || typeof a !== "object") return null
+          const ach = a as Record<string, unknown>
+          const aid = typeof ach.id === "string" ? ach.id : ""
+          if (!aid) return null
+          return {
+            id: aid,
+            col0: String(ach.col0 ?? ""),
+            col1: String(ach.col1 ?? ""),
+            col2: String(ach.col2 ?? ""),
+          }
+        })
+        .filter((a): a is ExperienceAchievement => a !== null)
+      return {
+        id,
+        type,
+        company: String(e.company ?? ""),
+        title: String(e.title ?? ""),
+        employmentType: String(e.employmentType ?? ""),
+        sector: String(e.sector ?? ""),
+        size: String(e.size ?? ""),
+        role: String(e.role ?? ""),
+        duration: String(e.duration ?? ""),
+        name: String(e.name ?? ""),
+        degree: String(e.degree ?? ""),
+        achievements,
+      }
+    })
+    .filter((b): b is ExperienceBlock => b !== null)
 }
 
 export const defaultSettings: UserSettings = {
@@ -144,7 +213,7 @@ export async function getUserProfile(userId: string) {
     const { data, error } = await supabaseAdmin
       .from("user_profiles")
       .select(
-        "professional_headline,target_roles,industries,key_achievements,strengths"
+        "professional_headline,target_roles,industries,key_achievements,strengths,experience_blocks,qualifications,notes"
       )
       .eq("user_id", userId)
       .maybeSingle()
@@ -156,7 +225,18 @@ export async function getUserProfile(userId: string) {
       }
     }
 
-    return { profile: { ...defaultProfile, ...(data || {}) } as UserProfile }
+    const raw = data ?? {}
+    const merged: UserProfile = {
+      ...defaultProfile,
+      ...(raw as Record<string, unknown>),
+      experience_blocks: normalizeExperienceBlocks(
+        (raw as { experience_blocks?: unknown }).experience_blocks
+      ),
+      qualifications: String((raw as { qualifications?: unknown }).qualifications ?? ""),
+      notes: String((raw as { notes?: unknown }).notes ?? ""),
+    } as UserProfile
+
+    return { profile: merged }
   } catch (error) {
     return {
       profile: defaultProfile,
@@ -180,7 +260,14 @@ export async function getApplicationBriefs(userId: string) {
       }
     }
 
-    return { briefs: (data || []) as ApplicationBrief[] }
+    const briefs: ApplicationBrief[] = (data || []).map((row: Record<string, unknown>) => ({
+      ...(row as ApplicationBrief),
+      selected_experience_ids: Array.isArray(row.selected_experience_ids)
+        ? (row.selected_experience_ids as string[])
+        : [],
+    }))
+
+    return { briefs }
   } catch (error) {
     return {
       briefs: [] as ApplicationBrief[],

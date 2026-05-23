@@ -41,6 +41,7 @@ export async function POST(req: NextRequest) {
     tone?: string
     job_description?: string
     candidate_experience?: string
+    selected_experience_ids?: unknown
   }
 
   const role = String(body.role || "").trim()
@@ -48,6 +49,11 @@ export async function POST(req: NextRequest) {
   const tone = allowedTones.has(String(body.tone)) ? String(body.tone) : "Professional"
   const job_description = String(body.job_description || "").trim()
   const candidate_experience = String(body.candidate_experience || "").trim()
+  const selected_experience_ids = Array.isArray(body.selected_experience_ids)
+    ? body.selected_experience_ids
+        .filter((id): id is string => typeof id === "string" && id.length > 0)
+        .slice(0, 40)
+    : []
 
   if (!role && !company && !job_description && !candidate_experience) {
     return NextResponse.json(
@@ -96,6 +102,7 @@ export async function POST(req: NextRequest) {
         tone,
         job_description,
         candidate_experience,
+        selected_experience_ids,
         status: statusForBrief(role, job_description, candidate_experience),
       })
       .select("*")
