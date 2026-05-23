@@ -115,21 +115,22 @@ export function HowItWorksDemo({ maxWidthPx = 1200, radiusPx = 14 }: Props) {
     }
   }, [prefersReducedMotion, userOptedIn])
 
+  // 16:9 lock via padding-top trick. This is more reliable than CSS
+  // `aspect-ratio` inside a grid cell that align-items:center, where
+  // some browsers compute the height before the aspect-ratio kicks in
+  // and the iframe ends up at a row-height that isn't 16:9.
   const wrapperStyle: React.CSSProperties = {
     width: "100%",
     maxWidth: maxWidthPx,
     margin: "0 auto",
-    aspectRatio: "16 / 9",
     position: "relative",
+    paddingTop: "56.25%", // 9 / 16
     borderRadius: radiusPx,
     overflow: "hidden",
-    // Light, subtle elevation — no heavy frame. The demo's own body
-    // background fills the wrapper edge-to-edge.
     boxShadow:
       "0 18px 36px -16px rgba(40, 26, 12, 0.22), 0 2px 8px -4px rgba(40, 26, 12, 0.08)",
-    // Match the demo's body background colour so any pixel gap at the
-    // edges blends invisibly. The iframe sits inside this directly.
-    background: "#efe9dd",
+    // Demo HTML body is transparent — any sub-pixel gap shows this.
+    background: "transparent",
   }
 
   const showFallback = prefersReducedMotion && !userOptedIn

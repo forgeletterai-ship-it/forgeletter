@@ -10148,13 +10148,12 @@ button.tone-chip:hover {
   position: relative;
   z-index: 5;
   display: grid;
-  /* Title column is comfortably proportioned to its content; the
-     demo gets the remaining space and is allowed to expand up to its
-     own max-width inside. */
-  grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.3fr);
+  /* Demo column gets the dominant share of the row so the animation
+     reads as the section's primary visual. */
+  grid-template-columns: minmax(0, 0.55fr) minmax(0, 1.45fr);
   gap: clamp(28px, 4vw, 56px);
   align-items: center;
-  max-width: 1500px;
+  max-width: 1600px;
   margin: 0 auto;
 }
 
