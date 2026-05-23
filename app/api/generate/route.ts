@@ -1,7 +1,12 @@
 import { NextRequest } from "next/server"
 import { generateCoverLetter } from "@/lib/agents"
 import type { Tier, Tone } from "@/lib/agents"
-import { dataErrorMessage, getCurrentAppUser } from "@/lib/app-data"
+import {
+  dataErrorMessage,
+  getCurrentAppUser,
+  getSupabaseSchemaCapabilities,
+  resetSchemaCapabilitiesCache,
+} from "@/lib/app-data"
 import {
   getBasePlan,
   getBillingPeriod,
@@ -126,21 +131,46 @@ export async function POST(req: NextRequest) {
 
   // 4. Insert the generation row up front.
   const tier = planToTier(user.plan)
-  const insertResult = await supabaseAdmin
+  const capabilities = await getSupabaseSchemaCapabilities()
+  const insertPayload: Record<string, unknown> = {
+    user_id: user.id,
+    resume_text: resumeText,
+    job_description: jobDescription,
+    job_title: jobTitle ?? null,
+    company_name: companyName ?? null,
+    tone,
+    tier,
+    generation_status: "running",
+  }
+  if (capabilities.generatedLettersSelectedExperienceIds) {
+    insertPayload.selected_experience_ids = selectedExperienceIds
+  }
+
+  let insertResult = await supabaseAdmin
     .from("generated_letters")
-    .insert({
-      user_id: user.id,
-      resume_text: resumeText,
-      job_description: jobDescription,
-      job_title: jobTitle ?? null,
-      company_name: companyName ?? null,
-      tone,
-      tier,
-      selected_experience_ids: selectedExperienceIds,
-      generation_status: "running",
-    })
+    .insert(insertPayload)
     .select("id")
     .single()
+
+  // Race recovery: capabilities said the column exists but insert disagrees.
+  if (
+    insertResult.error &&
+    (insertResult.error.code === "42703" ||
+      insertResult.error.code === "PGRST204" ||
+      /column .* does not exist/i.test(insertResult.error.message || ""))
+  ) {
+    console.warn(
+      "[POST /api/generate] selected_experience_ids missing at write; retrying without it:",
+      insertResult.error
+    )
+    resetSchemaCapabilitiesCache()
+    delete insertPayload.selected_experience_ids
+    insertResult = await supabaseAdmin
+      .from("generated_letters")
+      .insert(insertPayload)
+      .select("id")
+      .single()
+  }
 
   if (insertResult.error || !insertResult.data) {
     return sseError(dataErrorMessage(insertResult.error, "generated_letters"), 500)

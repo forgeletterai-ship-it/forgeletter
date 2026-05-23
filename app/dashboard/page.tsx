@@ -4,6 +4,7 @@ import {
   getApplicationBriefs,
   getCurrentPeriodBriefCount,
   getCurrentAppUser,
+  getSupabaseSchemaCapabilities,
   getUserProfile,
   getUserSettings,
 } from "@/lib/app-data"
@@ -63,6 +64,7 @@ export default async function DashboardPage() {
     { settings },
     { count: periodBriefCount, setupError: usageError },
     latestLetter,
+    capabilities,
   ] = userId
     ? await Promise.all([
         getApplicationBriefs(userId),
@@ -70,6 +72,7 @@ export default async function DashboardPage() {
         getUserSettings(userId),
         getCurrentPeriodBriefCount(userId, plan),
         getLatestLetter(userId),
+        getSupabaseSchemaCapabilities(),
       ])
     : [
         { briefs: [], setupError: "Authentication required" },
@@ -77,6 +80,11 @@ export default async function DashboardPage() {
         { settings: defaultSettings },
         { count: 0, setupError: "Authentication required" },
         null,
+        {
+          userProfileExperienceBlocks: true,
+          applicationBriefsSelectedExperienceIds: true,
+          generatedLettersSelectedExperienceIds: true,
+        },
       ]
 
   return (
@@ -88,6 +96,7 @@ export default async function DashboardPage() {
       settings={settings}
       setupError={briefsError || profileError || usageError}
       initialLatestLetter={latestLetter}
+      experiencePersistenceAvailable={capabilities.userProfileExperienceBlocks}
     />
   )
 }

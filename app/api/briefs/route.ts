@@ -3,6 +3,8 @@ import {
   dataErrorMessage,
   getApplicationBriefs,
   getCurrentAppUser,
+  getSupabaseSchemaCapabilities,
+  resetSchemaCapabilitiesCache,
 } from "@/lib/app-data"
 import {
   getBillingPeriod,
@@ -93,20 +95,47 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const { data, error: saveError } = await supabaseAdmin
+    const capabilities = await getSupabaseSchemaCapabilities()
+    const basePayload: Record<string, unknown> = {
+      user_id: user.id,
+      role,
+      company,
+      tone,
+      job_description,
+      candidate_experience,
+      status: statusForBrief(role, job_description, candidate_experience),
+    }
+    if (capabilities.applicationBriefsSelectedExperienceIds) {
+      basePayload.selected_experience_ids = selected_experience_ids
+    }
+
+    let { data, error: saveError } = await supabaseAdmin
       .from("application_briefs")
-      .insert({
-        user_id: user.id,
-        role,
-        company,
-        tone,
-        job_description,
-        candidate_experience,
-        selected_experience_ids,
-        status: statusForBrief(role, job_description, candidate_experience),
-      })
+      .insert(basePayload)
       .select("*")
       .single()
+
+    // Race recovery: cache said the column exists but the insert disagreed.
+    if (
+      saveError &&
+      (saveError.code === "42703" ||
+        saveError.code === "PGRST204" ||
+        /column .* does not exist/i.test(saveError.message || ""))
+    ) {
+      console.warn(
+        "[POST /api/briefs] selected_experience_ids missing at write; retrying without it:",
+        saveError
+      )
+      resetSchemaCapabilitiesCache()
+      delete basePayload.selected_experience_ids
+      const retry = await supabaseAdmin
+        .from("application_briefs")
+        .insert(basePayload)
+        .select("*")
+        .single()
+      data = retry.data
+      saveError = retry.error
+    }
 
     if (saveError) {
       return NextResponse.json(

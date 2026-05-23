@@ -39,6 +39,11 @@ type ProfileDraft = {
 type ProfileClientProps = {
   initialProfile: UserProfile
   setupError?: string
+  /** False when the experience_blocks/qualifications/notes columns
+   *  aren't in the database yet. Shows a non-blocking banner so the
+   *  user knows their structured entries aren't being persisted until
+   *  the migration runs. */
+  experiencePersistenceAvailable?: boolean
 }
 
 const SENIORITY_LEVELS = [
@@ -696,7 +701,11 @@ function EmployerBlock({
   )
 }
 
-export function ProfileClient({ initialProfile, setupError }: ProfileClientProps) {
+export function ProfileClient({
+  initialProfile,
+  setupError,
+  experiencePersistenceAvailable = true,
+}: ProfileClientProps) {
   const initialDraft = useMemo(
     () => createDefaultDraft(initialProfile),
     [initialProfile]
@@ -871,6 +880,18 @@ export function ProfileClient({ initialProfile, setupError }: ProfileClientProps
 
         {message ? <div className="success-alert">{message}</div> : null}
         {error ? <div className="alert">{error}</div> : null}
+        {!experiencePersistenceAvailable ? (
+          <div className="pp-info-banner" role="status">
+            <strong>Heads up:</strong> your database hasn&apos;t had the experience-
+            persistence migration applied yet, so saved Employer / Internship /
+            University blocks won&apos;t survive across page reloads. Everything
+            else (career snapshot, skills, qualifications) still saves normally,
+            and letter generation works without it.
+            <br />
+            Run <code>docs/supabase-experience-blocks.sql</code> in your
+            Supabase SQL editor to enable structured experience storage.
+          </div>
+        ) : null}
 
         <div className="pp-prog">
           {[
