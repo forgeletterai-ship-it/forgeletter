@@ -10144,48 +10144,63 @@ button.tone-chip:hover {
   isolation: isolate;
 }
 
-/* Section title — centred at the top, two-row headline. */
-.workflow-visual__title {
+.workflow-visual__grid {
   position: relative;
   z-index: 5;
-  max-width: 980px;
-  margin: 0 auto 44px;
-  text-align: center;
-}
-
-.workflow-visual__title .kicker {
-  justify-content: center;
-}
-
-.workflow-visual__title h2 {
-  font-size: clamp(40px, 4.4vw, 72px);
+  display: grid;
+  /* Demo column gets the dominant share of the row so the animation
+     reads as the section's primary visual. */
+  grid-template-columns: minmax(0, 0.55fr) minmax(0, 1.45fr);
+  gap: clamp(28px, 4vw, 56px);
+  align-items: center;
+  max-width: 1600px;
   margin: 0 auto;
-  max-width: 920px;
 }
 
-.workflow-visual__title p {
-  font-size: clamp(15px, 1.1vw, 18px);
-  max-width: 720px;
-  margin: 18px auto 0;
-}
-
-/* Demo — full width below the title. */
-.workflow-visual__demo--full {
-  position: relative;
-  z-index: 5;
+.workflow-visual__demo {
   width: 100%;
-  margin: 0 auto;
+  min-width: 0;
+}
+
+/* Tighten the headline at intermediate widths so the demo column
+   doesn't get squeezed. The original 58-86px clamp was tuned for the
+   single-column layout the cards used. */
+.workflow-visual__grid .intro-copy h2 {
+  font-size: clamp(38px, 4vw, 72px);
+}
+
+.workflow-visual__grid .intro-copy p {
+  font-size: clamp(15px, 1.1vw, 18px);
+}
+
+@media (max-width: 1100px) {
+  .workflow-visual__grid {
+    grid-template-columns: minmax(0, 0.55fr) minmax(0, 1.45fr);
+    gap: 32px;
+  }
+  .workflow-visual__grid .intro-copy h2 {
+    font-size: clamp(34px, 3.4vw, 52px);
+  }
 }
 
 @media (max-width: 860px) {
   .workflow-visual {
-    padding: 56px 20px 64px;
+    padding: 56px 24px 64px;
   }
-  .workflow-visual__title {
-    margin-bottom: 32px;
+  .workflow-visual__grid {
+    grid-template-columns: 1fr;
+    gap: 36px;
+    text-align: center;
   }
-  .workflow-visual__title h2 {
-    font-size: clamp(32px, 7vw, 44px);
+  .workflow-visual__grid .intro-copy {
+    margin: 0 auto;
+    max-width: 620px;
+  }
+  .workflow-visual__grid .kicker {
+    justify-content: center;
+  }
+  .workflow-visual__grid .intro-copy h2 {
+    font-size: clamp(34px, 7vw, 48px);
   }
 }
 
