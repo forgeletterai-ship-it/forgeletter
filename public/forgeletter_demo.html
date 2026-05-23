@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How ForgeLetter works</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--cream:#FEFBF6;--cream2:#F4EFE5;--card:#FAF6EE;--paper:#FFFFFF;--teal:#105250;--teal2:#0c403e;--gold:#C79B3C;--goldl:#E0C47C;--ink:#2A1A0E;--txt:#3A342C;--mute:#9b9384;--ph:#b9b1a3;--line:#E7E0D2;--emp:#C79B3C;--intn:#1f8a7a;--uni:#7163a8;--serif:'Spectral',Georgia,serif;--sans:'Inter',-apple-system,'Segoe UI',sans-serif}
+*{margin:0;padding:0;box-sizing:border-box}html,body{height:100%}
+body{background:#efe9dd;font-family:var(--sans);color:var(--txt);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.stage-wrap{width:100vw;height:100vh;display:flex;align-items:center;justify-content:center}
+.stage{position:relative;width:1280px;height:720px;background:radial-gradient(120% 100% at 80% 0%,#FEFBF6 0%,#F6F0E4 100%);overflow:hidden;transform-origin:center}
+.stage::before{content:"";position:absolute;inset:0;background-image:repeating-linear-gradient(135deg,rgba(176,162,138,.05) 0 1px,transparent 1px 22px);pointer-events:none}
+.goldline{position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,#C79B3C,#E0C47C);z-index:60}
+.center-layer{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;z-index:40;opacity:0;transition:opacity .9s ease}
+.center-layer.show{opacity:1}
+.center-layer h1{font-family:var(--serif);font-weight:700;color:var(--ink);font-size:58px;letter-spacing:-.5px}
+.center-layer p{font-family:var(--serif);color:var(--teal);font-size:25px;margin-top:14px}
+.cta{margin-top:30px;background:var(--teal);color:var(--goldl);font-weight:700;font-size:18px;padding:16px 34px;border-radius:40px;box-shadow:0 12px 30px rgba(16,82,80,.28);letter-spacing:.3px}
+.caption{position:absolute;left:70px;top:0;bottom:0;width:380px;display:flex;flex-direction:column;justify-content:center;z-index:30;opacity:0;transform:translateY(18px);transition:opacity .9s ease,transform .9s ease}
+.caption.show{opacity:1;transform:none}
+.cap-num{width:62px;height:62px;border:2.5px solid var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-weight:700;color:var(--gold);font-size:24px}
+.cap-title{font-family:var(--serif);font-weight:700;color:var(--ink);font-size:38px;line-height:1.12;margin-top:22px}
+.cap-sub{font-size:17px;color:var(--txt);margin-top:14px;line-height:1.5;max-width:330px}
+.dots{display:flex;gap:10px;margin-top:30px}
+.dots i{width:10px;height:10px;border-radius:50%;background:#E3CF9C;display:block;transition:all .5s}
+.dots i.on{width:26px;border-radius:6px;background:var(--teal)}
+.cap-fade{transition:opacity .7s ease}
+.window{position:absolute;right:40px;top:90px;width:760px;height:556px;background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:0 40px 90px -30px rgba(40,26,12,.45);overflow:hidden;z-index:20;opacity:0;transform:translateX(34px) scale(.985);transition:opacity 1.1s ease-in-out,transform 1.1s cubic-bezier(.4,0,.2,1)}
+.window.show{opacity:1;transform:none}
+.titlebar{height:46px;background:var(--paper);border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 18px}
+.addr{height:24px;flex:0 0 300px;background:var(--cream2);border-radius:12px;display:flex;align-items:center;gap:8px;padding:0 12px;font-size:12px;color:var(--mute)}
+.addr .dot{width:9px;height:9px;border:1.5px solid var(--mute);border-radius:50%}
+.viewport{position:relative;height:calc(100% - 46px);overflow:hidden}
+/* seamless cross-dissolve between scenes (opaque so no wash) */
+.scene{position:absolute;inset:0;padding:22px 26px;background:var(--card);opacity:0;transform:translateX(28px);transition:opacity 1.5s ease,transform 1.5s cubic-bezier(.32,0,.18,1);overflow:hidden}
+.scene.active{opacity:1;transform:none;z-index:2}
+.scene-inner{transition:transform 1.25s cubic-bezier(.45,.05,.2,1)}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:1.2px;color:var(--gold);text-transform:uppercase}
+.flabel{font-size:11.5px;color:#7a715f;font-weight:600;margin-bottom:5px;display:block}
+.field{height:38px;background:var(--paper);border:1px solid var(--line);border-radius:9px;display:flex;align-items:center;padding:0 12px;font-size:14px;color:var(--ink)}
+.field input{border:0;outline:0;background:transparent;font:inherit;color:var(--ink);width:100%}
+.field input::placeholder{color:var(--ph)}
+.field .ph{color:var(--ph)}
+.field.sel{justify-content:space-between;color:#5e564a}.field.sel svg{opacity:.5}
+.field.focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(199,155,60,.16)}
+.row{display:grid;gap:12px;margin-bottom:12px}
+/* profile */
+.pg-title{font-family:var(--serif);font-weight:700;font-size:30px;color:var(--ink)}
+.pg-sub{font-size:12.5px;color:var(--mute);margin:5px 0 12px;line-height:1.45;max-width:650px}
+.stepper{display:flex;align-items:center;gap:10px;font-size:12.5px;margin-bottom:12px}
+.st{display:flex;align-items:center;gap:7px;color:var(--mute)}.st.on{color:var(--ink);font-weight:600}
+.st i{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--mute);display:flex;align-items:center;justify-content:center;font-size:11px;font-style:normal}
+.st.on i{border-color:var(--gold);color:var(--gold)}
+.st-line{flex:0 0 60px;height:1px;background:var(--line)}
+.pcard{border:1px solid var(--line);background:var(--paper);border-radius:13px;padding:16px 18px;margin-bottom:12px}
+.pcard-h{display:flex;justify-content:space-between;align-items:baseline}.pcard-h b{font-size:15px;color:var(--ink)}
+.step-r{font-size:11px;color:var(--mute)}.pcard-sub{font-size:12px;color:var(--mute);margin-top:4px}
+.pdiv{height:1px;background:var(--line);margin:13px 0}
+.qlabel{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:6px}.muted{color:var(--mute);font-weight:400}
+.seniority{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:6px}
+.sopt{border:1px solid var(--line);border-radius:9px;padding:9px;text-align:center;background:var(--paper);transition:all .25s}
+.sopt b{display:block;font-size:13px;color:var(--ink)}.sopt span{font-size:11px;color:var(--mute)}
+.sopt.sel{border-color:var(--gold);background:#FBF3E2;box-shadow:0 0 0 2px rgba(199,155,60,.15)}
+.pfooter{display:flex;align-items:center;justify-content:space-between;background:var(--cream);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-top:14px}
+.pf-note{font-size:12.5px;color:#6b6256}
+.nextbtn{background:var(--teal);color:#fff;font-weight:600;font-size:13px;padding:11px 18px;border-radius:9px;box-shadow:0 8px 18px -6px rgba(16,82,80,.5);transition:transform .12s}
+.nextbtn.press{transform:scale(.97)}
+.pcard.locked{background:repeating-linear-gradient(135deg,#fbf7ef 0 14px,#f7f1e6 14px 15px);transition:opacity .5s,filter .5s}
+.pcard.unlocked{background:var(--paper);box-shadow:0 0 0 2px rgba(31,138,122,.18)}
+.lockrow{display:flex;gap:14px;align-items:flex-start;margin-top:6px}
+.lockbadge{width:34px;height:34px;border-radius:50%;background:#F3E7CB;color:#9a7b2e;display:flex;align-items:center;justify-content:center;font-weight:700;flex:0 0 34px}
+.lockrow b{font-size:13.5px;color:var(--ink)}.locksub{font-size:12px;color:var(--mute);margin-top:3px;line-height:1.4;max-width:600px}
+/* experience */
+.exp-step{position:absolute;right:0;top:0;font-size:11px;color:var(--mute)}
+.exp-head{font-weight:700;color:var(--ink);font-size:16px}.exp-sub{font-size:11.5px;color:var(--mute);margin-top:3px}
+.callout{background:linear-gradient(0deg,#fbf3e3,#fdf8ee);border-left:3px solid var(--gold);border-radius:6px;padding:9px 12px;margin:12px 0}
+.callout b{font-size:12px;color:var(--ink)}.callout i{display:block;font-family:var(--serif);font-style:italic;font-size:12px;color:#6b6052;margin-top:2px}
+.togs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:4px 0 12px}
+.tog{border:1px solid var(--line);background:var(--paper);border-radius:9px;height:34px;display:flex;align-items:center;justify-content:center;gap:7px;font-size:12.5px;color:#5e564a}
+.tog .b{width:7px;height:7px;border-radius:50%}
+.sec{border:1px solid var(--line);border-radius:11px;padding:12px 14px;margin-bottom:11px;position:relative}
+.sec.emp{background:#FCF8F0}.sec.intn{background:#F1F6F4}.sec.uni{background:#F4F2FA}
+.sec-h{display:flex;align-items:center;gap:8px;font-weight:700;font-size:13.5px;color:var(--ink);margin-bottom:10px}
+.sec-h .bul{width:9px;height:9px;border-radius:50%}.emp .bul{background:var(--emp)}.intn .bul{background:var(--intn)}.uni .bul{background:var(--uni)}
+.addwin{font-size:12.5px;color:var(--teal);font-weight:600;margin-top:9px}
+.wincount{position:absolute;right:14px;bottom:12px;font-size:11px;color:var(--mute)}
+.winrow{padding-left:38px;position:relative}
+.wbadge{position:absolute;left:5px;top:30px;width:20px;height:20px;border-radius:50%;background:var(--gold);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.wbadge.intn{background:var(--intn)}.wbadge.uni{background:var(--uni)}
+/* draft */
+.h-serif{font-family:var(--serif);font-weight:700;letter-spacing:1px;color:var(--ink);font-size:22px;display:flex;align-items:center;gap:9px}.h-serif .pen{color:var(--gold)}
+.dsub{font-size:12px;color:var(--mute);margin:4px 0 9px}
+.tones{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px}
+.tone{border:1px solid var(--line);background:var(--paper);border-radius:12px;padding:9px 11px}
+.tone .ic{width:28px;height:28px;border-radius:50%;background:#f3eee2;display:flex;align-items:center;justify-content:center;margin-bottom:5px}
+.tone h4{font-family:var(--serif);font-weight:700;color:var(--ink);font-size:15px}.tone p{font-size:11px;color:#6b6256;margin-top:4px;line-height:1.35}
+.tone.on{background:linear-gradient(145deg,#13615d,#0c403e);border-color:#0c403e;position:relative}.tone.on h4,.tone.on p{color:#eafcf6}.tone.on .ic{background:rgba(255,255,255,.12)}
+.tone.on .chk{position:absolute;right:10px;top:10px;width:22px;height:22px;border-radius:50%;background:var(--gold);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px}
+.dd{position:relative}
+.dd-bar{height:42px;background:var(--paper);border:1px solid #d2cab8;border-radius:10px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;font-size:14px;color:var(--ph);transition:box-shadow .25s,border-color .25s}
+.dd-bar.open{border-color:var(--gold);box-shadow:0 0 0 3px rgba(199,155,60,.18)}.dd-bar.filled{color:var(--ink)}
+.dd-bar .cv{color:#9b9384;font-size:13px;transition:transform .3s}.dd-bar.open .cv{transform:rotate(180deg)}
+.dd-list{position:absolute;left:0;right:0;top:48px;background:var(--paper);border:1px solid #e0d9ca;border-radius:12px;box-shadow:0 26px 50px -14px rgba(40,30,15,.4);padding:7px;opacity:0;transform:translateY(-6px);pointer-events:none;transition:opacity .3s,transform .3s;z-index:5}
+.dd-list.open{opacity:1;transform:none;pointer-events:auto}
+.opt{display:flex;align-items:center;gap:12px;padding:7px 10px;border-radius:8px}.opt+.opt{border-top:1px solid #efe9dc}.opt.on{background:#FAF6EC}
+.cbx{width:20px;height:20px;border-radius:5px;border:2px solid #bcb4a4;background:#fff;display:flex;align-items:center;justify-content:center;flex:0 0 20px;transition:all .18s}
+.cbx svg{opacity:0;transform:scale(.5);transition:all .18s}.opt.on .cbx{background:var(--teal);border-color:var(--teal)}.opt.on .cbx svg{opacity:1;transform:none}
+.opt .nm{font-weight:600;color:var(--ink);font-size:14px;flex:1}.opt .kd{font-size:12px;color:var(--mute)}
+.pinned{display:flex;align-items:center;gap:11px;padding:10px;border-top:1px solid #ece5d7;margin-top:2px}
+.pinned .cbx2{width:20px;height:20px;border-radius:5px;background:var(--teal);border:2px solid var(--teal);display:flex;align-items:center;justify-content:center;flex:0 0 20px}
+.pinned .nm{font-weight:600;color:var(--ink);font-size:13.5px;flex:1}.always{font-size:11px;font-weight:700;letter-spacing:.6px;color:#fff;background:var(--teal);border-radius:13px;padding:4px 12px}
+.genbtn{margin-top:12px;height:50px;background:linear-gradient(180deg,#13615d,#0e4a48);border-radius:11px;display:flex;align-items:center;justify-content:center;gap:9px;color:var(--goldl);font-weight:700;font-size:15px;box-shadow:0 12px 24px -8px rgba(16,82,80,.5);transition:transform .12s}.genbtn.press{transform:scale(.98)}
+/* letter */
+.lt-top{display:flex;align-items:flex-start;justify-content:space-between}
+.score{font-size:12.5px;color:#6f6757;margin-top:4px}
+.editbtn{background:var(--teal);color:var(--goldl);font-weight:700;font-size:13px;padding:8px 16px;border-radius:18px;display:flex;gap:6px;align-items:center}
+.paper{background:var(--paper);border:1px solid #ece6d8;border-radius:10px;padding:16px 18px;margin-top:12px;height:300px;overflow:hidden}
+.paper .dt{font-size:11.5px;color:#6b6256}.paper p{font-family:var(--serif);font-size:12px;color:#352f27;line-height:1.5;margin-top:9px}
+.lt-actions{display:flex;gap:12px;margin-top:14px}
+.btn-ghost{flex:1;height:46px;border:1px solid var(--gold);border-radius:10px;display:flex;align-items:center;justify-content:center;gap:8px;color:var(--gold);font-weight:600;font-size:14px;background:#fffdf8}
+.btn-solid{flex:1;height:46px;background:var(--teal);border-radius:10px;display:flex;align-items:center;justify-content:center;gap:8px;color:var(--goldl);font-weight:700;font-size:14px}
+.cursor{position:absolute;left:0;top:0;width:26px;height:26px;z-index:55;pointer-events:none;opacity:0;transition:transform .85s cubic-bezier(.4,0,.2,1),opacity .45s;will-change:transform}
+.cursor svg{filter:drop-shadow(0 2px 3px rgba(0,0,0,.35))}
+.cursor .ring{position:absolute;left:-12px;top:-12px;width:36px;height:36px;border:3px solid rgba(16,82,80,.55);border-radius:50%;opacity:0;transform:scale(.3)}
+.cursor.click .ring{animation:ring .55s ease-out}
+@keyframes ring{0%{opacity:.8;transform:scale(.3)}100%{opacity:0;transform:scale(1.1)}}
+</style></head>
+<body><div class="stage-wrap"><div class="stage" id="stage">
+<div class="goldline"></div>
+<div class="center-layer" id="intro"><h1>How ForgeLetter works</h1><p>Set it up once. Apply everywhere.</p></div>
+<div class="caption" id="caption"><div class="cap-num" id="capNum">01</div><div class="cap-title cap-fade" id="capTitle">Build your profile once</div><div class="cap-sub cap-fade" id="capSub">Fill it in once - ForgeLetter reuses it for every letter.</div><div class="dots" id="dots"><i class="on"></i><i></i><i></i><i></i></div></div>
+<div class="window" id="window"><div class="titlebar"><div class="addr"><span class="dot"></span>forgeletter.app/workspace</div></div><div class="viewport">
+
+<!-- SCENE 0: PROFILE -->
+<div class="scene" id="sc-profile"><div class="scene-inner" id="profInner">
+  <div class="pg-title">Your profile</div>
+  <div class="pg-sub">The context behind every letter you generate. Fill this in once - the AI pulls from it automatically and adapts it to each specific job.</div>
+  <div class="stepper"><span class="st on"><i>1</i> Career snapshot</span><span class="st-line"></span><span class="st" id="st2"><i>2</i> Experience &amp; wins</span></div>
+  <div class="pcard">
+    <div class="pcard-h"><b>Career snapshot</b><span class="step-r">Step 1 of 2</span></div>
+    <div class="pcard-sub">Your professional identity and seniority. This calibrates the tone and vocabulary of every letter.</div>
+    <div class="pdiv"></div>
+    <div class="qlabel">How would you describe yourself professionally?</div>
+    <div class="field" style="height:44px"><input id="p-desc" readonly></div>
+    <div class="qlabel" style="margin-top:14px">Seniority level <span class="muted">- calibrates tone, vocabulary, and confidence register</span></div>
+    <div class="seniority">
+      <div class="sopt"><b>Entry</b><span>0-2 yrs</span></div>
+      <div class="sopt" id="p-mid"><b>Mid</b><span>3-7 yrs</span></div>
+      <div class="sopt"><b>Senior</b><span>8-12 yrs</span></div>
+      <div class="sopt"><b>Leadership</b><span>13-18 yrs</span></div>
+      <div class="sopt"><b>C-suite</b><span>18+ yrs</span></div>
+    </div>
+    <div class="pfooter"><span class="pf-note" id="pfNote">Fill in your snapshot to continue.</span><div class="nextbtn" id="nextBtn">Next: experience &amp; wins</div></div>
+  </div>
+  <div class="pcard locked" id="lockCard">
+    <div class="pcard-h"><b>Experience &amp; wins</b><span class="step-r">Step 2 of 2</span></div>
+    <div class="lockrow" id="lockRow"><span class="lockbadge">2</span><div><b>Complete section 1 first</b><div class="locksub">Fill in your career snapshot, then click the next button above to unlock your experience, evidence, and achievements.</div></div></div>
+  </div>
+</div></div>
+
+<!-- SCENE 1: EXPERIENCE -->
+<div class="scene" id="sc-exp"><div class="scene-inner" id="expInner">
+  <div style="position:relative"><div class="exp-step">Step 2 of 2</div><div class="exp-head">Experience &amp; wins</div><div class="exp-sub">Your work history, education, and the wins from each. Add a number to every achievement.</div></div>
+  <div class="callout"><b>What makes an achievement land</b><i>"Grew the audience from 0 to 84K in 8 months with no paid spend - the team asked who was running it."</i></div>
+  <div class="togs"><div class="tog"><span class="b" style="background:var(--emp)"></span>Employer</div><div class="tog"><span class="b" style="background:var(--intn)"></span>Internship</div><div class="tog"><span class="b" style="background:var(--uni)"></span>University</div></div>
+  <div class="sec emp" id="secEmp">
+    <div class="sec-h"><span class="bul"></span>Employer</div>
+    <div class="row" style="grid-template-columns:1.5fr 1fr .9fr .9fr">
+      <div><span class="flabel">Company name</span><div class="field"><input id="f-comp" data-ph="e.g. Acme Corp"></div></div>
+      <div><span class="flabel">Your title</span><div class="field"><input id="f-title" data-ph="Job title"></div></div>
+      <div><span class="flabel">Type</span><div class="field sel">Full time <svg width="10" height="6"><path d="M0 0l5 5 5-5" fill="none" stroke="#555" stroke-width="1.4"/></svg></div></div>
+      <div><span class="flabel">Sector</span><div class="field sel" id="f-sector"><span class="ph">Select...</span><svg width="10" height="6"><path d="M0 0l5 5 5-5" fill="none" stroke="#555" stroke-width="1.4"/></svg></div></div>
+    </div>
+    <div class="row winrow" style="grid-template-columns:1.2fr 1fr 1fr">
+      <div class="wbadge">1</div>
+      <div><span class="flabel">What did you achieve?</span><div class="field"><input id="f-ach" data-ph="The result"></div></div>
+      <div><span class="flabel">The number</span><div class="field"><input id="f-num" data-ph="e.g. 34%, EUR2M"></div></div>
+      <div><span class="flabel">Why it mattered</span><div class="field"><input id="f-why" data-ph="Business impact"></div></div>
+    </div>
+    <div class="addwin">+ Add win</div><div class="wincount">1 win</div>
+  </div>
+  <div class="sec intn" id="secIntn">
+    <div class="sec-h"><span class="bul"></span>Internship</div>
+    <div class="row" style="grid-template-columns:1.5fr 1fr .9fr .9fr .9fr">
+      <div><span class="flabel">Company / Organisation</span><div class="field"><input id="f-icomp" data-ph="e.g. Goldman Sachs"></div></div>
+      <div><span class="flabel">Role</span><div class="field"><input id="f-irole" data-ph="e.g. Finance Intern"></div></div>
+      <div><span class="flabel">Duration</span><div class="field"><input id="f-idur" data-ph="e.g. 3 months"></div></div>
+      <div><span class="flabel">Sector</span><div class="field sel"><span class="ph">Select...</span><svg width="10" height="6"><path d="M0 0l5 5 5-5" fill="none" stroke="#555" stroke-width="1.4"/></svg></div></div>
+      <div><span class="flabel">Size <span style="color:var(--mute);font-weight:400">(optional)</span></span><div class="field sel">Not sure <svg width="10" height="6"><path d="M0 0l5 5 5-5" fill="none" stroke="#555" stroke-width="1.4"/></svg></div></div>
+    </div>
+    <div class="row winrow" style="grid-template-columns:1.2fr 1fr 1fr">
+      <div class="wbadge intn">1</div>
+      <div><span class="flabel">What did you do?</span><div class="field"><input id="f-ido" data-ph="e.g. Built a dashboard"></div></div>
+      <div><span class="flabel">The number</span><div class="field"><input id="f-inum" data-ph="e.g. 200+ users"></div></div>
+      <div><span class="flabel">What happened</span><div class="field"><input id="f-ihap" data-ph="e.g. Became a permanent feature"></div></div>
+    </div>
+    <div class="addwin">+ Add another</div><div class="wincount">1 added</div>
+  </div>
+  <div class="sec uni" id="secUni">
+    <div class="sec-h"><span class="bul"></span>University</div>
+    <div class="row" style="grid-template-columns:1.3fr 1fr">
+      <div><span class="flabel">University name</span><div class="field"><input id="f-uname" data-ph="e.g. University of Manchester"></div></div>
+      <div><span class="flabel">Degree</span><div class="field"><input id="f-udeg" data-ph="e.g. BSc Computer Science"></div></div>
+    </div>
+    <div class="row winrow" style="grid-template-columns:1.2fr 1fr 1fr">
+      <div class="wbadge uni">1</div>
+      <div><span class="flabel">Project or achievement</span><div class="field"><input id="f-uproj" data-ph="e.g. Led the Marketing Society"></div></div>
+      <div><span class="flabel">Scale or number</span><div class="field"><input id="f-uscale" data-ph="e.g. 300 members"></div></div>
+      <div><span class="flabel">Recognition</span><div class="field"><input id="f-urec" data-ph="e.g. Largest in faculty"></div></div>
+    </div>
+    <div class="addwin">+ Add project or award</div><div class="wincount">1 added</div>
+  </div>
+</div></div>
+
+<!-- SCENE 2: DRAFT -->
+<div class="scene" id="sc-draft"><div class="scene-inner">
+  <div class="h-serif"><span class="pen">✎</span>DRAFT INPUTS</div>
+  <div class="dsub">Save your brief and ForgeLetter runs the 12-agent pipeline to write, verify, and score the cover letter.</div>
+  <div class="eyebrow">Tone preset</div>
+  <div class="tones" style="margin-top:7px">
+    <div class="tone"><div class="ic">◆</div><h4>Professional</h4><p>Clear, polished, and suitable for most roles.</p></div>
+    <div class="tone"><div class="ic">☀</div><h4>Warm</h4><p>Human and relational for culture-led companies.</p></div>
+    <div class="tone on"><div class="chk">✓</div><div class="ic">✈</div><h4>Direct</h4><p>Sharp, confident, and outcome-focused.</p></div>
+  </div>
+  <div class="row" style="grid-template-columns:1fr 1fr">
+    <div><span class="eyebrow">Target role</span><div class="field" style="margin-top:6px">Senior Business Consultant</div></div>
+    <div><span class="eyebrow">Company</span><div class="field" style="margin-top:6px">Northpeak</div></div>
+  </div>
+  <span class="eyebrow">Experiences to include</span>
+  <div class="dd" style="margin-top:7px">
+    <div class="dd-bar" id="ddBar"><span id="ddLabel">Select experiences to include</span><span class="cv">▾</span></div>
+    <div class="dd-list" id="ddList">
+      <div class="opt" data-k="Brightfold Labs"><span class="cbx"><svg width="12" height="12"><path d="M2 6l3 3 5-6" fill="none" stroke="#fff" stroke-width="2"/></svg></span><span class="nm">Brightfold Labs</span><span class="kd">Employer</span></div>
+      <div class="opt" data-k="Harbor Finance"><span class="cbx"><svg width="12" height="12"><path d="M2 6l3 3 5-6" fill="none" stroke="#fff" stroke-width="2"/></svg></span><span class="nm">Harbor Finance</span><span class="kd">Internship</span></div>
+      <div class="opt" data-k="Westbridge University"><span class="cbx"><svg width="12" height="12"><path d="M2 6l3 3 5-6" fill="none" stroke="#fff" stroke-width="2"/></svg></span><span class="nm">Westbridge University</span><span class="kd">Academic</span></div>
+      <div class="pinned"><span class="cbx2"><svg width="12" height="12"><path d="M2 6l3 3 5-6" fill="none" stroke="#fff" stroke-width="2"/></svg></span><span class="nm">Qualifications &amp; achievements</span><span class="always">ALWAYS</span></div>
+    </div>
+  </div>
+  <div class="genbtn" id="genBtn">✦ Save brief &amp; generate letter</div>
+</div></div>
+
+<!-- SCENE 3: LETTER -->
+<div class="scene" id="sc-letter"><div class="scene-inner">
+  <div class="lt-top"><div><div class="h-serif" style="font-size:20px">📄 GENERATED COVER LETTER</div><div class="score">Score 94/100 - best draft delivered. Edit freely and save your changes.</div></div><div class="editbtn">✎ Edit</div></div>
+  <div class="paper"><div class="dt">May 20, 2026</div><div class="dt" style="margin-top:9px">Hiring Manager<br>Northpeak</div>
+    <p>Dear Northpeak Hiring Team,</p>
+    <p>When I rebuilt the onboarding flow for 11,000 monthly active users, weekly retention rose from 34% to 58% in nine months - the result of diagnosing the full activation arc and iterating on the sequence until behaviour measurably shifted, while maintaining a single design system across four product surfaces.</p>
+    <p>That retention lift had a business dimension worth naming. A 24-point increase, sustained over nine months, translates into reduced churn risk and expanded activation among the cohort most likely to convert - the kind of outcome I frame for leadership and executive stakeholders, not just reviewers.</p>
+    <p>I would welcome the chance to walk your team through the case study - the decisions, the restructure, and the alignment behind them. I am available this week or next.</p>
+  </div>
+  <div class="lt-actions"><div class="btn-ghost">⧉ Copy to clipboard</div><div class="btn-solid" id="dlBtn">⤓ Download PDF</div></div>
+</div></div>
+
+</div></div>
+<div class="center-layer" id="outro"><h1>Set it up once.<br>Apply everywhere.</h1><div class="cta">Start now →</div></div>
+<div class="cursor" id="cursor"><span class="ring"></span><svg width="26" height="26" viewBox="0 0 26 26"><path d="M3 2 L3 20 L8 15.5 L11.5 23 L14.5 21.6 L11 14.2 L18 14 Z" fill="#241608" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/></svg></div>
+</div></div>
+<script>
+const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s),sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const stage=$('#stage'),cursor=$('#cursor');
+function fit(){const sc=Math.min(innerWidth/1280,innerHeight/720);stage.style.transform=`scale(${sc})`}addEventListener('resize',fit);fit();
+$$('#sc-exp input,#p-desc').forEach(i=>{if(i.dataset.ph)i.setAttribute('placeholder',i.dataset.ph);i.readOnly=true});
+function moveTo(el,dx=0,dy=0){const s=stage.getBoundingClientRect(),r=el.getBoundingClientRect(),sc=s.width/1280;cursor.style.transform=`translate(${(r.left-s.left)/sc+r.width/sc/2+dx}px,${(r.top-s.top)/sc+r.height/sc/2+dy}px)`}
+async function click(){cursor.classList.remove('click');void cursor.offsetWidth;cursor.classList.add('click');await sleep(170)}
+async function type(sel,text,cps=46){const inp=$(sel),fld=inp.closest('.field');moveTo(inp,-fld.offsetWidth/2+18);await sleep(900);fld.classList.add('focus');inp.focus({preventScroll:true});await sleep(200);for(let i=1;i<=text.length;i++){inp.value=text.slice(0,i);await sleep(cps+Math.random()*24)}await sleep(240);fld.classList.remove('focus')}
+const cap={num:$('#capNum'),title:$('#capTitle'),sub:$('#capSub'),dots:$$('#dots i')};
+async function setCap(n,t,s,d){cap.title.style.opacity=0;cap.sub.style.opacity=0;await sleep(440);cap.num.textContent=n;cap.title.textContent=t;cap.sub.textContent=s;cap.dots.forEach((x,i)=>x.classList.toggle('on',i===d));cap.title.style.opacity=1;cap.sub.style.opacity=1;await sleep(140)}
+function show(el,on=true){el.classList.toggle('show',on)}
+function scene(id){$$('.scene').forEach(s=>{if(s.id===id){s.style.zIndex=2;s.classList.add('active')}else if(s.classList.contains('active')){s.style.zIndex=1;s.classList.remove('active')}})}
+function scrollExpTo(el){const inner=$('#expInner');const t=Math.max(0,el.offsetTop-118);inner.style.transform=`translateY(${-t}px)`}
+let running=false;
+async function run(){
+  if(running)return;running=true;
+  // reset
+  $$('#sc-exp input').forEach(i=>i.value='');$('#p-desc').value='';
+  $('#f-sector').innerHTML='<span class="ph">Select...</span><svg width="10" height="6"><path d="M0 0l5 5 5-5" fill="none" stroke="#555" stroke-width="1.4"/></svg>';$('#f-sector').style.color='';
+  $$('.opt').forEach(o=>o.classList.remove('on'));$('#ddList').classList.remove('open');$('#ddBar').classList.remove('open','filled');$('#ddLabel').textContent='Select experiences to include';
+  $('#p-mid').classList.remove('sel');$('#lockCard').classList.add('locked');$('#lockCard').classList.remove('unlocked');$('#pfNote').textContent='Fill in your snapshot to continue.';
+  $('#profInner').style.transform='';$('#expInner').style.transform='';$('#st2').classList.remove('on');
+  $$('.scene').forEach(s=>{s.classList.remove('active');s.style.zIndex=''});
+  show($('#intro'),false);show($('#outro'),false);show($('#window'),false);show($('#caption'),false);cursor.style.opacity=0;await sleep(150);
+
+  show($('#intro'),true);await sleep(1700);show($('#intro'),false);await sleep(750);
+  show($('#window'),true);
+  await setCap('01','Build your profile once','Fill it in once - ForgeLetter reuses it for every letter.',0);
+  show($('#caption'),true);scene('sc-profile');await sleep(1300);cursor.style.opacity=1;
+
+  // STEP 1 - profile
+  await type('#p-desc','Growth marketer with 5 years in SaaS and lifecycle marketing',38);
+  moveTo($('#p-mid'));await sleep(880);await click();$('#p-mid').classList.add('sel');await sleep(450);
+  $('#pfNote').textContent='Career snapshot is ready. Continue to add your evidence and wins.';
+  const nb=$('#nextBtn');moveTo(nb);await sleep(880);await click();nb.classList.add('press');await sleep(160);nb.classList.remove('press');
+  $('#st2').classList.add('on');$('#lockCard').classList.remove('locked');$('#lockCard').classList.add('unlocked');await sleep(700);
+
+  // STEP 2 - experience (with smooth scrolling)
+  await setCap('02','Add your evidence & wins','Add employer, academic and internship - then type the details.',1);
+  scene('sc-exp');$('#expInner').style.transform='';await sleep(1300);
+  await type('#f-comp','Brightfold Labs');await type('#f-title','Product Designer');
+  moveTo($('#f-sector'));await sleep(880);await click();
+  $('#f-sector').innerHTML='Software &amp; SaaS <svg width="10" height="6"><path d="M0 0l5 5 5-5" fill="none" stroke="#555" stroke-width="1.4"/></svg>';$('#f-sector').style.color='#2A1A0E';await sleep(120);
+  await type('#f-ach','Rebuilt the onboarding flow');await type('#f-num','+24% retention');await type('#f-why','Cut churn risk');
+  scrollExpTo($('#secIntn'));await sleep(1320);
+  await type('#f-icomp','Harbor Finance');await type('#f-irole','Finance Intern');await type('#f-idur','3 months');
+  await type('#f-ido','Built dashboards');await type('#f-inum','200+ users');await type('#f-ihap','Made permanent');
+  scrollExpTo($('#secUni'));await sleep(1320);
+  await type('#f-uname','Westbridge University');await type('#f-udeg','BSc Computer Science');
+  await type('#f-uproj','Led the design society');await type('#f-uscale','300 members');await type('#f-urec','Top of faculty');await sleep(750);
+
+  // STEP 3 - draft + dropdown
+  await setCap('03','Pick the experience that fits','Choose saved experiences to include - qualifications are always added.',2);
+  scene('sc-draft');await sleep(1350);
+  const bar=$('#ddBar'),list=$('#ddList');moveTo(bar);await sleep(880);await click();bar.classList.add('open');list.classList.add('open');await sleep(450);
+  const chosen=[];for(const k of ['Brightfold Labs','Harbor Finance']){const o=[...$$('.opt')].find(o=>o.dataset.k===k);moveTo(o.querySelector('.cbx'));await sleep(840);await click();o.classList.add('on');chosen.push(k);$('#ddLabel').textContent=chosen.join(', ');bar.classList.add('filled');await sleep(280)}
+  await sleep(560);bar.classList.remove('open');list.classList.remove('open');await sleep(380);
+  const gen=$('#genBtn');moveTo(gen);await sleep(880);await click();gen.classList.add('press');await sleep(170);gen.classList.remove('press');await sleep(700);
+
+  // STEP 4 - letter
+  await setCap('04','Your scored, ready letter','Reviewed by the 12-agent pipeline. Copy or download as a PDF.',3);
+  scene('sc-letter');await sleep(1350);
+  moveTo($('#dlBtn'));await sleep(880);await click();await sleep(900);
+
+  show($('#caption'),false);show($('#window'),false);cursor.style.opacity=0;await sleep(800);
+  show($('#outro'),true);await sleep(2600);show($('#outro'),false);await sleep(800);
+  running=false;setTimeout(()=>{if(!running)run()},900);
+}
+window.addEventListener('load',()=>setTimeout(run,400));
+</script></body></html>
