@@ -712,7 +712,19 @@ export function ProfileClient({
   )
   const [profile, setProfile] = useState(initialDraft)
   const [savedProfile, setSavedProfile] = useState(initialProfile)
-  const [experienceUnlocked, setExperienceUnlocked] = useState(false)
+  // Returning users (who already have a saved headline OR saved experience
+  // blocks) skip the "complete section 1 first" gating — they've been
+  // through the flow before and shouldn't have to re-unlock step 2 on
+  // every visit. New users (empty saved profile) still see the gated
+  // flow that nudges them through step 1.
+  const hasSavedHeadline =
+    (initialProfile.professional_headline ?? "").trim().length > 0
+  const hasSavedExperience =
+    Array.isArray(initialProfile.experience_blocks) &&
+    initialProfile.experience_blocks.length > 0
+  const hasSavedSkills = (initialProfile.strengths ?? "").trim().length > 0
+  const returningUser = hasSavedHeadline || hasSavedExperience || hasSavedSkills
+  const [experienceUnlocked, setExperienceUnlocked] = useState(returningUser)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState("")
   const [error, setError] = useState(setupError || "")
@@ -841,7 +853,15 @@ export function ProfileClient({
 
   function discardChanges() {
     setProfile(createDefaultDraft(savedProfile))
-    setExperienceUnlocked(false)
+    // For returning users, "Discard" reverts edits but keeps step 2
+    // unlocked — they shouldn't have to re-unlock just because they
+    // backed out of an in-progress edit.
+    const stillReturningUser =
+      (savedProfile.professional_headline ?? "").trim().length > 0 ||
+      (Array.isArray(savedProfile.experience_blocks) &&
+        savedProfile.experience_blocks.length > 0) ||
+      (savedProfile.strengths ?? "").trim().length > 0
+    setExperienceUnlocked(stillReturningUser)
     setMessage("")
     setError(setupError || "")
   }
@@ -902,7 +922,14 @@ export function ProfileClient({
             },
             {
               label: "Experience & wins",
-              state: experienceUnlocked ? "current" : "locked",
+              // Returning users with saved blocks see step 2 as "done";
+              // returning users who only have a saved headline see
+              // "current"; brand-new users see "locked".
+              state: hasSavedExperience
+                ? "done"
+                : experienceUnlocked
+                  ? "current"
+                  : "locked",
               n: 2,
             },
           ].map((step, index, steps) => (
@@ -995,21 +1022,26 @@ export function ProfileClient({
               </div>
             </div>
 
-            <div className="pp-step-actions">
-              <div className="pp-step-copy">
-                {careerSnapshotComplete
-                  ? "Career snapshot is ready. Continue to add your evidence and wins."
-                  : "Add your professional headline and seniority to unlock the next section."}
+            {/* Returning users who already have step 2 unlocked don't
+                need to see the "Next" CTA — both cards are visible at
+                once and they can edit either freely. */}
+            {!experienceUnlocked ? (
+              <div className="pp-step-actions">
+                <div className="pp-step-copy">
+                  {careerSnapshotComplete
+                    ? "Career snapshot is ready. Continue to add your evidence and wins."
+                    : "Add your professional headline and seniority to unlock the next section."}
+                </div>
+                <button
+                  className="pp-next-btn"
+                  type="button"
+                  disabled={!careerSnapshotComplete}
+                  onClick={() => setExperienceUnlocked(true)}
+                >
+                  Next: experience &amp; wins
+                </button>
               </div>
-              <button
-                className="pp-next-btn"
-                type="button"
-                disabled={!careerSnapshotComplete}
-                onClick={() => setExperienceUnlocked(true)}
-              >
-                Next: experience & wins
-              </button>
-            </div>
+            ) : null}
           </div>
         </div>
 
