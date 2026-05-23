@@ -331,21 +331,24 @@ export default function HomePage() {
           <div className="marble-glow glow-right" />
           <div className="marble-glow glow-bottom" />
 
-          <div className="workflow-visual__title">
-            <div className="kicker">How it works</div>
-            <h2 id="workflow-heading">
-              From job description to <span className="headline-teal">interview-ready</span>
-              <br />
-              letter in under 3 minutes.
-            </h2>
-            <p>
-              A guided AI workflow that helps you move from job description
-              to polished final letter with clarity, speed, and premium presentation.
-            </p>
-          </div>
+          <div className="workflow-visual__grid">
+            <div className="intro-copy">
+              <div className="kicker">How it works</div>
+              <h2 id="workflow-heading">
+                From job description to <span className="headline-teal">interview-ready</span>
+                <br />
+                letter in under 3 minutes.
+              </h2>
+              <p>
+                A guided AI workflow that helps you move from job description
+                <br className="desktop" />
+                to polished final letter with clarity, speed, and premium presentation.
+              </p>
+            </div>
 
-          <div className="workflow-visual__demo workflow-visual__demo--full">
-            <HowItWorksDemo maxWidthPx={1600} />
+            <div className="workflow-visual__demo">
+              <HowItWorksDemo />
+            </div>
           </div>
         </section>
 
