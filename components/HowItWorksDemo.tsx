@@ -4,26 +4,30 @@ import { useEffect, useRef, useState } from "react"
 import Image from "next/image"
 
 /**
- * Embedded animated walkthrough on the landing page's "How it works"
- * section. The animation itself is a self-contained HTML file at
- * /public/forgeletter_demo.html (its own CSS reset, fonts, JS) — kept
- * isolated inside an iframe so its globals can't collide with the site.
+ * Embedded animated walkthrough for the landing page's "How it works"
+ * section. The animation lives at /public/forgeletter_demo.html — a
+ * self-contained file with its own CSS reset and JS. We isolate it
+ * inside an iframe so its globals can't collide with the site's.
  *
- * Performance contract (the demo loops at 60fps 24/7):
- *  - The iframe never loads until it scrolls into view.
- *  - When it leaves the viewport for >2s we detach the src ("about:
- *    blank") so the browser stops running its rAF loop. We restore
- *    src when it scrolls back in.
+ * Design notes:
+ *   - The demo file is used AS-IS, no modifications. It works perfectly
+ *     when loaded standalone, so we don't touch it.
+ *   - The iframe is set up exactly ONCE on first viewport intersection,
+ *     then left alone. We deliberately do NOT detach the iframe when it
+ *     scrolls out of view — the previous version of this component did,
+ *     and the constant reload restarted the animation mid-scene which
+ *     looked broken on the screen.
+ *   - prefers-reduced-motion: the iframe doesn't auto-load; users see a
+ *     static fallback panel with an explicit Play button.
  *
- * Accessibility:
- *  - Descriptive title for screen readers.
- *  - When prefers-reduced-motion is set, we render a static fallback
- *    image instead of auto-playing animation, with a "Play animation"
- *    button users can opt into.
+ * Layout:
+ *   - 16:9 lock via padding-top: 56.25% (more reliable than CSS
+ *     aspect-ratio inside grid cells that align-items:center).
+ *   - Iframe positioned absolute inset:0 so it always exactly fills
+ *     the 16:9 box.
  */
 
 const DEMO_SRC = "/forgeletter_demo.html"
-const DETACH_AFTER_OUT_OF_VIEW_MS = 2_000
 const FALLBACK_IMAGE = "/hero-image-transparent.png"
 
 interface Props {
@@ -35,19 +39,13 @@ interface Props {
 
 export function HowItWorksDemo({ maxWidthPx = 1200, radiusPx = 14 }: Props) {
   const wrapperRef = useRef<HTMLDivElement | null>(null)
-  const iframeRef = useRef<HTMLIFrameElement | null>(null)
-  const detachTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // True once the section has scrolled into view. After that the iframe
-  // has its src set. We toggle the src on/off based on visibility for
-  // CPU savings but track this so we know whether the user has ever
-  // seen the demo (used to skip the autoplay altogether under reduced
-  // motion).
+  // Has the demo been activated (loaded) yet? Flipped to true the first
+  // time the wrapper intersects the viewport. After that we never flip
+  // it back — once loaded, the demo just keeps running.
   const [activated, setActivated] = useState(false)
 
-  // Reduced-motion handling. We don't auto-load the iframe when the
-  // user prefers reduced motion — they get a static image and a play
-  // button.
+  // Reduced-motion handling.
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
   const [userOptedIn, setUserOptedIn] = useState(false)
 
@@ -59,66 +57,32 @@ export function HowItWorksDemo({ maxWidthPx = 1200, radiusPx = 14 }: Props) {
     return () => mq.removeEventListener?.("change", onChange)
   }, [])
 
-  // IntersectionObserver: load + unload the iframe based on visibility.
+  // IntersectionObserver — single-shot. As soon as the wrapper enters
+  // the viewport we activate the iframe and stop observing.
   useEffect(() => {
+    if (activated) return
+    if (prefersReducedMotion && !userOptedIn) return
+
     const el = wrapperRef.current
     if (!el) return
-
-    // If reduced motion is active and user hasn't opted in, don't
-    // attach the observer at all — the static fallback stays.
-    if (prefersReducedMotion && !userOptedIn) return
 
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
           if (entry.isIntersecting) {
-            if (detachTimer.current) {
-              clearTimeout(detachTimer.current)
-              detachTimer.current = null
-            }
-            // Mount the demo. Setting state triggers the iframe render
-            // with the real src — the wrapper's space is already reserved
-            // by the 16:9 box so there's no layout shift.
             setActivated(true)
-            const iframe = iframeRef.current
-            if (iframe && iframe.src !== window.location.origin + DEMO_SRC) {
-              // Re-attach the demo if we previously swapped it out.
-              iframe.src = DEMO_SRC
-            }
-          } else {
-            // Schedule detach after a short delay so a quick scroll
-            // past doesn't unnecessarily kill+re-load the animation.
-            if (!detachTimer.current && iframeRef.current) {
-              detachTimer.current = setTimeout(() => {
-                const iframe = iframeRef.current
-                if (iframe) {
-                  // about:blank stops the inner JS/animation loop
-                  // immediately and releases CPU.
-                  iframe.src = "about:blank"
-                }
-                detachTimer.current = null
-              }, DETACH_AFTER_OUT_OF_VIEW_MS)
-            }
+            observer.disconnect()
+            return
           }
         }
       },
-      { rootMargin: "200px 0px", threshold: 0.01 }
+      { rootMargin: "300px 0px", threshold: 0.01 }
     )
 
     observer.observe(el)
-    return () => {
-      observer.disconnect()
-      if (detachTimer.current) {
-        clearTimeout(detachTimer.current)
-        detachTimer.current = null
-      }
-    }
-  }, [prefersReducedMotion, userOptedIn])
+    return () => observer.disconnect()
+  }, [activated, prefersReducedMotion, userOptedIn])
 
-  // 16:9 lock via padding-top trick. This is more reliable than CSS
-  // `aspect-ratio` inside a grid cell that align-items:center, where
-  // some browsers compute the height before the aspect-ratio kicks in
-  // and the iframe ends up at a row-height that isn't 16:9.
   const wrapperStyle: React.CSSProperties = {
     width: "100%",
     maxWidth: maxWidthPx,
@@ -129,8 +93,9 @@ export function HowItWorksDemo({ maxWidthPx = 1200, radiusPx = 14 }: Props) {
     overflow: "hidden",
     boxShadow:
       "0 18px 36px -16px rgba(40, 26, 12, 0.22), 0 2px 8px -4px rgba(40, 26, 12, 0.08)",
-    // Demo HTML body is transparent — any sub-pixel gap shows this.
-    background: "transparent",
+    // Match the demo's body background so any sub-pixel seam between
+    // the iframe and our wrapper is invisible.
+    background: "#efe9dd",
   }
 
   const showFallback = prefersReducedMotion && !userOptedIn
@@ -145,20 +110,14 @@ export function HowItWorksDemo({ maxWidthPx = 1200, radiusPx = 14 }: Props) {
     >
       {showFallback ? (
         <FallbackPanel onPlay={() => setUserOptedIn(true)} />
-      ) : (
+      ) : activated ? (
+        // Render the iframe ONLY after activation. Once mounted, we
+        // never change its src again — React's reconciliation keeps
+        // the iframe element stable so the animation runs uninterrupted.
         <iframe
-          ref={iframeRef}
-          // Only set src once activated. Before that the iframe is empty
-          // and uses zero network/CPU. `loading="lazy"` also prevents
-          // network on initial paint even when we set src.
-          src={activated ? DEMO_SRC : undefined}
+          src={DEMO_SRC}
           title="Animated walkthrough of how ForgeLetter works"
           loading="lazy"
-          // Sandbox: we control the demo file, but isolate it anyway.
-          // - allow-scripts: the demo needs JS to animate
-          // - same-origin so it can read its own font @import URLs from
-          //   googleapis (the demo's CSS imports them)
-          sandbox="allow-scripts allow-same-origin"
           style={{
             position: "absolute",
             inset: 0,
@@ -168,6 +127,23 @@ export function HowItWorksDemo({ maxWidthPx = 1200, radiusPx = 14 }: Props) {
             display: "block",
           }}
         />
+      ) : (
+        // Pre-activation placeholder — keeps the 16:9 space reserved
+        // (already handled by the wrapper) and shows a faint hint of
+        // what's coming so the empty area doesn't look broken.
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            display: "grid",
+            placeItems: "center",
+            color: "#9b9384",
+            fontSize: 14,
+            letterSpacing: "0.04em",
+          }}
+        >
+          Loading walkthrough…
+        </div>
       )}
     </div>
   )
