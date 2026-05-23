@@ -14470,3 +14470,19 @@ button.tone-chip:hover {
   font-size: 12px;
   color: #105250;
 }
+
+/* HowItWorksDemo wrapper — enforce 16:9 height via aspect-ratio in
+   modern browsers, fall back to padding-top trick for older ones. */
+.how-it-works-demo {
+  position: relative;
+  width: 100%;
+  /* Universal fallback: padding-top reserves height even when
+     aspect-ratio isn't supported. */
+  padding-top: 56.25%;
+}
+@supports (aspect-ratio: 16 / 9) {
+  .how-it-works-demo {
+    padding-top: 0;
+    aspect-ratio: 16 / 9;
+  }
+}

@@ -1,30 +1,30 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import Image from "next/image"
 
 /**
- * Embedded animated walkthrough for the landing page's "How it works"
- * section. The animation lives at /public/forgeletter_demo.html — a
- * self-contained file with its own CSS reset and JS. We isolate it
- * inside an iframe so its globals can't collide with the site's.
+ * Embedded animated walkthrough on the landing page's "How it works"
+ * section.
  *
- * Design notes:
- *   - The demo file is used AS-IS, no modifications. It works perfectly
- *     when loaded standalone, so we don't touch it.
- *   - The iframe is set up exactly ONCE on first viewport intersection,
- *     then left alone. We deliberately do NOT detach the iframe when it
- *     scrolls out of view — the previous version of this component did,
- *     and the constant reload restarted the animation mid-scene which
- *     looked broken on the screen.
- *   - prefers-reduced-motion: the iframe doesn't auto-load; users see a
- *     static fallback panel with an explicit Play button.
+ * The animation file at /public/forgeletter_demo.html is self-contained
+ * (its own CSS reset, JS, and fonts) and is loaded byte-identical to
+ * the original — we don't touch it. The iframe isolates its globals.
  *
- * Layout:
- *   - 16:9 lock via padding-top: 56.25% (more reliable than CSS
- *     aspect-ratio inside grid cells that align-items:center).
- *   - Iframe positioned absolute inset:0 so it always exactly fills
- *     the 16:9 box.
+ * The iframe src is set directly on render (NOT lazy via
+ * IntersectionObserver) so it always loads on page render; we just add
+ * loading="lazy" so the browser can defer the network fetch until the
+ * frame is near the viewport.
+ *
+ * The wrapper height is enforced by both:
+ *   - aspect-ratio: 16 / 9 (modern browsers — Chrome 88+, Firefox 89+,
+ *     Safari 15+)
+ *   - padding-top: 56.25% (universal fallback applied via @supports not)
+ * Either way the box is a real 16:9 rectangle on first paint, so the
+ * iframe is never 0px tall.
+ *
+ * Accessibility: prefers-reduced-motion users see a static panel with
+ * an explicit Play button rather than the auto-loading animation.
  */
 
 const DEMO_SRC = "/forgeletter_demo.html"
@@ -38,18 +38,11 @@ interface Props {
 }
 
 export function HowItWorksDemo({ maxWidthPx = 1200, radiusPx = 14 }: Props) {
-  const wrapperRef = useRef<HTMLDivElement | null>(null)
-
-  // Has the demo been activated (loaded) yet? Flipped to true the first
-  // time the wrapper intersects the viewport. After that we never flip
-  // it back — once loaded, the demo just keeps running.
-  const [activated, setActivated] = useState(false)
-
-  // Reduced-motion handling.
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
   const [userOptedIn, setUserOptedIn] = useState(false)
 
   useEffect(() => {
+    if (typeof window === "undefined") return
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)")
     setPrefersReducedMotion(mq.matches)
     const onChange = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches)
@@ -57,63 +50,27 @@ export function HowItWorksDemo({ maxWidthPx = 1200, radiusPx = 14 }: Props) {
     return () => mq.removeEventListener?.("change", onChange)
   }, [])
 
-  // IntersectionObserver — single-shot. As soon as the wrapper enters
-  // the viewport we activate the iframe and stop observing.
-  useEffect(() => {
-    if (activated) return
-    if (prefersReducedMotion && !userOptedIn) return
-
-    const el = wrapperRef.current
-    if (!el) return
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            setActivated(true)
-            observer.disconnect()
-            return
-          }
-        }
-      },
-      { rootMargin: "300px 0px", threshold: 0.01 }
-    )
-
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [activated, prefersReducedMotion, userOptedIn])
-
-  const wrapperStyle: React.CSSProperties = {
-    width: "100%",
-    maxWidth: maxWidthPx,
-    margin: "0 auto",
-    position: "relative",
-    paddingTop: "56.25%", // 9 / 16
-    borderRadius: radiusPx,
-    overflow: "hidden",
-    boxShadow:
-      "0 18px 36px -16px rgba(40, 26, 12, 0.22), 0 2px 8px -4px rgba(40, 26, 12, 0.08)",
-    // Match the demo's body background so any sub-pixel seam between
-    // the iframe and our wrapper is invisible.
-    background: "#efe9dd",
-  }
-
   const showFallback = prefersReducedMotion && !userOptedIn
 
   return (
     <div
-      ref={wrapperRef}
       className="how-it-works-demo"
-      style={wrapperStyle}
+      style={{
+        width: "100%",
+        maxWidth: maxWidthPx,
+        margin: "0 auto",
+        borderRadius: radiusPx,
+        overflow: "hidden",
+        boxShadow:
+          "0 18px 36px -16px rgba(40, 26, 12, 0.22), 0 2px 8px -4px rgba(40, 26, 12, 0.08)",
+        background: "#efe9dd",
+      }}
       role="region"
       aria-label="ForgeLetter how-it-works animation"
     >
       {showFallback ? (
         <FallbackPanel onPlay={() => setUserOptedIn(true)} />
-      ) : activated ? (
-        // Render the iframe ONLY after activation. Once mounted, we
-        // never change its src again — React's reconciliation keeps
-        // the iframe element stable so the animation runs uninterrupted.
+      ) : (
         <iframe
           src={DEMO_SRC}
           title="Animated walkthrough of how ForgeLetter works"
@@ -127,23 +84,6 @@ export function HowItWorksDemo({ maxWidthPx = 1200, radiusPx = 14 }: Props) {
             display: "block",
           }}
         />
-      ) : (
-        // Pre-activation placeholder — keeps the 16:9 space reserved
-        // (already handled by the wrapper) and shows a faint hint of
-        // what's coming so the empty area doesn't look broken.
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            display: "grid",
-            placeItems: "center",
-            color: "#9b9384",
-            fontSize: 14,
-            letterSpacing: "0.04em",
-          }}
-        >
-          Loading walkthrough…
-        </div>
       )}
     </div>
   )
