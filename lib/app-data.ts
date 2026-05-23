@@ -39,7 +39,29 @@ const LEGACY_CAPABILITIES: SupabaseSchemaCapabilities = {
   generatedLettersSelectedExperienceIds: false,
 }
 
-let schemaCache: Promise<SupabaseSchemaCapabilities> | null = null
+interface SchemaCacheEntry {
+  capabilities: SupabaseSchemaCapabilities
+  cachedAt: number
+}
+
+// Cache semantics:
+//   - Positive detection (column exists) is honoured FOREVER for this
+//     process — columns don't disappear at runtime.
+//   - Negative detection (column missing) is only honoured for
+//     NEGATIVE_TTL_MS so a freshly-applied migration is picked up on
+//     warm functions within ~1 minute, without needing a redeploy.
+const NEGATIVE_TTL_MS = 60_000
+
+let schemaCache: SchemaCacheEntry | null = null
+let inflightProbe: Promise<SupabaseSchemaCapabilities> | null = null
+
+function isFullyCapable(c: SupabaseSchemaCapabilities): boolean {
+  return (
+    c.userProfileExperienceBlocks &&
+    c.applicationBriefsSelectedExperienceIds &&
+    c.generatedLettersSelectedExperienceIds
+  )
+}
 
 function looksLikeMissingColumn(err: { code?: string | null; message?: string | null } | null): boolean {
   if (!err) return false
@@ -66,37 +88,57 @@ async function probeColumn(table: string, column: string): Promise<boolean> {
   }
 }
 
-export async function getSupabaseSchemaCapabilities(): Promise<SupabaseSchemaCapabilities> {
-  if (!schemaCache) {
-    schemaCache = (async () => {
-      try {
-        const [userProfileBlocks, briefIds, letterIds] = await Promise.all([
-          probeColumn("user_profiles", "experience_blocks"),
-          probeColumn("application_briefs", "selected_experience_ids"),
-          probeColumn("generated_letters", "selected_experience_ids"),
-        ])
-        if (!userProfileBlocks && !briefIds && !letterIds) {
-          console.warn(
-            "[schema] Experience-persistence columns are missing — run docs/supabase-experience-blocks.sql to enable structured experience storage."
-          )
-        }
-        return {
-          userProfileExperienceBlocks: userProfileBlocks,
-          applicationBriefsSelectedExperienceIds: briefIds,
-          generatedLettersSelectedExperienceIds: letterIds,
-        }
-      } catch (err) {
-        console.warn("[schema] Probe failed; assuming legacy schema:", err)
-        return LEGACY_CAPABILITIES
-      }
-    })()
+async function probeAll(): Promise<SupabaseSchemaCapabilities> {
+  try {
+    const [userProfileBlocks, briefIds, letterIds] = await Promise.all([
+      probeColumn("user_profiles", "experience_blocks"),
+      probeColumn("application_briefs", "selected_experience_ids"),
+      probeColumn("generated_letters", "selected_experience_ids"),
+    ])
+    if (!userProfileBlocks && !briefIds && !letterIds) {
+      console.warn(
+        "[schema] Experience-persistence columns are missing — run docs/supabase-experience-blocks.sql to enable structured experience storage."
+      )
+    }
+    return {
+      userProfileExperienceBlocks: userProfileBlocks,
+      applicationBriefsSelectedExperienceIds: briefIds,
+      generatedLettersSelectedExperienceIds: letterIds,
+    }
+  } catch (err) {
+    console.warn("[schema] Probe failed; assuming legacy schema:", err)
+    return LEGACY_CAPABILITIES
   }
-  return schemaCache
+}
+
+export async function getSupabaseSchemaCapabilities(): Promise<SupabaseSchemaCapabilities> {
+  // Honour the cache if either:
+  //   (a) all columns are present (definitive, can't get worse later), OR
+  //   (b) the cache is still fresh under the negative TTL.
+  if (schemaCache) {
+    if (isFullyCapable(schemaCache.capabilities)) return schemaCache.capabilities
+    if (Date.now() - schemaCache.cachedAt < NEGATIVE_TTL_MS) return schemaCache.capabilities
+  }
+
+  // Coalesce concurrent probes so we don't run 3 probes per request when
+  // multiple page-data loaders fire at once.
+  if (!inflightProbe) {
+    inflightProbe = probeAll()
+      .then((capabilities) => {
+        schemaCache = { capabilities, cachedAt: Date.now() }
+        return capabilities
+      })
+      .finally(() => {
+        inflightProbe = null
+      })
+  }
+  return inflightProbe
 }
 
 /** Test/recovery hook: lets us re-detect on demand (used in tests + when admin reruns migration). */
 export function resetSchemaCapabilitiesCache(): void {
   schemaCache = null
+  inflightProbe = null
 }
 
 // Marked exported for explicit reset in tests.
