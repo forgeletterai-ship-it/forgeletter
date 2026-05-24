@@ -12038,27 +12038,27 @@ button.tone-chip:hover {
    natural phrases in the narrow left column. Overrides the unified
    premium headline sizes above. */
 .workflow-visual .intro-copy h2 {
-  font-size: clamp(22px, 1.9vw, 32px) !important;
+  font-size: clamp(26px, 2.3vw, 38px) !important;
   line-height: 1.1 !important;
 }
 @media (max-width: 1180px) {
   .workflow-visual .intro-copy h2 {
-    font-size: clamp(22px, 2vw, 30px) !important;
+    font-size: clamp(24px, 2.3vw, 34px) !important;
   }
 }
 @media (max-width: 1024px) {
   .workflow-visual .intro-copy h2 {
-    font-size: clamp(24px, 3vw, 34px) !important;
+    font-size: clamp(26px, 3.4vw, 38px) !important;
   }
 }
 @media (max-width: 900px) {
   .workflow-visual .intro-copy h2 {
-    font-size: clamp(22px, 3.6vw, 30px) !important;
+    font-size: clamp(24px, 4vw, 34px) !important;
   }
 }
 @media (max-width: 560px) {
   .workflow-visual .intro-copy h2 {
-    font-size: clamp(20px, 5vw, 26px) !important;
+    font-size: clamp(22px, 5.4vw, 30px) !important;
     line-height: 1.1 !important;
   }
 }
