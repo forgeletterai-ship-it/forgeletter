@@ -59,6 +59,14 @@ begin
   perform pg_advisory_xact_lock(hashtext('letter_slot:' || p_user_id::text));
 
   -- Count rows that consume a slot for this user, in this period.
+  -- A slot is consumed when the pipeline produced output for the
+  -- user (final_cover_letter not null) regardless of whether the
+  -- internal quality gate marked the row passed or failed. From the
+  -- user's perspective they received a letter; from the business's
+  -- perspective the AI compute was spent. The only thing that
+  -- refunds a slot is a true pipeline crash (no output at all) or a
+  -- stale running row that never finalised.
+  --
   -- Running rows older than 7 minutes are treated as orphaned
   -- (Vercel function timed out, pipeline crashed pre-status-update,
   -- etc.) and excluded so they automatically refund the slot.
@@ -67,8 +75,12 @@ begin
   where user_id = p_user_id
     and created_at >= p_period_start
     and (
-      generation_status = 'passed'
-      or (generation_status = 'running' and created_at > now() - interval '7 minutes')
+      final_cover_letter is not null
+      or (
+        generation_status = 'running'
+        and final_cover_letter is null
+        and created_at > now() - interval '7 minutes'
+      )
     );
 
   if v_count >= p_max_count then

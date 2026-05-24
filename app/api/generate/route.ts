@@ -4,6 +4,7 @@ import type { Tier, Tone } from "@/lib/agents"
 import {
   dataErrorMessage,
   getCurrentAppUser,
+  getCurrentPeriodLetterCount,
   getSupabaseSchemaCapabilities,
   resetSchemaCapabilitiesCache,
 } from "@/lib/app-data"
@@ -174,21 +175,21 @@ export async function POST(req: NextRequest) {
   }
 
   // Legacy fallback path: only used when the SQL migration that adds
-  // try_start_letter has not been applied yet. Same logic as before
-  // but with the new period-start handling.
+  // try_start_letter has not been applied yet. Uses the same
+  // consumption rule as the helper (completed letters + in-flight
+  // running rows newer than 7 minutes) for consistency.
   if (!triedRpc || !generationId) {
-    const { count, error: countError } = await supabaseAdmin
-      .from("generated_letters")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", user.id)
-      .gte("created_at", periodStart)
-      .in("generation_status", ["passed", "running"])
+    const { count, setupError: countError } = await getCurrentPeriodLetterCount(
+      user.id,
+      user.plan,
+      user.currentPeriodStart
+    )
 
     if (countError) {
       return sseError(dataErrorMessage(countError, "generated_letters"), 500)
     }
-    if ((count || 0) >= planLimit) {
-      const usage = getPlanUsageDetails(user.plan, count || 0)
+    if (count >= planLimit) {
+      const usage = getPlanUsageDetails(user.plan, count)
       return sseError(
         `You have used all ${usage.limit} letters for this ${usage.periodNoun}. Upgrade your plan or wait until your allowance resets.`,
         402
@@ -217,7 +218,7 @@ export async function POST(req: NextRequest) {
       )
     }
     generationId = insertResult.data.id as string
-    postCount = (count || 0) + 1
+    postCount = count + 1
   }
 
   // Optional: persist selected_experience_ids on the row we just
@@ -307,19 +308,16 @@ export async function POST(req: NextRequest) {
 
         // Recount after the row's status is finalised so the client
         // sees the real post-generation usage (failed generations
-        // refund the slot, passed ones consume it).
+        // refund the slot. Pure pipeline crashes leave the row with
+        // no final_cover_letter, so they are excluded automatically.
         let usagePayload: ReturnType<typeof getPlanUsageDetails> | null = null
         try {
-          const period = getBillingPeriod(user.plan)
-          const periodStart = getCurrentPlanPeriodStart(period).toISOString()
-          const { count: postCount } = await supabaseAdmin
-            .from("generated_letters")
-            .select("id", { count: "exact", head: true })
-            .eq("user_id", user.id)
-            .gte("created_at", periodStart)
-            .in("generation_status", ["passed", "running"])
-
-          usagePayload = getPlanUsageDetails(user.plan, postCount || 0)
+          const { count: postCount } = await getCurrentPeriodLetterCount(
+            user.id,
+            user.plan,
+            user.currentPeriodStart
+          )
+          usagePayload = getPlanUsageDetails(user.plan, postCount)
         } catch {
           // non-fatal: client can fall back to /api/account/usage
         }
