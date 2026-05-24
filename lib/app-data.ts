@@ -446,20 +446,29 @@ export async function getApplicationBriefs(userId: string) {
   }
 }
 
-export async function getCurrentPeriodBriefCount(userId: string, plan: PlanId) {
+/**
+ * Single source of truth for "how many letters has this user consumed
+ * in the current billing period". Counts rows in generated_letters
+ * with status passed (succeeded) or running (in-flight). A failed
+ * generation refunds the slot automatically because failed rows are
+ * excluded. Briefs alone do not count — a saved brief without a
+ * successful generation is just metadata.
+ */
+export async function getCurrentPeriodLetterCount(userId: string, plan: PlanId) {
   try {
     const period = getBillingPeriod(plan)
     const periodStart = getCurrentPlanPeriodStart(period).toISOString()
     const { count, error } = await supabaseAdmin
-      .from("application_briefs")
+      .from("generated_letters")
       .select("id", { count: "exact", head: true })
       .eq("user_id", userId)
       .gte("created_at", periodStart)
+      .in("generation_status", ["passed", "running"])
 
     if (error) {
       return {
         count: 0,
-        setupError: dataErrorMessage(error, "application_briefs"),
+        setupError: dataErrorMessage(error, "generated_letters"),
       }
     }
 
@@ -467,9 +476,18 @@ export async function getCurrentPeriodBriefCount(userId: string, plan: PlanId) {
   } catch (error) {
     return {
       count: 0,
-      setupError: dataErrorMessage(error, "application_briefs"),
+      setupError: dataErrorMessage(error, "generated_letters"),
     }
   }
+}
+
+/**
+ * @deprecated Use getCurrentPeriodLetterCount. Kept as an alias so any
+ * older call site keeps building; both paths now route through the
+ * letter-based counter.
+ */
+export async function getCurrentPeriodBriefCount(userId: string, plan: PlanId) {
+  return getCurrentPeriodLetterCount(userId, plan)
 }
 
 export async function getUserSettings(userId: string) {

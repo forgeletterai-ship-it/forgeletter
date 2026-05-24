@@ -65,35 +65,27 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    // Briefs are record-keeping; they do not consume the user's
+    // letter allowance. The bottleneck is /api/generate, which gates
+    // on generated_letters (passed + running). Here we just count
+    // real letters so the response can report accurate usage.
     const billingPeriod = getBillingPeriod(user.plan)
-    const usageLimit = getPlanUsageDetails(user.plan, 0).limit
     const periodStart = getCurrentPlanPeriodStart(billingPeriod).toISOString()
     const { count, error: countError } = await supabaseAdmin
-      .from("application_briefs")
+      .from("generated_letters")
       .select("id", { count: "exact", head: true })
       .eq("user_id", user.id)
       .gte("created_at", periodStart)
+      .in("generation_status", ["passed", "running"])
 
     if (countError) {
       return NextResponse.json(
-        { error: dataErrorMessage(countError, "application_briefs") },
+        { error: dataErrorMessage(countError, "generated_letters") },
         { status: 500 }
       )
     }
 
     const usedThisPeriod = count || 0
-
-    if (usedThisPeriod >= usageLimit) {
-      const usage = getPlanUsageDetails(user.plan, usedThisPeriod)
-
-      return NextResponse.json(
-        {
-          error: `You have used all ${usage.limit} letters for this ${usage.periodNoun}. Upgrade your plan or wait until your allowance resets.`,
-          usage,
-        },
-        { status: 402 }
-      )
-    }
 
     const capabilities = await getSupabaseSchemaCapabilities()
     const basePayload: Record<string, unknown> = {
@@ -144,9 +136,12 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    // Saving a brief alone does not consume a letter; report current
+    // letter consumption unchanged. /api/generate will refresh this
+    // when the generation actually completes.
     return NextResponse.json({
       brief: data,
-      usage: getPlanUsageDetails(user.plan, usedThisPeriod + 1),
+      usage: getPlanUsageDetails(user.plan, usedThisPeriod),
     })
   } catch (error) {
     return NextResponse.json(

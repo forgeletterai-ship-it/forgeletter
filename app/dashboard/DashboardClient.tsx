@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useCallback, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
   ExperienceMultiSelect,
   QUALIFICATIONS_ROW_ID,
@@ -290,6 +290,35 @@ export function DashboardClient({
   const hasActivePlan = plan !== "free"
   const isBasicTier = plan === "free" || plan.startsWith("starter")
 
+  // Fetches the authoritative letter count from the server. Called
+  // after a generation completes and when the tab regains focus, so
+  // the meter recovers from anything that drifted client-side.
+  const refreshUsage = useCallback(async () => {
+    try {
+      const res = await fetch("/api/account/usage", { cache: "no-store" })
+      if (!res.ok) return
+      const payload = (await res.json()) as { usage?: { used?: number } }
+      if (payload.usage && typeof payload.usage.used === "number") {
+        setPeriodBriefCount(payload.usage.used)
+      }
+    } catch {
+      // best-effort; next page load will reconcile via the server
+      // component's getCurrentPeriodLetterCount call.
+    }
+  }, [])
+
+  useEffect(() => {
+    const onFocus = () => {
+      if (document.visibilityState === "visible") void refreshUsage()
+    }
+    document.addEventListener("visibilitychange", onFocus)
+    window.addEventListener("focus", onFocus)
+    return () => {
+      document.removeEventListener("visibilitychange", onFocus)
+      window.removeEventListener("focus", onFocus)
+    }
+  }, [refreshUsage])
+
   const updateAgent = useCallback((key: string, patch: Partial<AgentRow>) => {
     setAgentRows((prev) => {
       const idx = prev.findIndex((r) => r.key === key)
@@ -446,6 +475,17 @@ export function DashboardClient({
       setPercent(100)
       setPhase("done")
       setMessage("Letter generated successfully.")
+
+      // /api/generate emits the authoritative usage in the complete
+      // event. Sync the meter without a full page reload.
+      const usagePayload = (event as { usage?: { used?: number } }).usage
+      if (usagePayload && typeof usagePayload.used === "number") {
+        setPeriodBriefCount(usagePayload.used)
+      } else {
+        // Fall back to a fresh /api/account/usage fetch if the
+        // server payload was missing for any reason.
+        void refreshUsage()
+      }
       return
     }
 
