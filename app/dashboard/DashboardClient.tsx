@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { AccountStateBanner } from "@/components/AccountStateBanner"
 import {
   ExperienceMultiSelect,
   QUALIFICATIONS_ROW_ID,
@@ -46,6 +47,10 @@ type DashboardClientProps = {
    *  When false, the multi-select shows the empty state with a hint
    *  that the database migration is pending. */
   experiencePersistenceAvailable?: boolean
+  /** Stripe state surfaced via banners at the top of the workspace.
+   *  Both null is the happy path. */
+  pastDueSince?: string | null
+  disputedAt?: string | null
 }
 
 type ToneName = "Professional" | "Warm" | "Direct"
@@ -245,16 +250,25 @@ export function DashboardClient({
   setupError,
   initialLatestLetter,
   experiencePersistenceAvailable = true,
+  pastDueSince = null,
+  disputedAt = null,
 }: DashboardClientProps) {
   const normalizedTone = tones.some((item) => item.name === settings.default_tone)
     ? (settings.default_tone as ToneName)
     : "Professional"
   const [briefs, setBriefs] = useState(initialBriefs)
   const [periodBriefCount, setPeriodBriefCount] = useState(initialPeriodBriefCount)
+  // Brief-form state, seeded from (in priority order): the most recent
+  // brief returned by the server, then any localStorage draft from a
+  // previous session that was abandoned mid-edit. Autosave below
+  // keeps both in sync.
   const [role, setRole] = useState(initialBriefs[0]?.role || "")
   const [company, setCompany] = useState(initialBriefs[0]?.company || "")
   const [tone, setTone] = useState<ToneName>(normalizedTone)
   const [jobDescription, setJobDescription] = useState(initialBriefs[0]?.job_description || "")
+  const [autosaveStatus, setAutosaveStatus] = useState<
+    "idle" | "saving" | "saved"
+  >("idle")
   // Default selection: every saved experience block is checked.
   // The Qualifications & achievements row is always-on inside the
   // component and isn't tracked in this state.
@@ -318,6 +332,89 @@ export function DashboardClient({
       window.removeEventListener("focus", onFocus)
     }
   }, [refreshUsage])
+
+  // Brief-input autosave. Saves to localStorage 800 ms after the last
+  // edit, and on first mount restores any draft that was newer than
+  // the most recent saved brief. localStorage stays local; we never
+  // ship the draft to the server until the user clicks Generate.
+  const AUTOSAVE_KEY = "forgeletter:brief-draft:v1"
+
+  // Restore once on mount, only if the localStorage draft is newer
+  // than whatever seeded the form from initialBriefs.
+  const restoredRef = useRef(false)
+  useEffect(() => {
+    if (restoredRef.current) return
+    restoredRef.current = true
+    if (typeof window === "undefined") return
+    try {
+      const raw = window.localStorage.getItem(AUTOSAVE_KEY)
+      if (!raw) return
+      const draft = JSON.parse(raw) as {
+        role?: string
+        company?: string
+        tone?: string
+        jobDescription?: string
+        savedAt?: string
+      }
+      const seedTimestamp = initialBriefs[0]?.created_at
+        ? new Date(initialBriefs[0].created_at).getTime()
+        : 0
+      const draftTimestamp = draft.savedAt ? new Date(draft.savedAt).getTime() : 0
+      if (draftTimestamp > seedTimestamp) {
+        if (typeof draft.role === "string") setRole(draft.role)
+        if (typeof draft.company === "string") setCompany(draft.company)
+        if (
+          typeof draft.tone === "string" &&
+          tones.some((t) => t.name === draft.tone)
+        ) {
+          setTone(draft.tone as ToneName)
+        }
+        if (typeof draft.jobDescription === "string")
+          setJobDescription(draft.jobDescription)
+      }
+    } catch {
+      // corrupt draft — fall back to whatever the server seeded
+    }
+  }, [initialBriefs])
+
+  // Debounced save: write to localStorage 800 ms after the last edit
+  // to any of the four tracked fields.
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    const hasContent =
+      role.trim() || company.trim() || jobDescription.trim().length > 10
+    if (!hasContent) return
+    setAutosaveStatus("saving")
+    const handle = window.setTimeout(() => {
+      try {
+        window.localStorage.setItem(
+          AUTOSAVE_KEY,
+          JSON.stringify({
+            role,
+            company,
+            tone,
+            jobDescription,
+            savedAt: new Date().toISOString(),
+          })
+        )
+        setAutosaveStatus("saved")
+      } catch {
+        // localStorage full or denied (Safari private mode) — silently ignore
+        setAutosaveStatus("idle")
+      }
+    }, 800)
+    return () => window.clearTimeout(handle)
+  }, [role, company, tone, jobDescription])
+
+  const clearAutosavedDraft = useCallback(() => {
+    if (typeof window === "undefined") return
+    try {
+      window.localStorage.removeItem(AUTOSAVE_KEY)
+    } catch {
+      /* ignore */
+    }
+    setAutosaveStatus("idle")
+  }, [])
 
   const updateAgent = useCallback((key: string, patch: Partial<AgentRow>) => {
     setAgentRows((prev) => {
@@ -475,6 +572,9 @@ export function DashboardClient({
       setPercent(100)
       setPhase("done")
       setMessage("Letter generated successfully.")
+      // Draft completed its lifecycle — clear localStorage so the
+      // user starts the next brief from a clean slate.
+      clearAutosavedDraft()
 
       // /api/generate emits the authoritative usage in the complete
       // event. Sync the meter without a full page reload.
@@ -560,6 +660,7 @@ export function DashboardClient({
 
   return (
     <div className="cover-workspace" aria-label="Cover letter workspace">
+      <AccountStateBanner pastDueSince={pastDueSince} disputedAt={disputedAt} />
       {hasActivePlan ? (
         <section className="cover-panel cover-plan-panel">
           <div className="cover-plan-icon">
@@ -659,6 +760,16 @@ export function DashboardClient({
             </span>
             <h2>Draft inputs</h2>
           </div>
+          {autosaveStatus !== "idle" ? (
+            <span
+              className={`autosave-pill autosave-pill--${autosaveStatus}`}
+              aria-live="polite"
+              aria-atomic="true"
+            >
+              <span className="autosave-pill__dot" aria-hidden="true" />
+              {autosaveStatus === "saving" ? "Saving draft…" : "Draft saved"}
+            </span>
+          ) : null}
         </div>
         <p className="cover-panel-copy">
           Save your brief and ForgeLetter runs the 12-agent pipeline to write, verify, and score the cover letter.
@@ -907,6 +1018,28 @@ export function DashboardClient({
 
 // ---------- generation modal ----------
 
+function useElapsedSeconds(active: boolean) {
+  const [seconds, setSeconds] = useState(0)
+  useEffect(() => {
+    if (!active) {
+      setSeconds(0)
+      return
+    }
+    const start = Date.now()
+    const id = window.setInterval(() => {
+      setSeconds(Math.floor((Date.now() - start) / 1000))
+    }, 250)
+    return () => window.clearInterval(id)
+  }, [active])
+  return seconds
+}
+
+function formatElapsed(seconds: number) {
+  const m = Math.floor(seconds / 60)
+  const s = seconds % 60
+  return m > 0 ? `${m}:${s.toString().padStart(2, "0")}` : `${s}s`
+}
+
 function GenerationModal({
   phase,
   percent,
@@ -926,176 +1059,139 @@ function GenerationModal({
   score: number | undefined
   atsScore: number | null
 }) {
+  const elapsed = useElapsedSeconds(phase === "running")
+  const completedCount = agentRows.filter((r) => r.status === "done").length
+  const totalCount = agentRows.length || 12
+  const runningAgent = agentRows.find((r) => r.status === "running")
+
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "rgba(23,18,15,0.65)",
-        backdropFilter: "blur(4px)",
-        display: "grid",
-        placeItems: "center",
-        zIndex: 200,
-        padding: 16,
-      }}
-    >
-      <div
-        style={{
-          width: "100%",
-          maxWidth: 520,
-          background: "var(--paper-strong)",
-          borderRadius: 14,
-          padding: 28,
-          boxShadow: "var(--shadow)",
-          border: "1px solid var(--line)",
-        }}
-      >
+    <div role="dialog" aria-modal="true" className="generation-modal-root">
+      <div className="generation-modal-backdrop" aria-hidden="true" />
+      <div className="generation-modal">
         {phase === "running" && (
           <>
-            <h2
-              style={{
-                margin: 0,
-                fontSize: 22,
-                letterSpacing: "-0.02em",
-                color: "var(--ink)",
-              }}
-            >
-              Generating your letter…
-            </h2>
-            <p style={{ margin: "6px 0 0", color: "var(--muted)", fontSize: 14 }}>
-              12-agent pipeline. Quality-gated. Typically 30–90 seconds — don't close this window.
+            <div className="generation-modal__crest" aria-hidden="true">
+              <span className="generation-modal__crest-ring" />
+              <span className="generation-modal__crest-ring generation-modal__crest-ring--two" />
+              <span className="generation-modal__crest-core">
+                <Icon name="sparkle" />
+              </span>
+            </div>
+            <h2 className="generation-modal__title">Crafting your letter</h2>
+            <p className="generation-modal__subtitle">
+              {runningAgent ? runningAgent.label + "…" : "Spinning up the agent pipeline…"}
             </p>
 
             <div
-              style={{
-                height: 8,
-                background: "var(--line)",
-                borderRadius: 4,
-                overflow: "hidden",
-                marginTop: 20,
-              }}
+              className="generation-modal__progress"
+              role="progressbar"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={Math.max(2, percent)}
             >
-              <div
-                style={{
-                  width: `${Math.max(2, percent)}%`,
-                  height: "100%",
-                  background: "linear-gradient(90deg, var(--gold), var(--amber))",
-                  transition: "width 380ms ease",
-                }}
+              <span
+                className="generation-modal__progress-fill"
+                style={{ width: `${Math.max(2, percent)}%` }}
               />
+              <span className="generation-modal__progress-shine" aria-hidden="true" />
             </div>
 
-            <ul
-              style={{
-                listStyle: "none",
-                padding: 0,
-                margin: "20px 0 0",
-                display: "flex",
-                flexDirection: "column",
-                gap: 6,
-                maxHeight: 280,
-                overflowY: "auto",
-              }}
-            >
+            <div className="generation-modal__meta">
+              <span>
+                <strong>{completedCount}</strong> / {totalCount} agents
+              </span>
+              <span>{Math.max(0, Math.min(100, percent))}%</span>
+              <span>{formatElapsed(elapsed)} elapsed</span>
+            </div>
+
+            <ul className="generation-modal__agents">
               {agentRows.map((row) => (
                 <li
                   key={row.key}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 10,
-                    padding: "8px 12px",
-                    borderRadius: 8,
-                    background:
-                      row.status === "running"
-                        ? "var(--gold-soft)"
-                        : row.status === "done"
-                          ? "transparent"
-                          : row.status === "failed"
-                            ? "rgba(164,60,60,0.06)"
-                            : "transparent",
-                    fontSize: 13,
-                    color: row.status === "pending" ? "var(--muted)" : "var(--ink)",
-                  }}
+                  className={`generation-modal__agent generation-modal__agent--${row.status}`}
                 >
-                  <span
-                    style={{
-                      width: 8,
-                      height: 8,
-                      borderRadius: 999,
-                      background:
-                        row.status === "done"
-                          ? "var(--green)"
-                          : row.status === "running"
-                            ? "var(--gold)"
-                            : row.status === "failed"
-                              ? "var(--red)"
-                              : "var(--line-strong)",
-                      flexShrink: 0,
-                    }}
-                  />
-                  <span style={{ flex: 1 }}>{row.label}</span>
+                  <span className="generation-modal__agent-indicator" aria-hidden="true">
+                    {row.status === "done" ? (
+                      <svg viewBox="0 0 24 24">
+                        <path d="m6 12.4 3.8 3.8L18.5 7.5" />
+                      </svg>
+                    ) : row.status === "failed" ? (
+                      <svg viewBox="0 0 24 24">
+                        <path d="M6 6l12 12M18 6 6 18" />
+                      </svg>
+                    ) : row.status === "running" ? (
+                      <span className="generation-modal__agent-spinner" />
+                    ) : (
+                      <span className="generation-modal__agent-dot" />
+                    )}
+                  </span>
+                  <span className="generation-modal__agent-label">{row.label}</span>
+                  {row.status === "running" ? (
+                    <span className="generation-modal__agent-tag">running</span>
+                  ) : null}
                 </li>
               ))}
             </ul>
+
+            <p className="generation-modal__hint">
+              Sit tight — the 12-agent pipeline writes, fact-checks, and quality-gates
+              your letter. Typical run: 30–90 seconds.
+            </p>
           </>
         )}
 
         {phase === "done" && (
           <>
-            <h2
-              style={{
-                margin: 0,
-                fontSize: 22,
-                letterSpacing: "-0.02em",
-                color: "var(--ink)",
-              }}
+            <div
+              className="generation-modal__crest generation-modal__crest--done"
+              aria-hidden="true"
             >
-              Your letter is ready
-            </h2>
-            <p style={{ margin: "6px 0 18px", color: "var(--muted)", fontSize: 14 }}>
-              Quality score: <strong style={{ color: "var(--ink)" }}>{score ?? "—"}/100</strong>
+              <span className="generation-modal__crest-core">
+                <svg viewBox="0 0 24 24">
+                  <path d="m6 12.4 3.8 3.8L18.5 7.5" />
+                </svg>
+              </span>
+            </div>
+            <h2 className="generation-modal__title">Your letter is ready</h2>
+            <p className="generation-modal__subtitle">
+              Quality{" "}
+              <strong>{score ?? "—"}/100</strong>
               {atsScore != null ? (
                 <>
                   {" "}
-                  &middot; ATS score:{" "}
-                  <strong style={{ color: "var(--ink)" }}>{atsScore}/100</strong>
+                  · ATS <strong>{atsScore}/100</strong>
                 </>
               ) : null}
             </p>
             <button
               type="button"
-              className="cover-save-button"
+              className="cover-save-button generation-modal__cta"
               onClick={onViewLetter}
-              style={{ width: "100%" }}
             >
-              View letter →
+              <Icon name="sparkle" />
+              View letter
             </button>
           </>
         )}
 
         {phase === "error" && (
           <>
-            <h2
-              style={{
-                margin: 0,
-                fontSize: 22,
-                letterSpacing: "-0.02em",
-                color: "var(--red)",
-              }}
+            <div
+              className="generation-modal__crest generation-modal__crest--error"
+              aria-hidden="true"
             >
+              <span className="generation-modal__crest-core">!</span>
+            </div>
+            <h2 className="generation-modal__title generation-modal__title--error">
               Generation failed
             </h2>
-            <p style={{ margin: "6px 0 18px", color: "var(--muted)", fontSize: 14 }}>
+            <p className="generation-modal__subtitle">
               {errorMsg ?? "Something went wrong. Your quota was not used."}
             </p>
             <button
               type="button"
-              className="cover-save-button"
+              className="cover-save-button generation-modal__cta"
               onClick={onClose}
-              style={{ width: "100%" }}
             >
               Close
             </button>

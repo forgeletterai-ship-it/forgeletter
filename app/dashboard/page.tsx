@@ -97,6 +97,8 @@ export default async function DashboardPage() {
       setupError={briefsError || profileError || usageError}
       initialLatestLetter={latestLetter}
       experiencePersistenceAvailable={capabilities.userProfileExperienceBlocks}
+      pastDueSince={user?.pastDueSince ?? null}
+      disputedAt={user?.disputedAt ?? null}
     />
   )
 }
