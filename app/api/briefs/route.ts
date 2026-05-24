@@ -3,14 +3,11 @@ import {
   dataErrorMessage,
   getApplicationBriefs,
   getCurrentAppUser,
+  getCurrentPeriodLetterCount,
   getSupabaseSchemaCapabilities,
   resetSchemaCapabilitiesCache,
 } from "@/lib/app-data"
-import {
-  getBillingPeriod,
-  getCurrentPlanPeriodStart,
-  getPlanUsageDetails,
-} from "@/lib/plans"
+import { getPlanUsageDetails } from "@/lib/plans"
 import { supabaseAdmin } from "@/lib/supabase"
 
 const allowedTones = new Set(["Professional", "Warm", "Direct"])
@@ -68,15 +65,15 @@ export async function POST(req: NextRequest) {
     // Briefs are record-keeping; they do not consume the user's
     // letter allowance. The bottleneck is /api/generate, which gates
     // on generated_letters (passed + running). Here we just count
-    // real letters so the response can report accurate usage.
-    const billingPeriod = getBillingPeriod(user.plan)
-    const periodStart = getCurrentPlanPeriodStart(billingPeriod).toISOString()
-    const { count, error: countError } = await supabaseAdmin
-      .from("generated_letters")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", user.id)
-      .gte("created_at", periodStart)
-      .in("generation_status", ["passed", "running"])
+    // real letters so the response can report accurate usage,
+    // honouring the user's Stripe-anniversary period boundary when
+    // available and the 7-minute orphan-row cutoff.
+    const { count: usedThisPeriod, setupError: countError } =
+      await getCurrentPeriodLetterCount(
+        user.id,
+        user.plan,
+        user.currentPeriodStart
+      )
 
     if (countError) {
       return NextResponse.json(
@@ -84,8 +81,6 @@ export async function POST(req: NextRequest) {
         { status: 500 }
       )
     }
-
-    const usedThisPeriod = count || 0
 
     const capabilities = await getSupabaseSchemaCapabilities()
     const basePayload: Record<string, unknown> = {

@@ -199,6 +199,22 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   await updateUserPlan({ userId, email }, planId)
 }
 
+function extractPeriodStartIso(
+  subscription: Stripe.Subscription
+): string | null {
+  // current_period_start moved from subscription-level to per-item in
+  // recent Stripe API versions. Read both shapes so we work across
+  // 2022-11 through 2026-04 API versions.
+  const itemStart = (subscription.items.data[0] as { current_period_start?: number } | undefined)
+    ?.current_period_start
+  const subStart = (subscription as { current_period_start?: number })
+    .current_period_start
+  const seconds = itemStart ?? subStart
+  return typeof seconds === "number"
+    ? new Date(seconds * 1000).toISOString()
+    : null
+}
+
 async function handleSubscriptionChange(subscription: Stripe.Subscription) {
   const plan = subscription.metadata?.plan as BillingPlan | undefined
   const recurringInterval = subscription.items.data[0]?.price.recurring?.interval
@@ -217,12 +233,29 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription) {
   if (!userId && !email) return
 
   if (!activeSubscriptionStatuses.has(subscription.status)) {
-    await updateUserPlan({ userId, email }, "free")
+    // Subscription cancelled / unpaid / paused — revoke access and
+    // clear the period boundary so the calendar fallback kicks back
+    // in for any residual generation attempts.
+    await updateUsersRow({ userId, email }, {
+      plan: "free",
+      current_period_start: null,
+    })
     return
   }
 
+  // Active or trialing. Capture the current Stripe-anniversary
+  // period start alongside the plan, so the letter-quota window
+  // matches the billing window exactly.
+  const periodStartIso = extractPeriodStartIso(subscription)
+  const patch: Record<string, unknown> = { plan: planId }
+  if (periodStartIso) patch.current_period_start = periodStartIso
   if (plan) {
-    await updateUserPlan({ userId, email }, planId)
+    await updateUsersRow({ userId, email }, patch)
+  } else if (periodStartIso) {
+    // Stripe sent a subscription event without metadata.plan (e.g.
+    // legacy subscription, manual portal update). Still refresh the
+    // period boundary so the quota stays aligned.
+    await updateUsersRow({ userId, email }, { current_period_start: periodStartIso })
   }
 }
 
@@ -236,11 +269,26 @@ function lookupFromInvoice(invoice: Stripe.Invoice): UserLookup {
 }
 
 async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
-  // Renewal payment cleared. If we had previously flagged the user
-  // as past_due (after a failed renewal) clear that now.
+  // Renewal payment cleared. Clear any past_due flag, and refresh
+  // the period anniversary so the letter quota resets in step with
+  // the new billing cycle.
   const lookup = lookupFromInvoice(invoice)
   if (!lookup.userId && !lookup.email) return
-  await updateUsersRow(lookup, { past_due_since: null })
+
+  const patch: Record<string, unknown> = { past_due_since: null }
+
+  // Try to capture the new period start from the line items (invoice
+  // line items carry the new period anchor on a renewal invoice).
+  const periodStartSeconds =
+    (invoice as { period_start?: number }).period_start ??
+    invoice.lines?.data?.[0]?.period?.start
+  if (typeof periodStartSeconds === "number") {
+    patch.current_period_start = new Date(
+      periodStartSeconds * 1000
+    ).toISOString()
+  }
+
+  await updateUsersRow(lookup, patch)
 }
 
 async function handlePaymentFailed(invoice: Stripe.Invoice) {

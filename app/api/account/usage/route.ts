@@ -26,7 +26,8 @@ export async function GET() {
 
   const { count, setupError } = await getCurrentPeriodLetterCount(
     user.id,
-    user.plan
+    user.plan,
+    user.currentPeriodStart
   )
 
   if (setupError) {

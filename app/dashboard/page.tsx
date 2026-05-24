@@ -70,7 +70,7 @@ export default async function DashboardPage() {
         getApplicationBriefs(userId),
         getUserProfile(userId),
         getUserSettings(userId),
-        getCurrentPeriodLetterCount(userId, plan),
+        getCurrentPeriodLetterCount(userId, plan, user?.currentPeriodStart),
         getLatestLetter(userId),
         getSupabaseSchemaCapabilities(),
       ])

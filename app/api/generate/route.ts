@@ -103,13 +103,80 @@ export async function POST(req: NextRequest) {
     return sseError(`Job description must be at least ${MIN_JD_CHARS} characters.`, 400)
   }
 
-  // 3. Quota check. Counts only rows that represent a real consumed
-  // letter (passed) or one currently being generated (running). A
-  // failed generation refunds the slot automatically because failed
-  // rows are not included.
+  // 3 + 4. Atomic quota gate + row insert.
+  //
+  // The Postgres function try_start_letter does the count check and
+  // the row insert in a single transaction, serialised per-user via
+  // a Postgres advisory lock. Two concurrent requests from the same
+  // user can no longer both pass the gate.
+  //
+  // Period boundary: prefers the user's Stripe subscription
+  // current_period_start when available, falls back to the calendar
+  // boundary otherwise. Running rows older than 7 minutes are
+  // treated as orphaned inside the function and do not count.
+  const tier = planToTier(user.plan)
+  const periodForFallback = getBillingPeriod(user.plan)
+  const periodStart = user.currentPeriodStart
+    ? new Date(user.currentPeriodStart).toISOString()
+    : getCurrentPlanPeriodStart(periodForFallback).toISOString()
+  const planLimit = getPlanUsageDetails(user.plan, 0).limit
+
+  let generationId: string | null = null
+  let postCount: number | null = null
+  let triedRpc = false
+
   try {
-    const period = getBillingPeriod(user.plan)
-    const periodStart = getCurrentPlanPeriodStart(period).toISOString()
+    triedRpc = true
+    const rpc = await supabaseAdmin.rpc("try_start_letter", {
+      p_user_id: user.id,
+      p_max_count: planLimit,
+      p_period_start: periodStart,
+      p_resume_text: resumeText,
+      p_job_description: jobDescription,
+      p_job_title: jobTitle ?? null,
+      p_company_name: companyName ?? null,
+      p_tone: tone,
+      p_tier: tier,
+    })
+
+    if (rpc.error) {
+      const code = (rpc.error as { code?: string }).code
+      // PGRST202 = function not found (migration not yet applied).
+      // Fall through to the legacy two-step path so the route keeps
+      // working until the migration runs.
+      if (code !== "PGRST202") {
+        return sseError(
+          dataErrorMessage(rpc.error, "generated_letters"),
+          500
+        )
+      }
+      triedRpc = false
+    } else {
+      const row = Array.isArray(rpc.data) ? rpc.data[0] : rpc.data
+      if (!row) {
+        return sseError(
+          "Quota gate returned no data",
+          500
+        )
+      }
+      if (!row.granted) {
+        const usage = getPlanUsageDetails(user.plan, row.used_count ?? planLimit)
+        return sseError(
+          `You have used all ${usage.limit} letters for this ${usage.periodNoun}. Upgrade your plan or wait until your allowance resets.`,
+          402
+        )
+      }
+      generationId = row.letter_id as string
+      postCount = row.used_count as number
+    }
+  } catch (err) {
+    return sseError(dataErrorMessage(err, "generated_letters"), 500)
+  }
+
+  // Legacy fallback path: only used when the SQL migration that adds
+  // try_start_letter has not been applied yet. Same logic as before
+  // but with the new period-start handling.
+  if (!triedRpc || !generationId) {
     const { count, error: countError } = await supabaseAdmin
       .from("generated_letters")
       .select("id", { count: "exact", head: true })
@@ -120,66 +187,63 @@ export async function POST(req: NextRequest) {
     if (countError) {
       return sseError(dataErrorMessage(countError, "generated_letters"), 500)
     }
-
-    const usage = getPlanUsageDetails(user.plan, count || 0)
-    if ((count || 0) >= usage.limit) {
+    if ((count || 0) >= planLimit) {
+      const usage = getPlanUsageDetails(user.plan, count || 0)
       return sseError(
         `You have used all ${usage.limit} letters for this ${usage.periodNoun}. Upgrade your plan or wait until your allowance resets.`,
         402
       )
     }
-  } catch (err) {
-    return sseError(dataErrorMessage(err, "generated_letters"), 500)
-  }
 
-  // 4. Insert the generation row up front.
-  const tier = planToTier(user.plan)
-  const capabilities = await getSupabaseSchemaCapabilities()
-  const insertPayload: Record<string, unknown> = {
-    user_id: user.id,
-    resume_text: resumeText,
-    job_description: jobDescription,
-    job_title: jobTitle ?? null,
-    company_name: companyName ?? null,
-    tone,
-    tier,
-    generation_status: "running",
-  }
-  if (capabilities.generatedLettersSelectedExperienceIds) {
-    insertPayload.selected_experience_ids = selectedExperienceIds
-  }
-
-  let insertResult = await supabaseAdmin
-    .from("generated_letters")
-    .insert(insertPayload)
-    .select("id")
-    .single()
-
-  // Race recovery: capabilities said the column exists but insert disagrees.
-  if (
-    insertResult.error &&
-    (insertResult.error.code === "42703" ||
-      insertResult.error.code === "PGRST204" ||
-      /column .* does not exist/i.test(insertResult.error.message || ""))
-  ) {
-    console.warn(
-      "[POST /api/generate] selected_experience_ids missing at write; retrying without it:",
-      insertResult.error
-    )
-    resetSchemaCapabilitiesCache()
-    delete insertPayload.selected_experience_ids
-    insertResult = await supabaseAdmin
+    const insertResult = await supabaseAdmin
       .from("generated_letters")
-      .insert(insertPayload)
+      .insert({
+        user_id: user.id,
+        resume_text: resumeText,
+        job_description: jobDescription,
+        job_title: jobTitle ?? null,
+        company_name: companyName ?? null,
+        tone,
+        tier,
+        generation_status: "running",
+      })
       .select("id")
       .single()
+
+    if (insertResult.error || !insertResult.data) {
+      return sseError(
+        dataErrorMessage(insertResult.error, "generated_letters"),
+        500
+      )
+    }
+    generationId = insertResult.data.id as string
+    postCount = (count || 0) + 1
   }
 
-  if (insertResult.error || !insertResult.data) {
-    return sseError(dataErrorMessage(insertResult.error, "generated_letters"), 500)
+  // Optional: persist selected_experience_ids on the row we just
+  // created, if the schema supports that column. Done as a separate
+  // UPDATE so the atomic gate stays schema-independent.
+  const capabilities = await getSupabaseSchemaCapabilities()
+  if (capabilities.generatedLettersSelectedExperienceIds) {
+    const updateResult = await supabaseAdmin
+      .from("generated_letters")
+      .update({ selected_experience_ids: selectedExperienceIds })
+      .eq("id", generationId)
+    if (updateResult.error) {
+      const code = (updateResult.error as { code?: string }).code
+      if (
+        code === "42703" ||
+        code === "PGRST204" ||
+        /column .* does not exist/i.test(updateResult.error.message || "")
+      ) {
+        console.warn(
+          "[POST /api/generate] selected_experience_ids column missing at write; resetting capability cache.",
+          updateResult.error
+        )
+        resetSchemaCapabilitiesCache()
+      }
+    }
   }
-
-  const generationId = insertResult.data.id as string
 
   // 5. Stream the pipeline progress as SSE.
   const encoder = new TextEncoder()
