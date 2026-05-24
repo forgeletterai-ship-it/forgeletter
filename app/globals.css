@@ -14740,6 +14740,45 @@ button.tone-chip:hover {
   padding-bottom: 0;
 }
 
+.legal-table__scroll {
+  overflow-x: auto;
+  margin-top: 12px;
+  border: 1px solid #ece6d8;
+  border-radius: 10px;
+}
+.legal-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  background: #ffffff;
+}
+.legal-table thead {
+  background: #faf6ec;
+}
+.legal-table th {
+  text-align: left;
+  font-weight: 700;
+  color: #2a1a0e;
+  padding: 11px 14px;
+  border-bottom: 1px solid #ece6d8;
+  font-family:
+    "Plus Jakarta Sans", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  letter-spacing: 0.01em;
+}
+.legal-table td {
+  padding: 11px 14px;
+  border-bottom: 1px solid #f1ece0;
+  color: #3a342c;
+  vertical-align: top;
+  line-height: 1.5;
+}
+.legal-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+.legal-table tbody tr:hover td {
+  background: #fbf6ec;
+}
+
 @media (max-width: 960px) {
   .legal-shell {
     grid-template-columns: 1fr;
