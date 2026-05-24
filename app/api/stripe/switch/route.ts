@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/auth"
-import { billingPlans, getStripe, type BillingPlan } from "@/lib/stripe"
+import {
+  billingPlans,
+  getStripe,
+  resolveOrCreatePriceId,
+  type BillingPlan,
+} from "@/lib/stripe"
 import { normalizeBillingPeriod } from "@/lib/plans"
 
 /**
@@ -82,14 +87,7 @@ export async function POST(req: NextRequest) {
       limit: 1,
     })).data[0]
 
-    const newPriceEnvVar = billingPlans[newPlan].priceIdEnv[newPeriod]
-    const newPriceId = process.env[newPriceEnvVar]
-    if (!newPriceId) {
-      return NextResponse.json(
-        { error: `Plan ${newPlan} (${newPeriod}) is not configured.` },
-        { status: 400 }
-      )
-    }
+    const newPriceId = await resolveOrCreatePriceId(stripe, newPlan, newPeriod)
 
     const currentItem = sub.items.data[0]
     if (!currentItem) {
