@@ -103,7 +103,10 @@ export async function POST(req: NextRequest) {
     return sseError(`Job description must be at least ${MIN_JD_CHARS} characters.`, 400)
   }
 
-  // 3. Quota check
+  // 3. Quota check. Counts only rows that represent a real consumed
+  // letter (passed) or one currently being generated (running). A
+  // failed generation refunds the slot automatically because failed
+  // rows are not included.
   try {
     const period = getBillingPeriod(user.plan)
     const periodStart = getCurrentPlanPeriodStart(period).toISOString()
@@ -112,7 +115,7 @@ export async function POST(req: NextRequest) {
       .select("id", { count: "exact", head: true })
       .eq("user_id", user.id)
       .gte("created_at", periodStart)
-      .in("generation_status", ["queued", "running", "passed"])
+      .in("generation_status", ["passed", "running"])
 
     if (countError) {
       return sseError(dataErrorMessage(countError, "generated_letters"), 500)
@@ -238,6 +241,25 @@ export async function POST(req: NextRequest) {
           console.warn("[/api/generate] persist failed:", updateError)
         }
 
+        // Recount after the row's status is finalised so the client
+        // sees the real post-generation usage (failed generations
+        // refund the slot, passed ones consume it).
+        let usagePayload: ReturnType<typeof getPlanUsageDetails> | null = null
+        try {
+          const period = getBillingPeriod(user.plan)
+          const periodStart = getCurrentPlanPeriodStart(period).toISOString()
+          const { count: postCount } = await supabaseAdmin
+            .from("generated_letters")
+            .select("id", { count: "exact", head: true })
+            .eq("user_id", user.id)
+            .gte("created_at", periodStart)
+            .in("generation_status", ["passed", "running"])
+
+          usagePayload = getPlanUsageDetails(user.plan, postCount || 0)
+        } catch {
+          // non-fatal: client can fall back to /api/account/usage
+        }
+
         send({
           type: "complete",
           generationId,
@@ -253,6 +275,7 @@ export async function POST(req: NextRequest) {
           agentsRun: result.agentsRun,
           durationMs: result.totalDurationMs,
           failureReason: result.failureReason,
+          usage: usagePayload,
         })
       } catch (err) {
         await supabaseAdmin

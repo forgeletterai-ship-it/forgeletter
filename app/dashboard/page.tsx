@@ -2,7 +2,7 @@ import {
   defaultProfile,
   defaultSettings,
   getApplicationBriefs,
-  getCurrentPeriodBriefCount,
+  getCurrentPeriodLetterCount,
   getCurrentAppUser,
   getSupabaseSchemaCapabilities,
   getUserProfile,
@@ -70,7 +70,7 @@ export default async function DashboardPage() {
         getApplicationBriefs(userId),
         getUserProfile(userId),
         getUserSettings(userId),
-        getCurrentPeriodBriefCount(userId, plan),
+        getCurrentPeriodLetterCount(userId, plan),
         getLatestLetter(userId),
         getSupabaseSchemaCapabilities(),
       ])
