@@ -14,11 +14,11 @@ export function getStripe() {
 
   if (!stripeClient) {
     stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY, {
-      // Pinned to the latest stable Stripe API version at time of
-      // writing. Cast: the SDK's typed LatestApiVersion lags Stripe's
-      // released versions; the API accepts any version Stripe has
-      // shipped.
-      apiVersion: "2024-11-20.acacia" as Stripe.LatestApiVersion,
+      // Pinned to the latest stable Stripe API version supported by
+      // the installed SDK. The constant is updated by Stripe on every
+      // SDK release so we automatically get the latest stable when
+      // Dependabot bumps the SDK.
+      apiVersion: "2026-04-22.dahlia",
       typescript: true,
       maxNetworkRetries: 2,
       timeout: 20_000,
@@ -107,10 +107,18 @@ export const oneTimeProducts: Record<
   },
 }
 
+// In Stripe SDK 22, Checkout.SessionCreateParams is a type alias
+// rather than a namespace, so the old SessionCreateParams.LineItem
+// nested path no longer resolves. Pull the line-item shape out via
+// an indexed access on the params type instead.
+type CheckoutLineItem = NonNullable<
+  Stripe.Checkout.SessionCreateParams["line_items"]
+>[number]
+
 export function getCheckoutLineItem(
   plan: BillingPlan,
   period: BillingPeriod = "monthly"
-): Stripe.Checkout.SessionCreateParams.LineItem {
+): CheckoutLineItem {
   const config = billingPlans[plan]
   const price = process.env[config.priceIdEnv[period]]
 
@@ -135,7 +143,7 @@ export function getCheckoutLineItem(
 
 export function getOneTimeLineItem(
   product: OneTimeProduct
-): Stripe.Checkout.SessionCreateParams.LineItem {
+): CheckoutLineItem {
   const config = oneTimeProducts[product]
   const price = process.env[config.priceIdEnv]
 
