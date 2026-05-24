@@ -10150,7 +10150,7 @@ button.tone-chip:hover {
   display: grid;
   grid-template-columns: minmax(0, 0.55fr) minmax(0, 1.45fr);
   gap: clamp(28px, 4vw, 56px);
-  align-items: center;
+  align-items: start;
   max-width: 1600px;
   margin: 0 auto;
 }
@@ -10158,41 +10158,6 @@ button.tone-chip:hover {
 .workflow-visual__demo {
   width: 100%;
   min-width: 0;
-}
-
-/* Laptop+: lift the title to the top-left, spanning the full grid width
-   above the demo. This lets the headline be much larger without making
-   the demo column narrower. Mobile/tablet (≤1024) keeps the existing
-   single-column stack defined below. */
-@media (min-width: 1025px) {
-  .workflow-visual__grid {
-    grid-template-rows: auto auto auto;
-    align-items: start;
-    row-gap: clamp(20px, 1.8vw, 36px);
-  }
-  .workflow-visual__grid .intro-copy {
-    display: contents;
-  }
-  .workflow-visual__grid .intro-copy .kicker {
-    grid-column: 1 / -1;
-    grid-row: 1;
-    justify-self: start;
-  }
-  .workflow-visual__grid .intro-copy h2 {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    max-width: 100% !important;
-    text-align: left;
-  }
-  .workflow-visual__grid .intro-copy p {
-    grid-column: 1;
-    grid-row: 3;
-    align-self: center;
-  }
-  .workflow-visual__grid .workflow-visual__demo {
-    grid-column: 2;
-    grid-row: 3;
-  }
 }
 
 .workflow-visual__grid .intro-copy h2 {
@@ -12073,29 +12038,28 @@ button.tone-chip:hover {
    shrinking the demo column. Mobile/tablet keeps the original single-
    column stack with appropriately scaled sizes. */
 .workflow-visual .intro-copy h2 {
-  font-size: clamp(56px, 5.6vw, 96px) !important;
-  line-height: 1.02 !important;
-  letter-spacing: -0.03em !important;
+  font-size: clamp(24px, 1.9vw, 34px) !important;
+  line-height: 1.12 !important;
+  letter-spacing: -0.015em !important;
 }
 @media (max-width: 1180px) {
   .workflow-visual .intro-copy h2 {
-    font-size: clamp(48px, 5.4vw, 76px) !important;
+    font-size: clamp(22px, 2vw, 28px) !important;
   }
 }
 @media (max-width: 1024px) {
   .workflow-visual .intro-copy h2 {
-    font-size: clamp(42px, 5.4vw, 64px) !important;
-    line-height: 1.05 !important;
+    font-size: clamp(32px, 4vw, 46px) !important;
   }
 }
 @media (max-width: 900px) {
   .workflow-visual .intro-copy h2 {
-    font-size: clamp(34px, 6vw, 54px) !important;
+    font-size: clamp(28px, 4.4vw, 38px) !important;
   }
 }
 @media (max-width: 560px) {
   .workflow-visual .intro-copy h2 {
-    font-size: clamp(26px, 7vw, 40px) !important;
+    font-size: clamp(24px, 5.6vw, 32px) !important;
     line-height: 1.1 !important;
   }
 }
