@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { auth } from "@/auth"
 import { Brand } from "./Brand"
+import { CookiePreferencesLink } from "./CookiePreferencesLink"
 
 const productLinks = [
   { href: "/#how-it-works", label: "How It Works" },
@@ -87,6 +88,7 @@ export function PublicFooter() {
               { href: "/cookies", label: "Cookie policy" },
               { href: "/refund-policy", label: "Refund policy" },
             ]}
+            extra={<CookiePreferencesLink>Cookie preferences</CookiePreferencesLink>}
           />
         </div>
         <div className="footer-bottom">
@@ -100,9 +102,11 @@ export function PublicFooter() {
 function FooterColumn({
   title,
   links,
+  extra,
 }: {
   title: string
   links: Array<{ href: string; label: string }>
+  extra?: React.ReactNode
 }) {
   return (
     <div>
@@ -113,6 +117,7 @@ function FooterColumn({
             {link.label}
           </Link>
         ))}
+        {extra}
       </div>
     </div>
   )

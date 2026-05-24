@@ -10160,6 +10160,41 @@ button.tone-chip:hover {
   min-width: 0;
 }
 
+/* Laptop+: lift the title to the top-left, spanning the full grid width
+   above the demo. This lets the headline be much larger without making
+   the demo column narrower. Mobile/tablet (≤1024) keeps the existing
+   single-column stack defined below. */
+@media (min-width: 1025px) {
+  .workflow-visual__grid {
+    grid-template-rows: auto auto auto;
+    align-items: start;
+    row-gap: clamp(20px, 1.8vw, 36px);
+  }
+  .workflow-visual__grid .intro-copy {
+    display: contents;
+  }
+  .workflow-visual__grid .intro-copy .kicker {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    justify-self: start;
+  }
+  .workflow-visual__grid .intro-copy h2 {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    max-width: 100% !important;
+    text-align: left;
+  }
+  .workflow-visual__grid .intro-copy p {
+    grid-column: 1;
+    grid-row: 3;
+    align-self: center;
+  }
+  .workflow-visual__grid .workflow-visual__demo {
+    grid-column: 2;
+    grid-row: 3;
+  }
+}
+
 .workflow-visual__grid .intro-copy h2 {
   font-size: clamp(28px, 2.6vw, 46px);
 }
@@ -12033,32 +12068,34 @@ button.tone-chip:hover {
   }
 }
 
-/* Workflow visual section uses a smaller, more compact headline so it
-   doesn't dwarf the side-by-side embedded demo and stays readable as
-   natural phrases in the narrow left column. Overrides the unified
-   premium headline sizes above. */
+/* Workflow visual section title — at laptop+ it spans the full grid
+   width at top-left (above the demo) so it can be much larger without
+   shrinking the demo column. Mobile/tablet keeps the original single-
+   column stack with appropriately scaled sizes. */
 .workflow-visual .intro-copy h2 {
-  font-size: clamp(26px, 2.3vw, 38px) !important;
-  line-height: 1.1 !important;
+  font-size: clamp(56px, 5.6vw, 96px) !important;
+  line-height: 1.02 !important;
+  letter-spacing: -0.03em !important;
 }
 @media (max-width: 1180px) {
   .workflow-visual .intro-copy h2 {
-    font-size: clamp(24px, 2.3vw, 34px) !important;
+    font-size: clamp(48px, 5.4vw, 76px) !important;
   }
 }
 @media (max-width: 1024px) {
   .workflow-visual .intro-copy h2 {
-    font-size: clamp(26px, 3.4vw, 38px) !important;
+    font-size: clamp(42px, 5.4vw, 64px) !important;
+    line-height: 1.05 !important;
   }
 }
 @media (max-width: 900px) {
   .workflow-visual .intro-copy h2 {
-    font-size: clamp(24px, 4vw, 34px) !important;
+    font-size: clamp(34px, 6vw, 54px) !important;
   }
 }
 @media (max-width: 560px) {
   .workflow-visual .intro-copy h2 {
-    font-size: clamp(22px, 5.4vw, 30px) !important;
+    font-size: clamp(26px, 7vw, 40px) !important;
     line-height: 1.1 !important;
   }
 }
@@ -14526,6 +14563,52 @@ button.tone-chip:hover {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 12px;
   color: #105250;
+}
+
+/* Cookie consent banner — brand-tinted to match the cream/teal landing
+   page. vanilla-cookieconsent exposes CSS variables on its modals; we
+   override only what's needed to match the rest of the site. */
+#cc-main {
+  --cc-bg: #faf6ee;
+  --cc-primary-color: #2a1a0e;
+  --cc-secondary-color: #5e564a;
+  --cc-btn-primary-bg: #105250;
+  --cc-btn-primary-color: #f9e8c4;
+  --cc-btn-primary-hover-bg: #0c403e;
+  --cc-btn-primary-hover-color: #ffffff;
+  --cc-btn-secondary-bg: #ffffff;
+  --cc-btn-secondary-color: #2a1a0e;
+  --cc-btn-secondary-border-color: #e7e0d2;
+  --cc-btn-secondary-hover-bg: #f4efe5;
+  --cc-btn-secondary-hover-color: #2a1a0e;
+  --cc-btn-secondary-hover-border-color: #d2cab8;
+  --cc-toggle-bg-on: #105250;
+  --cc-toggle-bg-off: #b9b1a3;
+  --cc-toggle-bg-readonly: #c9c0b0;
+  --cc-toggle-knob-bg: #ffffff;
+  --cc-toggle-knob-icon-color: #105250;
+  --cc-cookie-category-block-bg: #ffffff;
+  --cc-cookie-category-block-border: #ece6d8;
+  --cc-cookie-category-block-hover-bg: #faf6ec;
+  --cc-cookie-category-expanded-block-bg: #faf6ec;
+  --cc-section-border: #ece6d8;
+  --cc-overlay-bg: rgba(40, 26, 12, 0.45);
+  font-family:
+    "Plus Jakarta Sans", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+#cc-main .cm,
+#cc-main .pm {
+  border-radius: 14px;
+  box-shadow: 0 24px 60px -18px rgba(40, 26, 12, 0.35);
+}
+#cc-main .cm__title,
+#cc-main .pm__title {
+  font-family: Georgia, "Times New Roman", serif;
+  letter-spacing: -0.01em;
+}
+#cc-main a {
+  color: #105250;
+  text-decoration: underline;
 }
 
 /* HowItWorksDemo wrapper — always 16:9 to match the embedded 1280x720

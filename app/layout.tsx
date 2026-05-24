@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next"
 import { BackToTopButton } from "@/components/BackToTopButton"
+import { CookieConsentProvider } from "@/components/CookieConsent"
 import "./globals.css"
 
 export const metadata: Metadata = {
@@ -23,6 +24,7 @@ export default function RootLayout({
       <body>
         {children}
         <BackToTopButton />
+        <CookieConsentProvider />
       </body>
     </html>
   )
