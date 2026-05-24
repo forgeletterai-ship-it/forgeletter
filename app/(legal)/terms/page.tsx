@@ -22,7 +22,7 @@ export default function TermsPage() {
         },
         {
           title: "3. Your account",
-          body: "You are responsible for keeping your sign-in credentials secret and for everything that happens under your account. Notify us immediately at the address in section 24 if you suspect unauthorised access. You may not share, sell or transfer your account. We may verify your identity before reinstating access to an account where suspicious activity has been observed.",
+          body: "You are responsible for keeping your sign-in credentials secret and for everything that happens under your account. Notify us immediately at the address in section 27 if you suspect unauthorised access. You may not share, sell or transfer your account. We may verify your identity before reinstating access to an account where suspicious activity has been observed.",
         },
         {
           title: "4. Acceptable use",
@@ -58,8 +58,24 @@ export default function TermsPage() {
           body: "The service relies on third-party providers, including Vercel (hosting), Supabase (database), Stripe (payments), Anthropic (AI), and optional sign-in through Google or Facebook. Each provider has its own terms and privacy policies, which apply to your interaction with their services. We are not responsible for the acts, omissions, availability, or content of third-party services.",
         },
         {
-          title: "10. Subscription, fees and billing",
-          body: "Paid plans are billed in advance through Stripe. Prices and the billing currency are shown at checkout. Where required by Bulgarian or EU law, VAT or equivalent indirect taxes will be added or included; consumers outside the EU may be liable for local taxes. Your subscription continues automatically for successive billing periods (usually monthly) until you cancel. Payment-card details are handled by Stripe; we do not see or store full card numbers.",
+          title: "10. Subscription, fees and billing — general",
+          body: "Paid plans are billed in advance through Stripe. Prices and the billing currency are shown at checkout. Where required by Bulgarian or EU law, VAT or equivalent indirect taxes will be added or included; consumers outside the EU may be liable for local taxes. Payment-card details are handled by Stripe under PCI-DSS Level 1; we do not see or store full card numbers. Subscriptions begin on the date of first successful payment unless a free-trial period is offered, in which case billing starts at trial end.",
+        },
+        {
+          title: "10a. Monthly subscription",
+          body: "A monthly plan grants access to the features described on the pricing page for a one-month billing period. The plan renews automatically on the same calendar day each month until cancelled. You may cancel at any time from the billing portal and retain access until the end of the paid period. Mid-cycle cancellations do not produce pro-rata refunds save where mandatory consumer law requires otherwise.",
+        },
+        {
+          title: "10b. Annual subscription",
+          body: "An annual plan is paid in advance for twelve months and renews automatically each year on the anniversary date until cancelled. Annual plans are non-refundable beyond the EU/UK 14-day withdrawal window described in section 12, except where a sustained service failure makes retention of the fee inequitable. We will send a renewal reminder at least 30 days before the renewal date.",
+        },
+        {
+          title: "10c. One-off purchases",
+          body: "Where ForgeLetter offers one-off credit packs or single-letter purchases, these are consumed on use, do not renew, and are non-refundable once the corresponding feature has been used. Unused credits expire 12 months after purchase unless a longer period is shown at checkout.",
+        },
+        {
+          title: "10d. Changes in fees",
+          body: "We may change the price of a subscription plan with at least 30 days' notice by email and on the pricing page. Price changes take effect at the start of your next billing period; if you do not accept the change, you may cancel before the renewal date. Continued payment after the effective date constitutes acceptance.",
         },
         {
           title: "11. Auto-renewal, cancellation and what happens to your data",
@@ -67,7 +83,7 @@ export default function TermsPage() {
         },
         {
           title: "12. EU / UK 14-day right of withdrawal",
-          body: "If you are a consumer resident in the EU or the United Kingdom you normally have 14 days from the date of purchase to withdraw from a distance contract without giving a reason. Where you purchase a digital subscription and ask for it to start immediately, you expressly consent to immediate performance and acknowledge that you lose the right of withdrawal once the service has been provided in full. To exercise the right where it still applies, contact us at the address in section 24.",
+          body: "If you are a consumer resident in the EU or the United Kingdom you normally have 14 days from the date of purchase to withdraw from a distance contract without giving a reason. Where you purchase a digital subscription and ask for it to start immediately, you expressly consent to immediate performance and acknowledge that you lose the right of withdrawal once the service has been provided in full. To exercise the right where it still applies, contact us at the address in section 27.",
         },
         {
           title: "13. Refunds",
@@ -91,7 +107,7 @@ export default function TermsPage() {
         },
         {
           title: "18. DMCA and copyright complaints",
-          body: "If you believe content on ForgeLetter infringes your copyright, send a notice with the information required under 17 U.S.C. §512(c)(3) (or equivalent in your jurisdiction) to the address in section 24 with subject line \"Copyright notice\". We will respond promptly and may remove the content or terminate repeat infringers' accounts.",
+          body: "If you believe content on ForgeLetter infringes your copyright, send a notice with the information required under 17 U.S.C. §512(c)(3) (or equivalent in your jurisdiction) to the address in section 27 with subject line \"Copyright notice\". We will respond promptly and may remove the content or terminate repeat infringers' accounts.",
         },
         {
           title: "19. Feedback",
@@ -118,7 +134,15 @@ export default function TermsPage() {
           body: "Nothing in these terms restricts the mandatory statutory rights of consumers under EU law, UK law, the California Consumer Privacy Act / CPRA, or other applicable consumer-protection regimes. Where a provision of these terms conflicts with such a mandatory right, the right prevails.",
         },
         {
-          title: "25. Notices, contact and miscellaneous",
+          title: "25. No third-party beneficiaries",
+          body: "These terms create rights and obligations only between you and ForgeLetter. No third party (including employers reading letters you generate, recruiters, or AI providers) is a beneficiary under this agreement and no third party may enforce any provision of these terms against ForgeLetter or against you.",
+        },
+        {
+          title: "26. Errata and minor errors",
+          body: "ForgeLetter strives to keep the site, prices, descriptions and AI outputs accurate, but typographical errors, pricing inaccuracies, model availability issues or outdated screenshots may occur. We reserve the right to correct any such errors without notice and, where the error affects a purchase, to cancel an order and issue a refund. An obvious error in price or description (for example a 99% discount displayed by mistake) does not bind ForgeLetter even after checkout completes.",
+        },
+        {
+          title: "27. Notices, contact and miscellaneous",
           body: "Legal notices to ForgeLetter must be sent to legal@forgeletter.app (or via the contact page) with a clear subject line indicating the topic. We may notify you through the email address registered to your account or by an in-app message. If any provision of these terms is held invalid or unenforceable, the remainder remains in effect. These terms, together with the Privacy Policy, Cookie Policy, Acceptable Use Policy and Refund Policy, constitute the entire agreement between you and ForgeLetter. We may assign these terms in connection with a merger, acquisition or sale of assets; you may not assign them without our written consent. Failure to enforce a right is not a waiver of it.",
         },
       ]}

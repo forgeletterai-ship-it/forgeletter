@@ -2,6 +2,10 @@ type Section = {
   title: string
   body: string
   points?: string[]
+  table?: {
+    headers: string[]
+    rows: string[][]
+  }
 }
 
 export function LegalPage({
@@ -31,6 +35,30 @@ export function LegalPage({
                   <li key={point}>{point}</li>
                 ))}
               </ul>
+            ) : null}
+            {section.table ? (
+              <div className="legal-table__scroll">
+                <table className="legal-table">
+                  <thead>
+                    <tr>
+                      {section.table.headers.map((h) => (
+                        <th key={h}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {section.table.rows.map((row, rowIndex) => (
+                      <tr key={`${section.title}-row-${rowIndex}`}>
+                        {row.map((cell, cellIndex) => (
+                          <td key={`${section.title}-cell-${rowIndex}-${cellIndex}`}>
+                            {cell}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             ) : null}
           </section>
         ))}
