@@ -80,6 +80,14 @@ export default function PrivacyPage() {
           ],
         },
         {
+          title: "Sign in with Google — limited use disclosure",
+          body: "ForgeLetter's use and transfer of information received from Google APIs adheres to the Google API Services User Data Policy, including the Limited Use requirements. We request only the scopes needed to authenticate you (email and basic profile). We do not use Google user data to develop, improve, or train generalised AI models; we do not transfer Google user data to third parties for advertising; we do not allow humans to read your Google user data unless we have your specific consent, it is necessary for security investigations, or as required by law. You can revoke ForgeLetter's access at any time from https://myaccount.google.com/permissions.",
+        },
+        {
+          title: "Sign in with Facebook",
+          body: "When you choose Sign in with Facebook, Meta passes us your name, email address, and Facebook user ID under your direction. We use this only to create or look up your ForgeLetter account. We do not post to Facebook on your behalf and do not run a Meta Pixel on the site. You can revoke ForgeLetter's access from your Facebook Settings → Business integrations.",
+        },
+        {
           title: "Cookies",
           body: 'For the full list of cookies set, why each exists, and how to change your choices, see the Cookie policy. You can re-open the consent banner from the Cookie preferences link in the footer at any time.',
         },

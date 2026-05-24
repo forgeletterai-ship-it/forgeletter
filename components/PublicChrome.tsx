@@ -86,7 +86,10 @@ export function PublicFooter() {
               { href: "/privacy", label: "Privacy policy" },
               { href: "/terms", label: "Terms of service" },
               { href: "/cookies", label: "Cookie policy" },
+              { href: "/acceptable-use", label: "Acceptable use" },
               { href: "/refund-policy", label: "Refund policy" },
+              { href: "/accessibility", label: "Accessibility" },
+              { href: "/imprint", label: "Imprint" },
             ]}
             extra={<CookiePreferencesLink>Cookie preferences</CookiePreferencesLink>}
           />
