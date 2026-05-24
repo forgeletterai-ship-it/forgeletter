@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { useCallback, useMemo, useRef, useState } from "react"
 import {
   ExperienceMultiSelect,
@@ -286,6 +287,7 @@ export function DashboardClient({
   const [showPdfPicker, setShowPdfPicker] = useState(false)
 
   const planUsage = getPlanUsageDetails(plan, periodBriefCount)
+  const hasActivePlan = plan !== "free"
   const isBasicTier = plan === "free" || plan.startsWith("starter")
 
   const updateAgent = useCallback((key: string, patch: Partial<AgentRow>) => {
@@ -518,28 +520,52 @@ export function DashboardClient({
 
   return (
     <div className="cover-workspace" aria-label="Cover letter workspace">
-      <section className="cover-panel cover-plan-panel">
-        <div className="cover-plan-icon">
-          <Icon name="crown" />
-        </div>
-        <div className="cover-plan-content">
-          <div className="cover-section-row">
-            <div>
-              <h2>{planUsage.label} plan</h2>
-              <p>{planUsage.copy}</p>
+      {hasActivePlan ? (
+        <section className="cover-panel cover-plan-panel">
+          <div className="cover-plan-icon">
+            <Icon name="crown" />
+          </div>
+          <div className="cover-plan-content">
+            <div className="cover-section-row">
+              <div>
+                <h2>{planUsage.label} plan</h2>
+                <p>{planUsage.copy}</p>
+              </div>
+            </div>
+            <div className="cover-plan-meter">
+              <span style={{ width: `${planUsage.usedPercent}%` }} />
+            </div>
+            <div className="cover-plan-meta">
+              <strong>{planUsage.remaining} <span>letters left</span></strong>
+              <span>
+                {planUsage.used} of {planUsage.limit} used this {planUsage.periodNoun}
+              </span>
             </div>
           </div>
-          <div className="cover-plan-meter">
-            <span style={{ width: `${planUsage.usedPercent}%` }} />
+        </section>
+      ) : (
+        <Link
+          href="/#pricing"
+          className="cover-panel cover-plan-panel cover-plan-panel--cta"
+          aria-label="View plans and purchase a subscription"
+        >
+          <div className="cover-plan-icon">
+            <Icon name="crown" />
           </div>
-          <div className="cover-plan-meta">
-            <strong>{planUsage.remaining} <span>letters left</span></strong>
-            <span>
-              {planUsage.used} of {planUsage.limit} used this {planUsage.periodNoun}
-            </span>
+          <div className="cover-plan-content">
+            <div className="cover-section-row">
+              <div>
+                <h2>Plans</h2>
+                <p>
+                  Choose a plan to unlock the workspace, your monthly letter
+                  allowance, and the full set of features.
+                </p>
+              </div>
+              <span className="cover-plan-cta-arrow" aria-hidden="true">→</span>
+            </div>
           </div>
-        </div>
-      </section>
+        </Link>
+      )}
 
       <section className="cover-panel cover-status-panel">
         <div className="cover-panel-title">
