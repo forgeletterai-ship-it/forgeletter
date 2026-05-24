@@ -153,6 +153,13 @@ export type AppUser = {
   name: string | null
   image?: string | null
   plan: PlanId
+  /**
+   * ISO timestamp of the start of the user's current Stripe billing
+   * period. Populated by the Stripe webhook on subscription
+   * created/updated/payment_succeeded events; cleared on subscription
+   * deleted. Falls back to the calendar boundary when null.
+   */
+  currentPeriodStart: string | null
 }
 
 // Experience types + display helpers live in their own zero-dep module
@@ -320,11 +327,38 @@ export async function getCurrentAppUser(): Promise<{
   try {
     const { data, error } = await supabaseAdmin
       .from("users")
-      .select("id,email,name,image,plan")
+      .select("id,email,name,image,plan,current_period_start")
       .eq("email", email)
       .maybeSingle()
 
     if (error) {
+      // PGRST204 / column-missing means the new column has not yet
+      // been added in this Supabase instance. Fall back to the older
+      // column set so the dashboard keeps working.
+      const code = (error as { code?: string }).code
+      if (code === "42703" || code === "PGRST204") {
+        const retry = await supabaseAdmin
+          .from("users")
+          .select("id,email,name,image,plan")
+          .eq("email", email)
+          .maybeSingle()
+        if (retry.error) {
+          return { user: null, error: dataErrorMessage(retry.error, "users") }
+        }
+        if (!retry.data) {
+          return { user: null, error: "Account record not found" }
+        }
+        return {
+          user: {
+            id: retry.data.id,
+            email: retry.data.email,
+            name: retry.data.name,
+            image: retry.data.image,
+            plan: normalizePlan(retry.data.plan),
+            currentPeriodStart: null,
+          },
+        }
+      }
       return { user: null, error: dataErrorMessage(error, "users") }
     }
 
@@ -339,6 +373,7 @@ export async function getCurrentAppUser(): Promise<{
         name: data.name,
         image: data.image,
         plan: normalizePlan(data.plan),
+        currentPeriodStart: data.current_period_start ?? null,
       },
     }
   } catch (error) {
@@ -447,32 +482,80 @@ export async function getApplicationBriefs(userId: string) {
 }
 
 /**
- * Single source of truth for "how many letters has this user consumed
- * in the current billing period". Counts rows in generated_letters
- * with status passed (succeeded) or running (in-flight). A failed
- * generation refunds the slot automatically because failed rows are
- * excluded. Briefs alone do not count — a saved brief without a
- * successful generation is just metadata.
+ * Window of seconds we still treat a "running" letter as in-flight.
+ * Beyond this, the row is treated as orphaned (Vercel function
+ * timeout, pipeline crashed pre-status-update) and excluded from the
+ * count so the user's slot is refunded automatically.
  */
-export async function getCurrentPeriodLetterCount(userId: string, plan: PlanId) {
+const RUNNING_LETTER_MAX_AGE_SECONDS = 7 * 60
+
+/**
+ * Single source of truth for "how many letters has this user consumed
+ * in the current billing period".
+ *
+ * Counts rows in generated_letters with status:
+ *  - passed (succeeded — consumes a slot for the full period)
+ *  - running AND younger than 7 minutes (in-flight — consumes a slot
+ *    until either the pipeline finalises it or 7 minutes have passed)
+ *
+ * Period boundary: prefers the user's Stripe subscription
+ * current_period_start when available (anniversary-aligned with what
+ * Stripe billed them for). Falls back to the calendar boundary
+ * (1st-of-UTC-month for monthly plans, Jan 1 UTC for annual plans)
+ * when null — which is the case for free / unverified users and for
+ * the first page load before the webhook has fired.
+ */
+export async function getCurrentPeriodLetterCount(
+  userId: string,
+  plan: PlanId,
+  currentPeriodStart?: string | null
+) {
   try {
     const period = getBillingPeriod(plan)
-    const periodStart = getCurrentPlanPeriodStart(period).toISOString()
-    const { count, error } = await supabaseAdmin
-      .from("generated_letters")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", userId)
-      .gte("created_at", periodStart)
-      .in("generation_status", ["passed", "running"])
+    const periodStart = currentPeriodStart
+      ? new Date(currentPeriodStart).toISOString()
+      : getCurrentPlanPeriodStart(period).toISOString()
 
-    if (error) {
+    const cutoff = new Date(
+      Date.now() - RUNNING_LETTER_MAX_AGE_SECONDS * 1000
+    ).toISOString()
+
+    // Two-query approach so we can apply different age filters to the
+    // two statuses we care about. One query for confirmed passed
+    // letters (any age within the period), another for running rows
+    // newer than the orphan cutoff.
+    const [passedResult, runningResult] = await Promise.all([
+      supabaseAdmin
+        .from("generated_letters")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", userId)
+        .eq("generation_status", "passed")
+        .gte("created_at", periodStart),
+      supabaseAdmin
+        .from("generated_letters")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", userId)
+        .eq("generation_status", "running")
+        .gte("created_at", periodStart)
+        .gte("created_at", cutoff),
+    ])
+
+    if (passedResult.error) {
       return {
         count: 0,
-        setupError: dataErrorMessage(error, "generated_letters"),
+        setupError: dataErrorMessage(passedResult.error, "generated_letters"),
+      }
+    }
+    if (runningResult.error) {
+      return {
+        count: 0,
+        setupError: dataErrorMessage(runningResult.error, "generated_letters"),
       }
     }
 
-    return { count: count || 0 }
+    return {
+      count: (passedResult.count || 0) + (runningResult.count || 0),
+    }
   } catch (error) {
     return {
       count: 0,
