@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import Image from "next/image"
 
 /**
@@ -28,7 +28,7 @@ import Image from "next/image"
  * Accessibility: prefers-reduced-motion shows a static fallback panel.
  */
 
-const DEMO_SRC = "/forgeletter_demo.html"
+const DEMO_SRC = "/forgeletter_demo.html?v=19"
 const FALLBACK_IMAGE = "/hero-image-transparent.png"
 
 interface Props {
@@ -41,6 +41,8 @@ interface Props {
 export function HowItWorksDemo({ maxWidthPx = 1200, radiusPx = 14 }: Props) {
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
   const [userOptedIn, setUserOptedIn] = useState(false)
+  const wrapperRef = useRef<HTMLDivElement | null>(null)
+  const iframeRef = useRef<HTMLIFrameElement | null>(null)
 
   useEffect(() => {
     if (typeof window === "undefined") return
@@ -51,10 +53,39 @@ export function HowItWorksDemo({ maxWidthPx = 1200, radiusPx = 14 }: Props) {
     return () => mq.removeEventListener?.("change", onChange)
   }, [])
 
+  // Force the iframe's fit() to re-run whenever the wrapper resizes
+  // (e.g. media-query breakpoint changes, orientation, browser resize).
+  // The internal ResizeObserver inside the demo HTML isn't 100% reliable
+  // across browsers when the iframe's outer box changes via CSS.
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    const wrap = wrapperRef.current
+    if (!wrap) return
+    const refit = () => {
+      const win = iframeRef.current?.contentWindow
+      if (!win) return
+      try {
+        win.dispatchEvent(new Event("resize"))
+      } catch {
+        /* cross-origin or not ready yet — ignore */
+      }
+    }
+    const ro = new ResizeObserver(refit)
+    ro.observe(wrap)
+    window.addEventListener("resize", refit)
+    window.addEventListener("orientationchange", refit)
+    return () => {
+      ro.disconnect()
+      window.removeEventListener("resize", refit)
+      window.removeEventListener("orientationchange", refit)
+    }
+  }, [])
+
   const showFallback = prefersReducedMotion && !userOptedIn
 
   return (
     <div
+      ref={wrapperRef}
       className="how-it-works-demo"
       style={{
         width: "100%",
@@ -65,7 +96,7 @@ export function HowItWorksDemo({ maxWidthPx = 1200, radiusPx = 14 }: Props) {
         overflow: "hidden",
         boxShadow:
           "0 18px 36px -16px rgba(40, 26, 12, 0.22), 0 2px 8px -4px rgba(40, 26, 12, 0.08)",
-        background: "#efe9dd",
+        background: "#FAF6EE",
         // aspect-ratio (modern) / padding-top: 56.25% (fallback) are
         // applied via the .how-it-works-demo class in globals.css so
         // we don't accidentally double-apply both methods here.
@@ -77,6 +108,7 @@ export function HowItWorksDemo({ maxWidthPx = 1200, radiusPx = 14 }: Props) {
         <FallbackPanel onPlay={() => setUserOptedIn(true)} />
       ) : (
         <iframe
+          ref={iframeRef}
           src={DEMO_SRC}
           title="Animated walkthrough of how ForgeLetter works"
           loading="lazy"
