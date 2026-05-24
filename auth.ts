@@ -196,9 +196,46 @@ if (process.env.FACEBOOK_CLIENT_ID && process.env.FACEBOOK_CLIENT_SECRET) {
   )
 }
 
+const SECURE_COOKIES = process.env.NODE_ENV === "production"
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
-  session: { strategy: "jwt" },
+  session: { strategy: "jwt", maxAge: 30 * 24 * 60 * 60 },
+  useSecureCookies: SECURE_COOKIES,
+  cookies: {
+    sessionToken: {
+      name: SECURE_COOKIES
+        ? "__Secure-next-auth.session-token"
+        : "next-auth.session-token",
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: SECURE_COOKIES,
+      },
+    },
+    callbackUrl: {
+      name: SECURE_COOKIES
+        ? "__Secure-next-auth.callback-url"
+        : "next-auth.callback-url",
+      options: {
+        sameSite: "lax",
+        path: "/",
+        secure: SECURE_COOKIES,
+      },
+    },
+    csrfToken: {
+      name: SECURE_COOKIES
+        ? "__Host-next-auth.csrf-token"
+        : "next-auth.csrf-token",
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: SECURE_COOKIES,
+      },
+    },
+  },
   providers,
   logger: {
     error(error) {

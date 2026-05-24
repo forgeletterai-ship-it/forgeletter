@@ -39,7 +39,7 @@ export default function TermsPage() {
         },
         {
           title: "5. AI-generated content and disclaimers",
-          body: "ForgeLetter uses third-party large-language models (currently Anthropic Claude) to assist in producing draft text. AI outputs may be inaccurate, incomplete, biased, or fabricated. We do not represent or guarantee that any output is true, factually correct, fit for a particular purpose, free of plagiarism, or suitable for submission to any employer. You must review, fact-check, and edit every output before relying on it. ForgeLetter is not a legal-, career-, or recruitment-advice service.",
+          body: "ForgeLetter uses third-party large-language models (currently provided by Anthropic) to assist in producing draft text. AI outputs may be inaccurate, incomplete, biased, or fabricated. We do not represent or guarantee that any output is true, factually correct, fit for a particular purpose, free of plagiarism, or suitable for submission to any employer. You must review, fact-check, and edit every output before relying on it. ForgeLetter is not a legal-, career-, or recruitment-advice service.",
         },
         {
           title: "6. Your inputs and how we handle them",
