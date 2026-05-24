@@ -11,6 +11,7 @@ interface LetterRow {
   company_name: string | null
   final_score: number | null
   ats_score: number | null
+  generation_status: string
   template_chosen: string | null
   tier: string
   created_at: string
@@ -33,14 +34,19 @@ export default async function LettersPage() {
   const { user } = await getCurrentAppUser()
   if (!user) redirect("/auth/login")
 
+  // A letter is "generated" if the pipeline produced text. Quality-gate
+  // verdicts ("passed" vs "failed") are scoring metadata, not delivery
+  // state — both surface a final_cover_letter and both consume quota.
+  // Only excludes still-running rows and catastrophic crashes (which
+  // leave final_cover_letter null).
   const { data: letters, count: totalCount } = await supabaseAdmin
     .from("generated_letters")
     .select(
-      "id,job_title,company_name,final_score,ats_score,template_chosen,tier,created_at",
+      "id,job_title,company_name,final_score,ats_score,generation_status,template_chosen,tier,created_at",
       { count: "exact" }
     )
     .eq("user_id", user.id)
-    .eq("generation_status", "passed")
+    .not("final_cover_letter", "is", null)
     .order("created_at", { ascending: false })
     .limit(100)
 
@@ -48,111 +54,83 @@ export default async function LettersPage() {
   const generatedCount = totalCount ?? rows.length
 
   return (
-    <div style={{ maxWidth: 980, margin: "0 auto", padding: "32px 20px 64px" }}>
-      <header
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "baseline",
-          flexWrap: "wrap",
-          gap: 16,
-          marginBottom: 24,
-        }}
-      >
+    <div className="letters-page">
+      <Link className="letters-interlock" href="/dashboard" aria-label="Letters are generated in the workspace. Open the workspace.">
+        <span className="letters-interlock__node">
+          <span className="letters-interlock__dot" aria-hidden="true" />
+          Workspace
+        </span>
+        <span className="letters-interlock__wire" aria-hidden="true">
+          <svg viewBox="0 0 24 8" preserveAspectRatio="none">
+            <path d="M0 4h24" />
+            <path d="m20 1 4 3-4 3" />
+          </svg>
+        </span>
+        <span className="letters-interlock__node letters-interlock__node--current">
+          <span className="letters-interlock__dot letters-interlock__dot--current" aria-hidden="true" />
+          My letters
+        </span>
+      </Link>
+
+      <header className="letters-header">
         <div>
-          <h1 style={{ margin: 0, fontSize: "clamp(22px, 3vw, 30px)", letterSpacing: "-0.02em" }}>
-            My letters
-          </h1>
-          <p style={{ margin: "4px 0 0", color: "var(--muted)" }}>
+          <h1>My letters</h1>
+          <p>
             {generatedCount === 0
-              ? "Your generated cover letters will appear here."
-              : `${generatedCount} generated ${
+              ? "Generate your first cover letter in the workspace — it'll appear here."
+              : `${generatedCount} cover ${
                   generatedCount === 1 ? "letter" : "letters"
-                }. Click any one to view, edit, or download.`}
+                } generated. Click any to view, edit, or download.`}
           </p>
         </div>
-        <Link className="button" href="/dashboard">
-          ← Back to workspace
-        </Link>
       </header>
 
       {rows.length === 0 ? (
-        <div className="dashboard-card" style={{ textAlign: "center", padding: 48 }}>
-          <h2 style={{ margin: 0 }}>No letters yet</h2>
-          <p style={{ color: "var(--muted)", marginTop: 8 }}>
-            Head to the workspace to generate your first cover letter.
+        <div className="letters-empty">
+          <div className="letters-empty__icon" aria-hidden="true">
+            <svg viewBox="0 0 32 32">
+              <rect x="6" y="8" width="20" height="18" rx="2" />
+              <path d="M6 12h20" />
+              <path d="M11 17h10M11 21h6" />
+            </svg>
+          </div>
+          <h2>No letters yet</h2>
+          <p>
+            Your generated cover letters will land here automatically. Head to
+            the workspace to brief the agents.
           </p>
-          <Link className="button" href="/dashboard" style={{ marginTop: 16 }}>
-            Open workspace →
-          </Link>
         </div>
       ) : (
-        <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 12 }}>
+        <ul className="letters-list">
           {rows.map((row) => (
             <li key={row.id}>
-              <Link
-                href={`/dashboard/letters/${row.id}`}
-                className="dashboard-card"
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr auto",
-                  alignItems: "center",
-                  gap: 16,
-                  textDecoration: "none",
-                  color: "var(--ink)",
-                  transition: "transform 0.15s, box-shadow 0.15s",
-                }}
-              >
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 4 }}>
+              <Link href={`/dashboard/letters/${row.id}`} className="letters-row">
+                <div className="letters-row__main">
+                  <div className="letters-row__title">
                     {row.job_title || "Untitled role"}
                     {row.company_name ? (
-                      <span style={{ color: "var(--muted)", fontWeight: 400 }}>
-                        {" "}
-                        at {row.company_name}
-                      </span>
+                      <span> at {row.company_name}</span>
                     ) : null}
                   </div>
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: 10,
-                      flexWrap: "wrap",
-                      color: "var(--muted)",
-                      fontSize: 13,
-                    }}
-                  >
+                  <div className="letters-row__meta">
                     <span>{formatRelative(row.created_at)}</span>
                     <span>·</span>
                     <span>{row.tier.toUpperCase()}</span>
-                    {row.final_score != null && (
+                    {row.final_score != null ? (
                       <>
                         <span>·</span>
                         <span>Score {row.final_score}</span>
                       </>
-                    )}
-                    {row.ats_score != null && (
+                    ) : null}
+                    {row.ats_score != null ? (
                       <>
                         <span>·</span>
                         <span>ATS {row.ats_score}</span>
                       </>
-                    )}
+                    ) : null}
                   </div>
                 </div>
-                <span
-                  style={{
-                    padding: "4px 12px",
-                    borderRadius: 999,
-                    color: "var(--green)",
-                    background: "rgba(40,120,94,0.10)",
-                    border: "1px solid var(--green)",
-                    fontWeight: 700,
-                    fontSize: 12,
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  Ready
-                </span>
+                <span className="letters-row__chevron" aria-hidden="true">→</span>
               </Link>
             </li>
           ))}
