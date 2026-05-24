@@ -141,6 +141,40 @@ export function getCheckoutLineItem(
   }
 }
 
+/**
+ * Resolve a Stripe Price ID for a subscription plan. If the matching
+ * STRIPE_*_PRICE_ID env var is set we use that; otherwise we create
+ * an ad-hoc Price (with inline product) on the fly, mirroring what
+ * `getCheckoutLineItem` does via `price_data`.
+ *
+ * Needed because `subscriptions.update` requires an existing Price ID
+ * — it does not accept the inline `price_data` shape Checkout uses.
+ * Without this helper, switching plans for accounts created via
+ * Checkout's ad-hoc fallback would fail with "Plan X is not
+ * configured".
+ */
+export async function resolveOrCreatePriceId(
+  stripe: Stripe,
+  plan: BillingPlan,
+  period: BillingPeriod = "monthly"
+): Promise<string> {
+  const config = billingPlans[plan]
+  const envPrice = process.env[config.priceIdEnv[period]]
+  if (envPrice) return envPrice
+
+  const price = await stripe.prices.create({
+    currency: "eur",
+    unit_amount: config.unitAmount[period],
+    recurring: {
+      interval: period === "annual" ? "year" : "month",
+    },
+    product_data: {
+      name: config.name,
+    },
+  })
+  return price.id
+}
+
 export function getOneTimeLineItem(
   product: OneTimeProduct
 ): CheckoutLineItem {
