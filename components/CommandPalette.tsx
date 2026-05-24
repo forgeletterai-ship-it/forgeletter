@@ -80,13 +80,6 @@ function Icon({ name }: { name: string }) {
       </svg>
     )
   }
-  if (name === "status") {
-    return (
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M3 12h4l3-7 4 14 3-7h4" />
-      </svg>
-    )
-  }
   if (name === "legal") {
     return (
       <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -192,15 +185,6 @@ export function CommandPalette() {
         keywords: ["contact", "support", "help", "email"],
         icon: <Icon name="help" />,
         onRun: go("/contact"),
-      },
-      {
-        id: "status",
-        label: "System status",
-        description: "Uptime, webhook delivery, recent incidents",
-        group: "Help",
-        keywords: ["status", "uptime", "incidents", "outage"],
-        icon: <Icon name="status" />,
-        onRun: go("/status"),
       },
       {
         id: "legal",
