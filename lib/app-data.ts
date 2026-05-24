@@ -493,17 +493,27 @@ const RUNNING_LETTER_MAX_AGE_SECONDS = 7 * 60
  * Single source of truth for "how many letters has this user consumed
  * in the current billing period".
  *
- * Counts rows in generated_letters with status:
- *  - passed (succeeded — consumes a slot for the full period)
- *  - running AND younger than 7 minutes (in-flight — consumes a slot
- *    until either the pipeline finalises it or 7 minutes have passed)
+ * A slot is consumed when the pipeline produced **output** for the
+ * user, regardless of whether the internal quality gate marked the
+ * row passed or failed. From the user's perspective they received a
+ * letter; from the business's perspective the Anthropic compute was
+ * spent. The only thing that should refund a slot is a true pipeline
+ * crash (no output at all) or a stale running row that never
+ * finalised.
+ *
+ * Counted rows:
+ *  - final_cover_letter present (any completed generation, regardless
+ *    of pass/fail quality score)
+ *  - status = running AND created within the orphan window (7 min)
+ *
+ * Excluded:
+ *  - status = failed with no final_cover_letter (true crash)
+ *  - status = running but older than 7 min (orphaned)
  *
  * Period boundary: prefers the user's Stripe subscription
  * current_period_start when available (anniversary-aligned with what
  * Stripe billed them for). Falls back to the calendar boundary
- * (1st-of-UTC-month for monthly plans, Jan 1 UTC for annual plans)
- * when null — which is the case for free / unverified users and for
- * the first page load before the webhook has fired.
+ * (1st-of-UTC-month for monthly plans, Jan 1 UTC for annual plans).
  */
 export async function getCurrentPeriodLetterCount(
   userId: string,
@@ -520,30 +530,30 @@ export async function getCurrentPeriodLetterCount(
       Date.now() - RUNNING_LETTER_MAX_AGE_SECONDS * 1000
     ).toISOString()
 
-    // Two-query approach so we can apply different age filters to the
-    // two statuses we care about. One query for confirmed passed
-    // letters (any age within the period), another for running rows
-    // newer than the orphan cutoff.
-    const [passedResult, runningResult] = await Promise.all([
+    // Two-query approach. One for completed letters (any row with
+    // output, passed OR quality-failed). One for currently in-flight
+    // running rows newer than the orphan cutoff.
+    const [completedResult, runningResult] = await Promise.all([
       supabaseAdmin
         .from("generated_letters")
         .select("id", { count: "exact", head: true })
         .eq("user_id", userId)
-        .eq("generation_status", "passed")
-        .gte("created_at", periodStart),
+        .gte("created_at", periodStart)
+        .not("final_cover_letter", "is", null),
       supabaseAdmin
         .from("generated_letters")
         .select("id", { count: "exact", head: true })
         .eq("user_id", userId)
         .eq("generation_status", "running")
         .gte("created_at", periodStart)
-        .gte("created_at", cutoff),
+        .gte("created_at", cutoff)
+        .is("final_cover_letter", null),
     ])
 
-    if (passedResult.error) {
+    if (completedResult.error) {
       return {
         count: 0,
-        setupError: dataErrorMessage(passedResult.error, "generated_letters"),
+        setupError: dataErrorMessage(completedResult.error, "generated_letters"),
       }
     }
     if (runningResult.error) {
@@ -554,7 +564,7 @@ export async function getCurrentPeriodLetterCount(
     }
 
     return {
-      count: (passedResult.count || 0) + (runningResult.count || 0),
+      count: (completedResult.count || 0) + (runningResult.count || 0),
     }
   } catch (error) {
     return {
