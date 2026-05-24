@@ -16100,3 +16100,228 @@ button.tone-chip:hover {
     font-size: 12px;
   }
 }
+
+/* ----- My letters page ----- */
+
+.letters-page {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 32px 20px 64px;
+}
+
+.letters-interlock {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(16, 82, 80, 0.18);
+  background: linear-gradient(135deg, rgba(245, 233, 200, 0.65) 0%, rgba(254, 247, 230, 0.85) 100%);
+  color: #1f3a39;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  margin-bottom: 18px;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.letters-interlock:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px -16px rgba(16, 82, 80, 0.5);
+}
+
+.letters-interlock__node {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: rgba(31, 58, 57, 0.7);
+}
+
+.letters-interlock__node--current {
+  color: #105250;
+  font-weight: 700;
+}
+
+.letters-interlock__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(16, 82, 80, 0.35);
+}
+
+.letters-interlock__dot--current {
+  background: #105250;
+  box-shadow: 0 0 0 3px rgba(16, 82, 80, 0.16);
+}
+
+.letters-interlock__wire {
+  display: inline-flex;
+  width: 28px;
+  height: 8px;
+  color: rgba(16, 82, 80, 0.45);
+}
+
+.letters-interlock__wire svg {
+  width: 100%;
+  height: 100%;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.letters-header {
+  margin-bottom: 24px;
+}
+
+.letters-header h1 {
+  margin: 0;
+  font-size: clamp(22px, 3vw, 30px);
+  letter-spacing: -0.02em;
+  color: #1f3a39;
+  font-weight: 600;
+}
+
+.letters-header p {
+  margin: 6px 0 0;
+  color: rgba(31, 58, 57, 0.65);
+  font-size: 14.5px;
+  line-height: 1.55;
+  max-width: 60ch;
+}
+
+.letters-empty {
+  padding: 56px 32px;
+  border-radius: 22px;
+  background: #ffffff;
+  border: 1px solid rgba(16, 82, 80, 0.12);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.letters-empty__icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(245, 233, 200, 0.55) 0%, rgba(254, 247, 230, 0.9) 100%);
+  border: 1px solid rgba(16, 82, 80, 0.14);
+  display: grid;
+  place-items: center;
+  margin-bottom: 6px;
+}
+
+.letters-empty__icon svg {
+  width: 28px;
+  height: 28px;
+  stroke: #105250;
+  stroke-width: 1.6;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.letters-empty h2 {
+  margin: 0;
+  font-size: 19px;
+  color: #1f3a39;
+  letter-spacing: -0.01em;
+}
+
+.letters-empty p {
+  margin: 0;
+  color: rgba(31, 58, 57, 0.65);
+  font-size: 14px;
+  max-width: 40ch;
+  line-height: 1.55;
+}
+
+.letters-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.letters-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 22px;
+  border-radius: 18px;
+  background: #ffffff;
+  border: 1px solid rgba(16, 82, 80, 0.12);
+  box-shadow: 0 12px 24px -22px rgba(8, 25, 24, 0.3);
+  text-decoration: none;
+  color: #1f3a39;
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.16s ease,
+    border-color 0.16s ease;
+}
+
+.letters-row:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 30px -22px rgba(8, 25, 24, 0.45);
+  border-color: rgba(16, 82, 80, 0.24);
+}
+
+.letters-row__main {
+  min-width: 0;
+}
+
+.letters-row__title {
+  font-weight: 700;
+  font-size: 16px;
+  margin-bottom: 4px;
+  color: #1f3a39;
+  letter-spacing: -0.005em;
+}
+
+.letters-row__title span {
+  color: rgba(31, 58, 57, 0.55);
+  font-weight: 400;
+}
+
+.letters-row__meta {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  color: rgba(31, 58, 57, 0.6);
+  font-size: 13px;
+}
+
+.letters-row__chevron {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(16, 82, 80, 0.08);
+  color: #105250;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  transition: background 0.16s ease, transform 0.16s ease;
+}
+
+.letters-row:hover .letters-row__chevron {
+  background: linear-gradient(135deg, #0c403e 0%, #105250 100%);
+  color: #f9e8c4;
+  transform: translateX(2px);
+}
+
+@media (max-width: 640px) {
+  .letters-page {
+    padding: 24px 16px 48px;
+  }
+  .letters-row {
+    padding: 16px 18px;
+  }
+  .letters-empty {
+    padding: 40px 22px;
+  }
+}
