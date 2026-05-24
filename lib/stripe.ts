@@ -14,7 +14,14 @@ export function getStripe() {
 
   if (!stripeClient) {
     stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: "2023-10-16",
+      // Pinned to the latest stable Stripe API version at time of
+      // writing. Cast: the SDK's typed LatestApiVersion lags Stripe's
+      // released versions; the API accepts any version Stripe has
+      // shipped.
+      apiVersion: "2024-11-20.acacia" as Stripe.LatestApiVersion,
+      typescript: true,
+      maxNetworkRetries: 2,
+      timeout: 20_000,
     })
   }
 
