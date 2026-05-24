@@ -253,10 +253,32 @@ export function SettingsClient({
           </div>
           <h2>Data controls</h2>
           <div className="settings-card__rule" />
-          <p>Clear saved drafts and profile data when you need a fresh workspace.</p>
+          <p>
+            Exercise your GDPR / CCPA rights at any time. Download a full
+            machine-readable copy of your workspace, or clear your saved
+            content when you need a fresh start.
+          </p>
+          <div className="settings-card__divider" />
+          <div className="settings-data-actions">
+            <a
+              className="settings-export-button"
+              href="/api/account/export"
+              download
+            >
+              <SettingsIcon type="data" />
+              Download my data (JSON)
+            </a>
+            <p className="settings-export-note">
+              Includes account fields, profile, briefs, settings. Stripe
+              billing history lives in your billing portal.
+            </p>
+          </div>
           <div className="settings-card__divider" />
           <div className="settings-danger-zone">
-            <label htmlFor="delete-confirm">Type DELETE to clear workspace data</label>
+            <strong className="settings-danger-zone__heading">Danger zone</strong>
+            <label htmlFor="delete-confirm">
+              Type DELETE to permanently clear workspace data
+            </label>
             <input
               id="delete-confirm"
               value={confirmation}
@@ -272,6 +294,12 @@ export function SettingsClient({
               <SettingsIcon type="trash" />
               {deleting ? "Deleting workspace data..." : "Delete workspace data"}
             </button>
+            <p className="settings-danger-zone__note">
+              This removes your application briefs, profile and settings.
+              To also delete your account, cancel your subscription first
+              from the Billing page, then email{" "}
+              <a href="mailto:forgeletterai@gmail.com">forgeletterai@gmail.com</a>.
+            </p>
           </div>
         </section>
       </div>

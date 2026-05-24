@@ -3,6 +3,7 @@ import type { ReactNode } from "react"
 import { auth, signOut } from "@/auth"
 import { getCurrentAppUser } from "@/lib/app-data"
 import { getBasePlan } from "@/lib/plans"
+import { CommandPalette } from "@/components/CommandPalette"
 import { DashboardNavigation } from "./DashboardNavigation"
 
 function getInitials(name: string) {
@@ -66,6 +67,7 @@ export default async function DashboardLayout({
         planTier={planTier}
       />
       <section className="dashboard-main">{children}</section>
+      <CommandPalette />
     </main>
   )
 }

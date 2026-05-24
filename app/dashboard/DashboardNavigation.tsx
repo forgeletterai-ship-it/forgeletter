@@ -117,6 +117,16 @@ function SecurityIcon() {
   )
 }
 
+function LettersIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24">
+      <rect x="4" y="5" width="16" height="14" rx="2" />
+      <path d="M4 9h16" />
+      <path d="M8 13h8M8 16h5" />
+    </svg>
+  )
+}
+
 function BillingIcon() {
   return (
     <svg aria-hidden="true" viewBox="0 0 24 24">
@@ -275,6 +285,9 @@ export function DashboardNavigation({
             <AccountMenuItem href="/dashboard" icon={<WorkspaceIcon />} onClick={closeMenus}>
               Workspace
             </AccountMenuItem>
+            <AccountMenuItem href="/dashboard/letters" icon={<LettersIcon />} onClick={closeMenus}>
+              My letters
+            </AccountMenuItem>
             <AccountMenuItem href="/dashboard/settings" icon={<AccountIcon />} onClick={closeMenus}>
               Account settings
             </AccountMenuItem>
@@ -335,6 +348,9 @@ export function DashboardNavigation({
             <AccountMenuItem href="/dashboard" icon={<WorkspaceIcon />} onClick={closeMenus}>
               Workspace
             </AccountMenuItem>
+            <AccountMenuItem href="/dashboard/letters" icon={<LettersIcon />} onClick={closeMenus}>
+              My letters
+            </AccountMenuItem>
             <AccountMenuItem href="/dashboard/settings" icon={<AccountIcon />} onClick={closeMenus}>
               Account settings
             </AccountMenuItem>
@@ -376,6 +392,9 @@ export function DashboardNavigation({
             <DropdownDivider />
             <AccountMenuItem href="/dashboard" icon={<WorkspaceIcon />} onClick={closeMenus}>
               Workspace
+            </AccountMenuItem>
+            <AccountMenuItem href="/dashboard/letters" icon={<LettersIcon />} onClick={closeMenus}>
+              My letters
             </AccountMenuItem>
             <AccountMenuItem href="/dashboard/settings" icon={<AccountIcon />} onClick={closeMenus}>
               Account settings
@@ -444,6 +463,9 @@ export function DashboardNavigation({
 
         <SheetItem href="/dashboard" icon={<WorkspaceIcon />} onClick={closeMenus}>
           Workspace
+        </SheetItem>
+        <SheetItem href="/dashboard/letters" icon={<LettersIcon />} onClick={closeMenus}>
+          My letters
         </SheetItem>
         <SheetItem href="/dashboard/settings" icon={<AccountIcon />} onClick={closeMenus}>
           Account settings

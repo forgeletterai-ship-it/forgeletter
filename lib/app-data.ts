@@ -160,6 +160,18 @@ export type AppUser = {
    * deleted. Falls back to the calendar boundary when null.
    */
   currentPeriodStart: string | null
+  /**
+   * ISO timestamp set when invoice.payment_failed fires; cleared on
+   * invoice.payment_succeeded. UI surfaces a "your card was declined"
+   * banner while this is non-null.
+   */
+  pastDueSince: string | null
+  /**
+   * ISO timestamp set when charge.dispute.created fires for a charge
+   * belonging to this user. UI surfaces a "chargeback under review"
+   * banner while this is non-null.
+   */
+  disputedAt: string | null
 }
 
 // Experience types + display helpers live in their own zero-dep module
@@ -327,12 +339,14 @@ export async function getCurrentAppUser(): Promise<{
   try {
     const { data, error } = await supabaseAdmin
       .from("users")
-      .select("id,email,name,image,plan,current_period_start")
+      .select(
+        "id,email,name,image,plan,current_period_start,past_due_since,disputed_at"
+      )
       .eq("email", email)
       .maybeSingle()
 
     if (error) {
-      // PGRST204 / column-missing means the new column has not yet
+      // PGRST204 / column-missing means the new columns have not yet
       // been added in this Supabase instance. Fall back to the older
       // column set so the dashboard keeps working.
       const code = (error as { code?: string }).code
@@ -356,6 +370,8 @@ export async function getCurrentAppUser(): Promise<{
             image: retry.data.image,
             plan: normalizePlan(retry.data.plan),
             currentPeriodStart: null,
+            pastDueSince: null,
+            disputedAt: null,
           },
         }
       }
@@ -374,6 +390,8 @@ export async function getCurrentAppUser(): Promise<{
         image: data.image,
         plan: normalizePlan(data.plan),
         currentPeriodStart: data.current_period_start ?? null,
+        pastDueSince: data.past_due_since ?? null,
+        disputedAt: data.disputed_at ?? null,
       },
     }
   } catch (error) {
