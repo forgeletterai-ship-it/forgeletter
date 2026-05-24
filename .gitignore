@@ -40,6 +40,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# claude code local state (worktrees + permission cache)
+# local tool state (worktrees + permission cache)
 .claude/settings.local.json
 .claude/worktrees/

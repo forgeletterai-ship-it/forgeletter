@@ -18,10 +18,9 @@ export default function PrivacyPage() {
         },
         {
           title: "2. How to reach us",
-          body: "Our designated privacy contact is reachable at the addresses below. We have appointed a privacy lead acting in the role of Data Protection Officer to handle privacy-related enquiries even though formal DPO designation under Article 37 GDPR is not strictly required for ForgeLetter today.",
+          body: "All privacy and data-protection requests are handled by our designated privacy contact. ForgeLetter is not required to appoint a formal Data Protection Officer under Article 37 GDPR — our processing is not large-scale monitoring of individuals and does not involve special-category data — but we still respond to GDPR requests within the statutory timeframes.",
           points: [
             "Privacy and data-protection requests: privacy@forgeletter.app",
-            "Designated privacy lead (DPO): dpo@forgeletter.app",
             "Postal: [Legal entity name], [Registered address], Republic of Bulgaria",
           ],
         },
@@ -191,7 +190,7 @@ export default function PrivacyPage() {
         },
         {
           title: "11. How to exercise your rights",
-          body: "Email privacy@forgeletter.app or dpo@forgeletter.app from the email address on your account, or submit a request via the contact page. We may ask for additional information to verify your identity before acting on the request. We do not charge a fee unless the request is manifestly unfounded or excessive, in line with Article 12(5) GDPR.",
+          body: "Email privacy@forgeletter.app from the email address on your account, or submit a request via the contact page. We may ask for additional information to verify your identity before acting on the request. We do not charge a fee unless the request is manifestly unfounded or excessive, in line with Article 12(5) GDPR.",
         },
         {
           title: "12. Sign in with Google — limited use disclosure",
@@ -215,7 +214,7 @@ export default function PrivacyPage() {
         },
         {
           title: "17. Contact",
-          body: "Privacy questions and rights requests can be sent to privacy@forgeletter.app, dpo@forgeletter.app, or via the contact page. We aim to respond within one working week and at the latest within 30 days as required by the GDPR.",
+          body: "Privacy questions and rights requests can be sent to privacy@forgeletter.app or via the contact page. We aim to respond within one working week and at the latest within 30 days as required by the GDPR.",
         },
       ]}
     />

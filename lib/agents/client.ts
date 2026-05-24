@@ -11,7 +11,13 @@ function getClient(): Anthropic {
     )
   }
   if (!cached) {
-    cached = new Anthropic({ apiKey, maxRetries: 2 })
+    cached = new Anthropic({
+      apiKey,
+      maxRetries: 2,
+      defaultHeaders: {
+        "anthropic-no-retention": "true",
+      },
+    })
   }
   return cached
 }
@@ -46,12 +52,12 @@ export interface StructuredCallResult<T> {
 }
 
 /**
- * Calls Claude with a tool definition derived from the Zod schema, then
+ * Calls the model with a tool definition derived from the Zod schema, then
  * parses + validates the returned arguments.
  *
  * Why tool-use instead of "respond in JSON": tool-use is the most reliable
- * way to get structured output from Claude — the SDK enforces the schema at
- * the API layer, so we never see free-form prose where we expect JSON.
+ * way to get structured output — the SDK enforces the schema at the API
+ * layer, so we never see free-form prose where we expect JSON.
  */
 export async function structuredCall<S extends ZodTypeAny>(
   opts: StructuredCallOptions<S>
@@ -86,7 +92,7 @@ export async function structuredCall<S extends ZodTypeAny>(
   if (!toolUseBlock) {
     throw new AgentParseError(
       opts.agent,
-      "Claude did not return a tool_use block. Response: " +
+      "Model did not return a tool_use block. Response: " +
         JSON.stringify(response.content).slice(0, 500)
     )
   }
@@ -148,7 +154,7 @@ export async function textCall(opts: TextCallOptions): Promise<TextCallResult> {
   if (!textBlock) {
     throw new AgentParseError(
       opts.agent,
-      "Claude did not return any text content."
+      "Model did not return any text content."
     )
   }
 
