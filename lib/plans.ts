@@ -277,5 +277,8 @@ export function computeFairLetterCap(args: {
   const segmentCap = segmentDays * dailyRate
   const accrued = Math.max(0, args.accruedCapThisPeriod || 0)
   const total = accrued + segmentCap
-  return Math.max(0, Math.floor(total))
+  // Add a small epsilon before flooring so values that are
+  // mathematically integers but land at 34.999999… due to IEEE-754
+  // rounding (e.g. 30 × 35/30) snap to 35 not 34.
+  return Math.max(0, Math.floor(total + 1e-6))
 }
