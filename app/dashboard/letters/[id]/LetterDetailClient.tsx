@@ -6,6 +6,14 @@ import { useCallback, useState } from "react"
 import { ATSScoreCard, type ATSData, type ATSVerdict } from "@/components/ATSScoreCard"
 import { TemplatePickerModal } from "@/components/TemplatePickerModal"
 
+type ApplicationStatus =
+  | "not_submitted"
+  | "submitted"
+  | "interviewing"
+  | "offer"
+  | "rejected"
+  | "ghosted"
+
 interface Letter {
   id: string
   finalCoverLetter: string
@@ -23,9 +31,26 @@ interface Letter {
   generationStatus: string
   failureReason: string | null
   createdAt: string
+  applicationStatus: ApplicationStatus
+  submittedAt: string | null
+  outcomeAt: string | null
+  outcomeNotes: string
 }
 
 type BasePlan = "free" | "starter" | "pro" | "ultra"
+
+const STATUS_OPTIONS: Array<{
+  key: ApplicationStatus
+  label: string
+  description: string
+}> = [
+  { key: "not_submitted", label: "Not submitted", description: "Drafted, not yet sent" },
+  { key: "submitted", label: "Submitted", description: "Application sent, waiting" },
+  { key: "interviewing", label: "Interviewing", description: "They reached out" },
+  { key: "offer", label: "Offer", description: "You got the role" },
+  { key: "rejected", label: "Rejected", description: "Declined after response" },
+  { key: "ghosted", label: "Ghosted", description: "No response, given up" },
+]
 
 export function LetterDetailClient({
   letter,
@@ -41,6 +66,69 @@ export function LetterDetailClient({
   const [deleting, setDeleting] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showPdfPicker, setShowPdfPicker] = useState(false)
+  const [appStatus, setAppStatus] = useState<ApplicationStatus>(letter.applicationStatus)
+  const [submittedAt, setSubmittedAt] = useState(letter.submittedAt)
+  const [outcomeAt, setOutcomeAt] = useState(letter.outcomeAt)
+  const [notes, setNotes] = useState(letter.outcomeNotes)
+  const [trackStatus, setTrackStatus] = useState<"idle" | "saving" | "saved" | "error">("idle")
+  const [notesStatus, setNotesStatus] = useState<"idle" | "saving" | "saved" | "error">("idle")
+
+  const updateApplicationStatus = useCallback(
+    async (next: ApplicationStatus) => {
+      if (next === appStatus) return
+      const previous = {
+        appStatus,
+        submittedAt,
+        outcomeAt,
+      }
+      setAppStatus(next)
+      setTrackStatus("saving")
+      const now = new Date().toISOString()
+      if (next === "submitted") {
+        setSubmittedAt(now)
+        setOutcomeAt(null)
+      } else if (next === "not_submitted") {
+        setSubmittedAt(null)
+        setOutcomeAt(null)
+      } else {
+        if (!submittedAt) setSubmittedAt(now)
+        setOutcomeAt(now)
+      }
+      try {
+        const res = await fetch(`/api/letters/${letter.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ applicationStatus: next }),
+        })
+        if (!res.ok) throw new Error(await res.text())
+        setTrackStatus("saved")
+        setTimeout(() => setTrackStatus("idle"), 1800)
+        router.refresh()
+      } catch {
+        setAppStatus(previous.appStatus)
+        setSubmittedAt(previous.submittedAt)
+        setOutcomeAt(previous.outcomeAt)
+        setTrackStatus("error")
+      }
+    },
+    [appStatus, letter.id, outcomeAt, router, submittedAt]
+  )
+
+  const saveNotes = useCallback(async () => {
+    setNotesStatus("saving")
+    try {
+      const res = await fetch(`/api/letters/${letter.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ outcomeNotes: notes }),
+      })
+      if (!res.ok) throw new Error(await res.text())
+      setNotesStatus("saved")
+      setTimeout(() => setNotesStatus("idle"), 1800)
+    } catch {
+      setNotesStatus("error")
+    }
+  }, [letter.id, notes])
 
   const onSave = useCallback(async () => {
     setSaveStatus("saving")
@@ -171,6 +259,96 @@ export function LetterDetailClient({
         </div>
       )}
 
+      <section className={`letter-tracker letter-tracker--${appStatus}`} aria-label="Application outcome tracker">
+        <div className="letter-tracker__header">
+          <div>
+            <p className="letter-tracker__kicker">Application outcome</p>
+            <h2>Track where this letter landed</h2>
+            <p className="letter-tracker__sub">
+              Marking outcomes feeds the gold-standard examples base —
+              letters that earned offers train future generations.
+            </p>
+          </div>
+          {trackStatus !== "idle" ? (
+            <span className={`letter-tracker__pill letter-tracker__pill--${trackStatus}`}>
+              {trackStatus === "saving"
+                ? "Saving…"
+                : trackStatus === "saved"
+                  ? "Saved"
+                  : "Save failed — retry"}
+            </span>
+          ) : null}
+        </div>
+
+        <div className="letter-tracker__grid" role="radiogroup" aria-label="Application status">
+          {STATUS_OPTIONS.map((option) => {
+            const isActive = appStatus === option.key
+            return (
+              <button
+                key={option.key}
+                type="button"
+                role="radio"
+                aria-checked={isActive}
+                className={`letter-tracker__option letter-tracker__option--${option.key}${
+                  isActive ? " is-active" : ""
+                }`}
+                onClick={() => updateApplicationStatus(option.key)}
+                disabled={trackStatus === "saving"}
+              >
+                <span className="letter-tracker__option-dot" aria-hidden="true" />
+                <span className="letter-tracker__option-copy">
+                  <strong>{option.label}</strong>
+                  <span>{option.description}</span>
+                </span>
+              </button>
+            )
+          })}
+        </div>
+
+        {appStatus !== "not_submitted" ? (
+          <div className="letter-tracker__timeline" aria-label="Timeline">
+            <Timeline submittedAt={submittedAt} outcomeAt={outcomeAt} status={appStatus} />
+          </div>
+        ) : null}
+
+        {appStatus !== "not_submitted" ? (
+          <div className="letter-tracker__notes">
+            <label htmlFor="outcome-notes">
+              Notes
+              <span>
+                Optional — what worked, what you'd change next time. Visible
+                only to you.
+              </span>
+            </label>
+            <textarea
+              id="outcome-notes"
+              value={notes}
+              onChange={(event) => setNotes(event.target.value)}
+              onBlur={() => {
+                if (notes !== letter.outcomeNotes) void saveNotes()
+              }}
+              rows={3}
+              maxLength={2000}
+              placeholder="e.g. opener resonated with the founder, technical paragraph could be tighter."
+            />
+            <div className="letter-tracker__notes-footer">
+              <span>
+                {notesStatus === "saving"
+                  ? "Saving…"
+                  : notesStatus === "saved"
+                    ? "Saved"
+                    : notesStatus === "error"
+                      ? "Save failed"
+                      : `${notes.length}/2000`}
+              </span>
+              <button type="button" className="button-secondary" onClick={() => void saveNotes()}>
+                Save notes
+              </button>
+            </div>
+          </div>
+        ) : null}
+      </section>
+
       {atsData && <ATSScoreCard atsData={atsData} tier={basePlan} />}
 
       <div className="dashboard-card">
@@ -231,6 +409,53 @@ export function LetterDetailClient({
         </div>
       )}
     </div>
+  )
+}
+
+function Timeline({
+  submittedAt,
+  outcomeAt,
+  status,
+}: {
+  submittedAt: string | null
+  outcomeAt: string | null
+  status: ApplicationStatus
+}) {
+  const outcomeReached =
+    status === "interviewing" ||
+    status === "offer" ||
+    status === "rejected" ||
+    status === "ghosted"
+  return (
+    <ol className="letter-tracker__timeline-list">
+      <li className={submittedAt ? "is-done" : ""}>
+        <span className="letter-tracker__timeline-dot" aria-hidden="true" />
+        <div>
+          <strong>Submitted</strong>
+          <span>{submittedAt ? new Date(submittedAt).toLocaleString() : "—"}</span>
+        </div>
+      </li>
+      <li className={outcomeReached ? "is-done" : ""}>
+        <span
+          className={`letter-tracker__timeline-dot letter-tracker__timeline-dot--${status}`}
+          aria-hidden="true"
+        />
+        <div>
+          <strong>
+            {status === "offer"
+              ? "Offer received"
+              : status === "interviewing"
+                ? "Interview booked"
+                : status === "rejected"
+                  ? "Rejected"
+                  : status === "ghosted"
+                    ? "Ghosted"
+                    : "Outcome pending"}
+          </strong>
+          <span>{outcomeAt ? new Date(outcomeAt).toLocaleString() : "—"}</span>
+        </div>
+      </li>
+    </ol>
   )
 }
 

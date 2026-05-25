@@ -15976,3 +15976,718 @@ button.tone-chip:hover {
     padding: 40px 22px;
   }
 }
+
+/* ----- My letters: status pill + insights ----- */
+
+.letters-row__right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.letters-row__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+
+.letters-row__status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.letters-row__status--not_submitted {
+  color: rgba(31, 58, 57, 0.55);
+  background: rgba(31, 58, 57, 0.06);
+  border-color: rgba(31, 58, 57, 0.12);
+}
+.letters-row__status--submitted {
+  color: #105250;
+  background: rgba(16, 82, 80, 0.1);
+  border-color: rgba(16, 82, 80, 0.22);
+}
+.letters-row__status--interviewing {
+  color: #8a6516;
+  background: rgba(200, 150, 56, 0.16);
+  border-color: rgba(200, 150, 56, 0.32);
+}
+.letters-row__status--offer {
+  color: #f9e8c4;
+  background: linear-gradient(135deg, #b8862b 0%, #d9a644 50%, #b8862b 100%);
+  border-color: rgba(184, 134, 43, 0.7);
+  box-shadow: 0 6px 14px -10px rgba(184, 134, 43, 0.6);
+  text-shadow: 0 1px 0 rgba(40, 25, 8, 0.3);
+}
+.letters-row__status--rejected {
+  color: #8a2d2d;
+  background: rgba(176, 58, 58, 0.1);
+  border-color: rgba(176, 58, 58, 0.25);
+}
+.letters-row__status--ghosted {
+  color: rgba(31, 58, 57, 0.7);
+  background: rgba(31, 58, 57, 0.08);
+  border-color: rgba(31, 58, 57, 0.18);
+  font-style: italic;
+}
+
+.letters-row--offer {
+  border-color: rgba(184, 134, 43, 0.4);
+  box-shadow:
+    0 12px 24px -22px rgba(8, 25, 24, 0.3),
+    0 0 0 1px rgba(200, 150, 56, 0.25) inset;
+  background: linear-gradient(180deg, #fffdf6 0%, #fdf5dc 100%);
+}
+.letters-row--offer:hover {
+  border-color: rgba(184, 134, 43, 0.6);
+  box-shadow:
+    0 18px 32px -22px rgba(184, 134, 43, 0.45),
+    0 0 0 1px rgba(200, 150, 56, 0.4) inset;
+}
+
+.letters-row--interviewing {
+  border-color: rgba(200, 150, 56, 0.28);
+}
+
+.letters-row--rejected {
+  opacity: 0.85;
+}
+
+.letters-row--ghosted {
+  opacity: 0.75;
+}
+
+.letters-insights {
+  margin-bottom: 24px;
+  padding: 24px 26px;
+  border-radius: 22px;
+  background: linear-gradient(180deg, #fbf6ea 0%, #f4ecd6 100%);
+  border: 1px solid rgba(16, 82, 80, 0.18);
+  box-shadow:
+    0 24px 48px -28px rgba(16, 82, 80, 0.3),
+    0 1px 0 rgba(255, 255, 255, 0.55) inset;
+}
+
+.letters-insights__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.letters-insights__kicker {
+  margin: 0 0 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(31, 58, 57, 0.55);
+}
+
+.letters-insights h2 {
+  margin: 0;
+  font-size: clamp(22px, 3vw, 28px);
+  letter-spacing: -0.02em;
+  color: #1f3a39;
+  font-weight: 600;
+}
+
+.letters-insights__sub {
+  margin: 6px 0 0;
+  font-size: 13.5px;
+  color: rgba(31, 58, 57, 0.65);
+  letter-spacing: 0.01em;
+}
+
+.letters-insights__gold {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #b8862b 0%, #d9a644 50%, #b8862b 100%);
+  color: #281908;
+  box-shadow: 0 18px 32px -18px rgba(184, 134, 43, 0.55);
+  border: 1px solid rgba(184, 134, 43, 0.7);
+}
+
+.letters-insights__gold-icon {
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  align-items: center;
+  justify-content: center;
+}
+
+.letters-insights__gold-icon svg {
+  width: 22px;
+  height: 22px;
+  stroke: rgba(40, 25, 8, 0.85);
+  stroke-width: 1.4;
+  fill: rgba(255, 240, 200, 0.6);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.letters-insights__gold strong {
+  display: block;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.01em;
+}
+
+.letters-insights__gold span {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.78;
+  margin-top: 2px;
+}
+
+.letters-insights__bar {
+  display: flex;
+  height: 10px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(31, 58, 57, 0.06);
+  margin-bottom: 12px;
+}
+
+.letters-insights__seg {
+  height: 100%;
+  transition: flex-grow 0.3s ease;
+}
+
+.letters-insights__seg--offer {
+  background: linear-gradient(90deg, #b8862b 0%, #d9a644 100%);
+}
+.letters-insights__seg--interviewing { background: #c89638; }
+.letters-insights__seg--submitted { background: #105250; }
+.letters-insights__seg--rejected { background: #b03a3a; }
+.letters-insights__seg--ghosted { background: rgba(31, 58, 57, 0.45); }
+
+.letters-insights__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  font-size: 12.5px;
+  color: rgba(31, 58, 57, 0.75);
+}
+
+.letters-insights__legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+}
+
+.letters-insights__legend-item strong {
+  color: #1f3a39;
+  font-weight: 700;
+  margin-left: 2px;
+}
+
+.letters-insights__legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.letters-insights__legend-dot--offer {
+  background: linear-gradient(135deg, #b8862b 0%, #d9a644 100%);
+}
+.letters-insights__legend-dot--interviewing { background: #c89638; }
+.letters-insights__legend-dot--submitted { background: #105250; }
+.letters-insights__legend-dot--rejected { background: #b03a3a; }
+.letters-insights__legend-dot--ghosted { background: rgba(31, 58, 57, 0.45); }
+
+/* ----- Letter detail tracker ----- */
+
+.letter-tracker {
+  padding: 26px 28px;
+  border-radius: 22px;
+  background: #ffffff;
+  border: 1px solid rgba(16, 82, 80, 0.12);
+  box-shadow: 0 12px 28px -24px rgba(8, 25, 24, 0.35);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+}
+
+.letter-tracker--offer {
+  background: linear-gradient(180deg, #fffdf6 0%, #fdf5dc 100%);
+  border-color: rgba(184, 134, 43, 0.45);
+  box-shadow: 0 22px 40px -24px rgba(184, 134, 43, 0.4);
+}
+
+.letter-tracker--interviewing {
+  border-color: rgba(200, 150, 56, 0.32);
+}
+
+.letter-tracker__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.letter-tracker__kicker {
+  margin: 0 0 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(31, 58, 57, 0.55);
+}
+
+.letter-tracker h2 {
+  margin: 0;
+  font-size: 19px;
+  letter-spacing: -0.01em;
+  color: #1f3a39;
+  font-weight: 600;
+}
+
+.letter-tracker__sub {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: rgba(31, 58, 57, 0.6);
+  max-width: 52ch;
+  line-height: 1.55;
+}
+
+.letter-tracker__pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.letter-tracker__pill--saving {
+  color: rgba(31, 58, 57, 0.7);
+  background: rgba(31, 58, 57, 0.06);
+}
+.letter-tracker__pill--saved {
+  color: #1b6f4d;
+  background: rgba(27, 111, 77, 0.12);
+}
+.letter-tracker__pill--error {
+  color: #8a2d2d;
+  background: rgba(176, 58, 58, 0.1);
+}
+
+.letter-tracker__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+.letter-tracker__option {
+  display: grid;
+  grid-template-columns: 14px 1fr;
+  align-items: start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(16, 82, 80, 0.16);
+  background: #fbfaf6;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    background 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+  color: inherit;
+}
+
+.letter-tracker__option:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: rgba(16, 82, 80, 0.3);
+}
+
+.letter-tracker__option:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.letter-tracker__option-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: rgba(31, 58, 57, 0.2);
+  margin-top: 4px;
+}
+
+.letter-tracker__option-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.letter-tracker__option-copy strong {
+  font-size: 14px;
+  color: #1f3a39;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+
+.letter-tracker__option-copy span {
+  font-size: 12px;
+  color: rgba(31, 58, 57, 0.6);
+  line-height: 1.4;
+}
+
+.letter-tracker__option--submitted .letter-tracker__option-dot { background: #105250; }
+.letter-tracker__option--interviewing .letter-tracker__option-dot { background: #c89638; }
+.letter-tracker__option--offer .letter-tracker__option-dot {
+  background: linear-gradient(135deg, #b8862b 0%, #d9a644 100%);
+}
+.letter-tracker__option--rejected .letter-tracker__option-dot { background: #b03a3a; }
+.letter-tracker__option--ghosted .letter-tracker__option-dot { background: rgba(31, 58, 57, 0.5); }
+
+.letter-tracker__option.is-active {
+  border-color: rgba(16, 82, 80, 0.4);
+  background: linear-gradient(135deg, #0c403e 0%, #105250 100%);
+  color: #f9e8c4;
+  box-shadow: 0 14px 24px -16px rgba(8, 25, 24, 0.45);
+}
+
+.letter-tracker__option.is-active .letter-tracker__option-copy strong {
+  color: #f9e8c4;
+}
+
+.letter-tracker__option.is-active .letter-tracker__option-copy span {
+  color: rgba(249, 232, 196, 0.78);
+}
+
+.letter-tracker__option.is-active .letter-tracker__option-dot {
+  box-shadow: 0 0 0 3px rgba(249, 232, 196, 0.18);
+}
+
+.letter-tracker__option--offer.is-active {
+  background: linear-gradient(135deg, #b8862b 0%, #d9a644 50%, #b8862b 100%);
+  color: #281908;
+  border-color: rgba(184, 134, 43, 0.7);
+}
+
+.letter-tracker__option--offer.is-active .letter-tracker__option-copy strong {
+  color: #281908;
+}
+
+.letter-tracker__option--offer.is-active .letter-tracker__option-copy span {
+  color: rgba(40, 25, 8, 0.78);
+}
+
+.letter-tracker__timeline {
+  margin-top: 22px;
+  padding-top: 22px;
+  border-top: 1px solid rgba(16, 82, 80, 0.1);
+}
+
+.letter-tracker__timeline-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  gap: 32px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.letter-tracker__timeline-list li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  opacity: 0.5;
+  position: relative;
+}
+
+.letter-tracker__timeline-list li.is-done {
+  opacity: 1;
+}
+
+.letter-tracker__timeline-list li:not(:last-child)::after {
+  content: "";
+  display: inline-block;
+  width: 32px;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(16, 82, 80, 0.3), rgba(16, 82, 80, 0.05));
+  margin-left: 20px;
+}
+
+.letter-tracker__timeline-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: rgba(16, 82, 80, 0.3);
+  flex-shrink: 0;
+}
+
+.is-done .letter-tracker__timeline-dot {
+  background: #105250;
+  box-shadow: 0 0 0 4px rgba(16, 82, 80, 0.14);
+}
+
+.is-done .letter-tracker__timeline-dot--offer {
+  background: linear-gradient(135deg, #b8862b 0%, #d9a644 100%);
+  box-shadow: 0 0 0 4px rgba(200, 150, 56, 0.22);
+}
+
+.is-done .letter-tracker__timeline-dot--rejected {
+  background: #b03a3a;
+  box-shadow: 0 0 0 4px rgba(176, 58, 58, 0.16);
+}
+
+.is-done .letter-tracker__timeline-dot--ghosted {
+  background: rgba(31, 58, 57, 0.6);
+  box-shadow: 0 0 0 4px rgba(31, 58, 57, 0.08);
+}
+
+.letter-tracker__timeline-list strong {
+  display: block;
+  font-size: 13.5px;
+  color: #1f3a39;
+  font-weight: 600;
+}
+
+.letter-tracker__timeline-list span {
+  display: block;
+  font-size: 12px;
+  color: rgba(31, 58, 57, 0.6);
+}
+
+.letter-tracker__notes {
+  margin-top: 22px;
+  padding-top: 22px;
+  border-top: 1px solid rgba(16, 82, 80, 0.1);
+}
+
+.letter-tracker__notes label {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #1f3a39;
+  margin-bottom: 8px;
+}
+
+.letter-tracker__notes label span {
+  display: block;
+  font-weight: 400;
+  color: rgba(31, 58, 57, 0.6);
+  font-size: 12.5px;
+  margin-top: 2px;
+}
+
+.letter-tracker__notes textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid rgba(16, 82, 80, 0.18);
+  border-radius: 12px;
+  background: #fbfaf6;
+  color: #1f3a39;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.55;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.letter-tracker__notes textarea:focus {
+  border-color: rgba(16, 82, 80, 0.4);
+  box-shadow: 0 0 0 3px rgba(16, 82, 80, 0.1);
+}
+
+.letter-tracker__notes-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+  font-size: 12px;
+  color: rgba(31, 58, 57, 0.6);
+}
+
+@media (max-width: 640px) {
+  .letters-row {
+    grid-template-columns: 1fr;
+  }
+  .letters-row__right {
+    justify-content: space-between;
+    margin-top: 4px;
+  }
+  .letter-tracker {
+    padding: 20px 18px;
+  }
+  .letter-tracker__grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .letter-tracker__timeline-list {
+    gap: 12px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .letter-tracker__timeline-list li:not(:last-child)::after {
+    display: none;
+  }
+}
+
+/* ----- Mobile workspace polish -----
+ * The workspace already has a 1180px collapse to single column and a
+ * 560px shrink pass. This block tunes the experience between 0–640px
+ * so the form feels native on phones: bigger touch targets, properly
+ * stacked field rows, comfortable textareas, sticky generate CTA. */
+
+@media (max-width: 640px) {
+  .cover-workspace {
+    gap: 14px !important;
+  }
+
+  /* Target role + Company stack into a single column. */
+  .cover-field-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+
+  /* Bigger touch targets. iOS treats 44pt as the minimum tap; we keep
+   * inputs at 50px which is already comfortable, but lift textareas
+   * to a usable height and bump buttons. */
+  .cover-field textarea,
+  .cover-textarea-shell textarea {
+    min-height: 180px;
+    font-size: 16px;
+    line-height: 1.55;
+  }
+
+  .cover-save-button {
+    width: 100%;
+    min-height: 56px;
+    font-size: 16px;
+    border-radius: 14px;
+  }
+
+  /* The save button is the primary action of the page. On phones we
+   * pin it to the bottom of the viewport so the user never has to
+   * scroll past long paste-in content to commit. The card around it
+   * loses a bit of bottom padding to compensate. */
+  .cover-draft-panel {
+    padding-bottom: 14px !important;
+  }
+
+  .cover-draft-panel .cover-save-button {
+    position: sticky;
+    bottom: 76px; /* clear the back-to-top + command palette FAB */
+    z-index: 12;
+    margin-top: 14px;
+    box-shadow:
+      0 18px 36px -16px rgba(8, 25, 24, 0.4),
+      0 1px 0 rgba(245, 233, 200, 0.18) inset;
+  }
+
+  /* Tone cards become a comfortable single column with reduced
+   * vertical density. */
+  .cover-tone-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  .cover-tone-card {
+    padding: 14px 16px !important;
+    display: grid !important;
+    grid-template-columns: 44px 1fr auto !important;
+    grid-template-areas:
+      "icon title check"
+      "icon detail check" !important;
+    column-gap: 14px !important;
+    row-gap: 2px !important;
+    align-items: center !important;
+    text-align: left !important;
+  }
+
+  .cover-tone-card .cover-tone-icon { grid-area: icon; }
+  .cover-tone-card strong { grid-area: title; }
+  .cover-tone-card small { grid-area: detail; }
+  .cover-tone-card .cover-tone-check { grid-area: check; }
+
+  /* Workspace inputs sit comfortably with iOS Safari (no zoom on
+   * focus = ≥16px font). */
+  .cover-field input {
+    font-size: 16px !important;
+    height: 52px !important;
+  }
+
+  /* Plan + status cards: tighter padding, single column status grid. */
+  .cover-status-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  .cover-status-item {
+    text-align: left !important;
+    padding: 14px 16px !important;
+  }
+
+  /* Letter preview: reduce ornamental margins, keep prose tight. */
+  .cover-letter-paper {
+    padding: 22px 18px !important;
+    font-size: 14.5px !important;
+    line-height: 1.65 !important;
+  }
+
+  .cover-letter-paper p {
+    margin: 0 0 12px !important;
+  }
+
+  /* Output actions stack vertically full-width. */
+  .cover-output-actions {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  .cover-output-button {
+    min-height: 52px !important;
+    font-size: 15px !important;
+    border-radius: 14px !important;
+  }
+
+  /* Generation modal sizing for narrow viewports (it already has a
+   * 520px clause but we tighten it further). */
+  .generation-modal {
+    max-height: calc(100vh - 32px);
+  }
+
+  .generation-modal__agents {
+    max-height: 220px;
+  }
+}
+
+/* Very narrow phones — keep the generate button accessible above the
+ * iOS safe-area inset. */
+@supports (padding: env(safe-area-inset-bottom)) {
+  @media (max-width: 640px) {
+    .cover-draft-panel .cover-save-button {
+      bottom: calc(76px + env(safe-area-inset-bottom));
+    }
+  }
+}
