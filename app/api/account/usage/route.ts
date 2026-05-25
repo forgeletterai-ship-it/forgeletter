@@ -4,7 +4,7 @@ import {
   getCurrentAppUser,
   getCurrentPeriodLetterCount,
 } from "@/lib/app-data"
-import { computeFairLetterCap, getPlanUsageDetails } from "@/lib/plans"
+import { getPlanUsageDetails } from "@/lib/plans"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -37,16 +37,12 @@ export async function GET() {
     )
   }
 
-  const fairCap = computeFairLetterCap({
-    plan: user.plan,
-    accruedCapThisPeriod: user.accruedCapThisPeriod ?? 0,
-    currentSegmentStartedAt: user.currentSegmentStartedAt,
-    currentPeriodStart: user.currentPeriodStart,
-  })
-
+  // Meter shows the nominal plan cap — matches what we marketed
+  // on the pricing cards. Fair-cap proration still runs in
+  // /api/generate for enforcement.
   return NextResponse.json({
     plan: user.plan,
-    usage: getPlanUsageDetails(user.plan, count, fairCap),
+    usage: getPlanUsageDetails(user.plan, count),
     scheduledPlanChange: user.scheduledPlanChange,
   })
 }
