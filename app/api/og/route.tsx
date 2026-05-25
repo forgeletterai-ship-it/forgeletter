@@ -21,11 +21,14 @@ export const runtime = "edge"
  * ForgeLetter card rather than crashing.
  */
 export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url)
-  const title = (searchParams.get("title") || "ForgeLetter — AI cover letters")
+  const reqUrl = new URL(req.url)
+  const origin = `${reqUrl.protocol}//${reqUrl.host}`
+  const title = (reqUrl.searchParams.get("title") || "ForgeLetter — AI cover letters")
     .slice(0, 140)
-  const category = (searchParams.get("category") || "ForgeLetter")
+  const category = (reqUrl.searchParams.get("category") || "ForgeLetter")
     .slice(0, 40)
+  // Absolute URL to the brand mark; Satori fetches it at render time.
+  const logoUrl = `${origin}/letterforge-icon.png`
 
   return new ImageResponse(
     (
@@ -75,13 +78,15 @@ export async function GET(req: NextRequest) {
               letterSpacing: "-0.01em",
             }}
           >
-            <div
+            {/* Real brand mark — fetched from the deployment origin
+                at render time. Satori inlines the bytes into the PNG. */}
+            <img
+              src={logoUrl}
+              width={56}
+              height={56}
+              alt="ForgeLetter"
               style={{
-                width: "46px",
-                height: "46px",
-                borderRadius: "13px",
-                background:
-                  "linear-gradient(135deg, #f0c040 0%, #e07800 100%)",
+                borderRadius: "14px",
                 display: "flex",
               }}
             />
