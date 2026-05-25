@@ -52,11 +52,15 @@ export interface RetrievedExample {
   excerpt: string
   whyItWorks: string | null
   qualityScore: number
-  /** Provenance of this example. "curated" = editor-vetted entry in
-   *  cover_letter_examples. "user_offer" = the requesting user's
-   *  own letter that earned an offer — used to condition future
-   *  generations on patterns the user has personally proven out. */
-  source: "curated" | "user_offer"
+  /** Provenance of this example.
+   *
+   *  - "curated" = editor-vetted entry in cover_letter_examples.
+   *  - "user_offer" = the requesting user's own letter that earned
+   *    an offer. Strongest personal signal.
+   *  - "user_interview" = the requesting user's own letter that
+   *    got them through to interview. Still a winning letter, just
+   *    a slightly weaker conversion signal than an offer. */
+  source: "curated" | "user_offer" | "user_interview"
 }
 
 export interface WriterOutput {

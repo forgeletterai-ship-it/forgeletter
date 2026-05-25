@@ -8,19 +8,19 @@ import type { JobAnalysis, RetrievedExample } from "../types"
  *   1. cover_letter_examples — editor-vetted "curated" entries
  *      (the historical source).
  *   2. generated_letters — the requesting user's own past letters
- *      with application_status = 'offer'. These are letters the
- *      user has personally proven out: they wrote them, sent them,
- *      and got the role. Conditioning future generations on these
- *      makes voice, opener cadence, and closing CTAs converge on
- *      what has worked for this specific user.
+ *      with application_status in ('offer', 'interviewing'). Both
+ *      are letters that worked: an offer is the strongest possible
+ *      signal, but an interview booking is still validation that
+ *      the letter beat the screening filter. Offers outrank
+ *      interviews via a larger bonus.
  *
  * Personal-only by design — we never cross user boundaries, so this
  * works without consent flows and leaks no PII between accounts. The
  * curated table remains the cross-user gold standard.
  *
  * Returns [] gracefully if the table doesn't exist yet (pre-migration),
- * the user has no offers, or no rows match — the writer handles empty
- * examples fine.
+ * the user has no winning letters, or no rows match — the writer
+ * handles empty examples fine.
  */
 export async function runExampleRetrieval(args: {
   supabase: SupabaseClient | null
@@ -34,38 +34,45 @@ export async function runExampleRetrieval(args: {
   if (!args.supabase) return []
   const limit = args.limit ?? 3
 
-  const [curated, userOffers] = await Promise.all([
+  const [curated, userWinners] = await Promise.all([
     fetchCuratedExamples(args.supabase, args.job, limit * 4),
     args.userId
-      ? fetchUserOfferExamples(args.supabase, args.userId, args.job, limit * 2)
+      ? fetchUserWinnerExamples(args.supabase, args.userId, limit * 2)
       : Promise.resolve<RetrievedExample[]>([]),
   ])
 
-  // Personal offer letters get a fixed bonus on top of their match
+  // Personal winning letters get a fixed bonus on top of their match
   // score so a moderately-similar past winner still outranks a
-  // distantly-similar curated example. The bonus is bounded so a
-  // wildly off-role personal letter does not push out a much better
-  // curated match.
-  const all = [...userOffers, ...curated]
+  // distantly-similar curated example. Offers carry a larger bonus
+  // than interviews because an offer is the strongest signal — but
+  // both indicate the letter worked, so interviews get half the lift.
+  const all = [...userWinners, ...curated]
   const ranked = all
     .map((example) => ({
       example,
       score:
         rankScore(args.job, example) +
-        (example.source === "user_offer" ? 25 : 0),
+        (example.source === "user_offer"
+          ? 25
+          : example.source === "user_interview"
+            ? 12
+            : 0),
     }))
     .sort((a, b) => b.score - a.score)
 
   // Enforce diversity: never let the personal pool monopolise all
   // slots — keep at least one curated entry when both pools exist.
+  // The cap is shared across both personal sources.
   const finalList: RetrievedExample[] = []
-  const userOfferCap = Math.max(1, limit - 1)
-  let userOfferTaken = 0
+  const personalCap = Math.max(1, limit - 1)
+  let personalTaken = 0
   for (const { example } of ranked) {
     if (finalList.length >= limit) break
-    if (example.source === "user_offer") {
-      if (userOfferTaken >= userOfferCap) continue
-      userOfferTaken += 1
+    const isPersonal =
+      example.source === "user_offer" || example.source === "user_interview"
+    if (isPersonal) {
+      if (personalTaken >= personalCap) continue
+      personalTaken += 1
     }
     finalList.push(example)
   }
@@ -119,20 +126,19 @@ async function fetchCuratedExamples(
   }
 }
 
-async function fetchUserOfferExamples(
+async function fetchUserWinnerExamples(
   supabase: SupabaseClient,
   userId: string,
-  job: JobAnalysis,
   pool: number
 ): Promise<RetrievedExample[]> {
   try {
     const { data, error } = await supabase
       .from("generated_letters")
       .select(
-        "id, job_title, company_name, final_cover_letter, final_score, outcome_at, created_at"
+        "id, job_title, company_name, final_cover_letter, final_score, outcome_at, application_status, created_at"
       )
       .eq("user_id", userId)
-      .eq("application_status", "offer")
+      .in("application_status", ["offer", "interviewing"])
       .not("final_cover_letter", "is", null)
       .order("outcome_at", { ascending: false, nullsFirst: false })
       .limit(pool)
@@ -140,8 +146,13 @@ async function fetchUserOfferExamples(
     if (error || !data) return []
 
     return data
-      .filter((row) => typeof row.final_cover_letter === "string" && row.final_cover_letter.trim().length > 100)
+      .filter(
+        (row) =>
+          typeof row.final_cover_letter === "string" &&
+          row.final_cover_letter.trim().length > 100
+      )
       .map((row) => {
+        const status = row.application_status as "offer" | "interviewing"
         const fullLetter = (row.final_cover_letter as string).trim()
         // Excerpts mirror the curated table — keep them focused so
         // the writer's prompt stays under token budget.
@@ -149,30 +160,36 @@ async function fetchUserOfferExamples(
           fullLetter.length > 1200 ? `${fullLetter.slice(0, 1200)}…` : fullLetter
         const role = (row.job_title as string | null) ?? ""
         const ageDays = row.outcome_at
-          ? Math.round((Date.now() - new Date(row.outcome_at as string).getTime()) / 86400000)
+          ? Math.round(
+              (Date.now() - new Date(row.outcome_at as string).getTime()) / 86400000
+            )
           : null
-        const whyItWorks = `Your past offer-winning letter for ${
+        const verb = status === "offer" ? "offer-winning" : "interview-winning"
+        const whyItWorks = `Your past ${verb} letter for ${
           role || "a similar role"
         }${row.company_name ? ` at ${row.company_name}` : ""}${
-          ageDays != null && ageDays >= 0 ? ` (${ageDays} ${ageDays === 1 ? "day" : "days"} ago)` : ""
+          ageDays != null && ageDays >= 0
+            ? ` (${ageDays} ${ageDays === 1 ? "day" : "days"} ago)`
+            : ""
         }.`
 
         return {
-          id: `user_offer:${row.id as string}`,
+          id: `${status === "offer" ? "user_offer" : "user_interview"}:${row.id as string}`,
           industry: "",
           role,
           excerpt,
           whyItWorks,
-          // Treat user-offer examples as quality_score 100 — they are
-          // empirically proven, not just AI-scored. The rank-bonus
-          // still mediates how aggressively we surface them.
-          qualityScore: 100,
-          source: "user_offer" as const,
+          // Treat winning letters as empirically scored: offers at
+          // 100 (strongest signal), interviews at 90 (got past
+          // screening but not the final yes). The rank-bonus
+          // mediates how aggressively we surface them.
+          qualityScore: status === "offer" ? 100 : 90,
+          source: status === "offer" ? ("user_offer" as const) : ("user_interview" as const),
           _seniority: undefined,
         }
       })
   } catch (err) {
-    console.warn("[ExampleRetrieval] user-offer lookup failed:", err)
+    console.warn("[ExampleRetrieval] user-winner lookup failed:", err)
     return []
   }
 }

@@ -181,22 +181,31 @@ export async function generateCoverLetter(
         {
           examplesUsed: examples.map((e) => e.id),
           userOffersIncluded: examples.filter((e) => e.source === "user_offer").length,
+          userInterviewsIncluded: examples.filter((e) => e.source === "user_interview").length,
           curatedIncluded: examples.filter((e) => e.source === "curated").length,
         },
         { modelUsed: "supabase", tokensInput: 0, tokensOutput: 0, durationMs: 0 },
         false
       )
-      const userOffersUsed = examples.filter((e) => e.source === "user_offer").length
-      const examplesMessage =
-        userOffersUsed > 0
-          ? `Conditioning on ${userOffersUsed} of your offer-winning ${
-              userOffersUsed === 1 ? "letter" : "letters"
-            }`
-          : examples.length > 0
-            ? `Drawing on ${examples.length} curated ${
-                examples.length === 1 ? "example" : "examples"
-              }`
-            : undefined
+      const offersUsed = examples.filter((e) => e.source === "user_offer").length
+      const interviewsUsed = examples.filter((e) => e.source === "user_interview").length
+      const personalUsed = offersUsed + interviewsUsed
+      let examplesMessage: string | undefined
+      if (personalUsed > 0) {
+        const parts: string[] = []
+        if (offersUsed > 0) {
+          parts.push(`${offersUsed} offer-winning`)
+        }
+        if (interviewsUsed > 0) {
+          parts.push(`${interviewsUsed} interview-winning`)
+        }
+        const noun = personalUsed === 1 ? "letter" : "letters"
+        examplesMessage = `Conditioning on ${parts.join(" + ")} of your ${noun}`
+      } else if (examples.length > 0) {
+        examplesMessage = `Drawing on ${examples.length} curated ${
+          examples.length === 1 ? "example" : "examples"
+        }`
+      }
       await emit("ExampleRetrieval", "done", PROGRESS_WEIGHTS.ExampleRetrieval, examplesMessage)
     }
 
