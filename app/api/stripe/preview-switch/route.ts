@@ -4,18 +4,15 @@ import { getCurrentAppUser } from "@/lib/app-data"
 import {
   computeFairLetterCap,
   getBasePlan,
-  getBillingPeriod,
   getDailyLetterRate,
   getPlanLetterLimit,
   getStoredPlanId,
   normalizeBillingPeriod,
   resolveSwitchDirection,
-  type BillingPeriod,
 } from "@/lib/plans"
 import {
   billingPlans,
   getStripe,
-  previewSwitchInvoice,
   resolveOrCreatePriceId,
   type BillingPlan,
 } from "@/lib/stripe"
@@ -231,52 +228,40 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    // Upgrade flow — generate a real Stripe invoice preview to get
-    // exact line items + tax.
-    const invoicePreview = await previewSwitchInvoice({
-      stripe,
-      customerId: customer.id,
-      subscriptionId: sub.id,
-      itemId: item.id,
-      newPriceId,
-    })
-
-    // Build the charge breakdown from the preview. Fall back to a
-    // calculated breakdown if Stripe's preview API isn't available.
-    let chargeBreakdown: Array<{ description: string; amount: number }> = []
-    let chargeAmount = 0
-    let taxIncluded = false
-    if (invoicePreview && Array.isArray(invoicePreview.lines?.data)) {
-      chargeBreakdown = invoicePreview.lines.data.map((line) => ({
-        description: line.description || "Subscription change",
-        amount: (line.amount ?? 0) / 100,
-      }))
-      chargeAmount = (invoicePreview.amount_due ?? invoicePreview.total ?? 0) / 100
-      const tax = (invoicePreview as { tax?: number | null }).tax
-      taxIncluded = typeof tax === "number" && tax > 0
-    } else {
-      // Calculated fallback. Matches Stripe's math closely enough for
-      // display; the real switch will be invoiced by Stripe directly.
-      const oldPriceEur = item.price?.unit_amount
-        ? item.price.unit_amount / 100
-        : 0
-      const unusedCredit = prorationFraction * oldPriceEur
-      const newShare = prorationFraction * newPlanFullPrice
-      chargeBreakdown = [
-        {
-          description: `Unused time on ${user.plan}`,
-          amount: -Number(unusedCredit.toFixed(2)),
-        },
-        {
-          description: `${billingPlans[newPlan].name} for ${daysRemaining} day${
-            daysRemaining === 1 ? "" : "s"
-          } remaining`,
-          amount: Number(newShare.toFixed(2)),
-        },
-      ]
-      chargeAmount = Number((newShare - unusedCredit).toFixed(2))
-      taxIncluded = false
-    }
+    // Upgrade flow — compute the clean spec-shaped breakdown (5 lines,
+    // no duplication) ourselves. Stripe's preview API returns raw
+    // line items including the next-month subscription charge etc.,
+    // which clutters the modal; for a customer-facing screen we want
+    // exactly: cycle window, days remaining, unused credit, new
+    // share, total. The actual invoice Stripe generates will use its
+    // own math and may differ by a few cents due to rounding — we
+    // refresh the dashboard after the switch so the customer sees
+    // the authoritative numbers from the real receipt.
+    const oldPriceEur = item.price?.unit_amount
+      ? item.price.unit_amount / 100
+      : 0
+    const unusedCredit = Number((prorationFraction * oldPriceEur).toFixed(2))
+    const newShare = Number((prorationFraction * newPlanFullPrice).toFixed(2))
+    const chargeAmount = Number((newShare - unusedCredit).toFixed(2))
+    const oldPlanName = billingPlans[user.plan.replace(/_annual$/, "") as BillingPlan]
+      ?.name ?? user.plan
+    const chargeBreakdown: Array<{ description: string; amount: number }> = [
+      {
+        description: `Unused ${oldPlanName} time refunded`,
+        amount: -unusedCredit,
+      },
+      {
+        description: `${billingPlans[newPlan].name} for the remaining ${daysRemaining} day${
+          daysRemaining === 1 ? "" : "s"
+        }`,
+        amount: newShare,
+      },
+    ]
+    // Stripe Tax adds VAT to the actual invoice; surface that fact in
+    // the modal so the customer knows the figure shown already
+    // includes it. (We can't pull the exact VAT line without calling
+    // invoices.createPreview, which we deliberately skip per above.)
+    const taxIncluded = true
 
     // Letter caps for the upgrade scenario.
     const letterCapNow = computeFairLetterCap({

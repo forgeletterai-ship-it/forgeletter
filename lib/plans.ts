@@ -202,49 +202,80 @@ export function resolveSwitchDirection(
 /**
  * Compute the user's fair letter cap for the current period.
  *
- *   fair_cap = accruedCapThisPeriod + (days_since_segment_started × current_daily_rate)
+ *   fair_cap = accruedCapThisPeriod
+ *            + (period_end − segment_start) × current_daily_rate
  *
- * Returns Math.floor of the result — letters are discrete, fractional
- * entitlement is dropped to the customer's slight disadvantage (~half
- * a letter at most, equivalent to a few cents of value).
+ * Critical: the segment portion uses (period_end − segment_start),
+ * NOT (now − segment_start). The customer paid upfront for the
+ * period, so their full entitlement must be available from the
+ * moment the segment begins — it doesn't grow over time.
  *
- * Pass the user's currentPeriodStart so we can clamp the segment start
- * if it sits before the period boundary (defensive — shouldn't happen
- * if the webhook resets things on renewal).
+ * Example — fresh Ultra Monthly signup on day 0 of a 30-day cycle:
+ *   accrued = 0
+ *   segment_start = period_start
+ *   period_end − segment_start = 30 days
+ *   daily_rate = 35 / 30 = 1.17
+ *   fair_cap = 0 + 30 × 1.17 = 35 ✓ (full Ultra cap on day 1)
+ *
+ * Example — Pro → Ultra at day 15:
+ *   At switch time the API does:
+ *     accrued += 15 × (20/30) = 10 letters from the Pro segment
+ *     segment_start = now (day 15)
+ *   Then fair_cap computed against:
+ *     accrued = 10
+ *     period_end − segment_start = 15 days
+ *     daily_rate = 35/30 = 1.17
+ *     fair_cap = 10 + 15 × 1.17 = 27.5 → floor 27
+ *
+ * Returns Math.floor of the result — letters are discrete units;
+ * fractional entitlement drops to the customer's slight disadvantage
+ * (< 1 letter, equivalent to a few cents of value).
+ *
+ * Pass currentPeriodEnd when you have it (from Stripe). Otherwise
+ * we derive it from period start + the plan's period length, which
+ * is accurate enough for the cap display (real billing math always
+ * comes from Stripe directly).
  */
 export function computeFairLetterCap(args: {
   plan: unknown
   accruedCapThisPeriod: number
   currentSegmentStartedAt: Date | string | null
   currentPeriodStart: Date | string | null
+  currentPeriodEnd?: Date | string | null
   now?: Date
 }): number {
-  const now = args.now ?? new Date()
   const periodStart = args.currentPeriodStart
     ? new Date(args.currentPeriodStart)
     : null
+  let periodEnd: Date | null = null
+  if (args.currentPeriodEnd) {
+    periodEnd = new Date(args.currentPeriodEnd)
+  } else if (periodStart) {
+    const period = getBillingPeriod(args.plan)
+    const days = period === "annual" ? DAYS_PER_YEAR : DAYS_PER_MONTH
+    periodEnd = new Date(periodStart.getTime() + days * 86400000)
+  }
+
   const rawSegmentStart = args.currentSegmentStartedAt
     ? new Date(args.currentSegmentStartedAt)
     : periodStart
+  // Clamp segment start to the period boundary (defensive).
   const segmentStart =
     periodStart && rawSegmentStart && rawSegmentStart < periodStart
       ? periodStart
       : rawSegmentStart
-  if (!segmentStart) {
-    // No anchoring data at all — fall back to the static plan limit so
-    // the user is never locked out due to missing migration state.
+
+  if (!segmentStart || !periodEnd) {
+    // No anchoring data — fall back to the static plan limit so the
+    // user is never locked out due to missing state.
     return getPlanLetterLimit(args.plan)
   }
-  const daysSinceSegment = Math.max(
-    0,
-    (now.getTime() - segmentStart.getTime()) / (24 * 60 * 60 * 1000)
-  )
+
+  const segmentDurationMs = Math.max(0, periodEnd.getTime() - segmentStart.getTime())
+  const segmentDays = segmentDurationMs / 86400000
   const dailyRate = getDailyLetterRate(args.plan)
-  const segmentCap = daysSinceSegment * dailyRate
+  const segmentCap = segmentDays * dailyRate
   const accrued = Math.max(0, args.accruedCapThisPeriod || 0)
   const total = accrued + segmentCap
-  // Never grant more than the full-period plan limit (defensive ceiling
-  // for unusual segment math during interval changes).
-  const planCeiling = getPlanLetterLimit(args.plan)
-  return Math.max(0, Math.min(planCeiling, Math.floor(total)))
+  return Math.max(0, Math.floor(total))
 }

@@ -27,30 +27,39 @@ export type SwitchPreview = {
 type Props = {
   preview: SwitchPreview
   toPlanLabel: string
+  fromPlanLabel: string
   submitting: boolean
   errorMessage: string | null
   onConfirm: (args: { consented: boolean; waiveWithdrawalRight: boolean }) => void
   onCancel: () => void
 }
 
-function formatDate(iso: string | null): string {
+function formatLongDate(iso: string | null): string {
   if (!iso) return "—"
   return new Date(iso).toLocaleDateString(undefined, {
-    weekday: "long",
     day: "numeric",
     month: "long",
     year: "numeric",
   })
 }
 
+function formatShortDate(iso: string | null): string {
+  if (!iso) return "—"
+  return new Date(iso).toLocaleDateString(undefined, {
+    day: "numeric",
+    month: "short",
+  })
+}
+
 function formatEUR(amount: number): string {
-  const sign = amount < 0 ? "-" : ""
+  const sign = amount < 0 ? "−" : ""
   return `${sign}€${Math.abs(amount).toFixed(2)}`
 }
 
 export function PlanSwitchConfirmModal({
   preview,
   toPlanLabel,
+  fromPlanLabel,
   submitting,
   errorMessage,
   onConfirm,
@@ -72,9 +81,13 @@ export function PlanSwitchConfirmModal({
   const isCheckout = preview.flow === "checkout"
 
   const canSubmit =
-    consented &&
-    (!isUpgrade || waiveWithdrawal) &&
-    !submitting
+    consented && (!isUpgrade || waiveWithdrawal) && !submitting
+
+  const todayDate = new Date().toLocaleDateString(undefined, {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  })
 
   return (
     <div className="plan-switch-modal-root" role="dialog" aria-modal="true">
@@ -100,55 +113,46 @@ export function PlanSwitchConfirmModal({
         <section className="plan-switch-modal__section">
           <h3 className="plan-switch-modal__section-title">
             Today{" "}
-            <span className="plan-switch-modal__section-sub">
-              ({new Date().toLocaleDateString(undefined, {
-                weekday: "long",
-                day: "numeric",
-                month: "long",
-                year: "numeric",
-              })})
-            </span>
+            <span className="plan-switch-modal__section-sub">({todayDate})</span>
           </h3>
           <ul className="plan-switch-modal__bullets">
             {isCheckout ? (
               <>
                 <li>You'll be redirected to secure Stripe Checkout.</li>
                 <li>
-                  First charge: <strong>{formatEUR(preview.charge)}</strong>
-                  {preview.taxIncluded ? " (VAT included)" : ""}
+                  First charge:{" "}
+                  <strong>{formatEUR(preview.charge)}</strong>
+                  {preview.taxIncluded ? " (VAT included)" : ""}.
                 </li>
               </>
             ) : isUpgrade ? (
               <>
-                <li>Access to {toPlanLabel} starts immediately.</li>
+                <li>Access to {toPlanLabel} unlocks immediately.</li>
                 <li>
-                  Your card will be charged{" "}
-                  <strong>{formatEUR(preview.charge)}</strong>
-                  {preview.taxIncluded ? " (VAT included)" : ""} right now.
+                  <strong>{formatEUR(preview.charge)}</strong> charged to your
+                  card now{preview.taxIncluded ? " (VAT included)" : ""}.
                 </li>
                 <li>
-                  Your letter cap goes from{" "}
-                  <strong>{preview.letterCapNow}</strong> to{" "}
-                  <strong>{preview.letterCapAfter}</strong> for the remainder of
-                  the cycle.
+                  Letter cap: <strong>{preview.letterCapNow}</strong> →{" "}
+                  <strong>{preview.letterCapAfter}</strong> for the rest of this
+                  cycle.
                 </li>
               </>
             ) : (
               <>
                 <li>
-                  <strong>No charge today.</strong> No change to your access
-                  right now.
+                  <strong>No charge today.</strong>
                 </li>
                 <li>
-                  You keep your current plan and all its letters until your
-                  cycle ends.
+                  You keep {fromPlanLabel} and all your letters until{" "}
+                  <strong>{formatLongDate(preview.cycleAnchorDate)}</strong>.
                 </li>
               </>
             )}
           </ul>
         </section>
 
-        {/* HOW WE CALCULATED (upgrades only) */}
+        {/* HOW WE CALCULATED THIS — upgrades only, 5 clean rows */}
         {isUpgrade && preview.cycleStart && preview.cycleEnd ? (
           <section className="plan-switch-modal__section plan-switch-modal__section--calc">
             <h3 className="plan-switch-modal__section-title">
@@ -156,17 +160,18 @@ export function PlanSwitchConfirmModal({
             </h3>
             <ul className="plan-switch-modal__calc">
               <li>
-                <span>Your current billing cycle</span>
+                <span>Your billing cycle</span>
                 <strong>
-                  {formatDate(preview.cycleStart)} → {formatDate(preview.cycleEnd)}
+                  {formatShortDate(preview.cycleStart)} →{" "}
+                  {formatShortDate(preview.cycleEnd)} ({preview.daysTotal} days)
                 </strong>
               </li>
               <li>
                 <span>Days remaining</span>
                 <strong>
-                  {preview.daysRemaining} of {preview.daysTotal} (
-                  {Math.round((preview.prorationFraction ?? 0) * 100)}% of the
-                  cycle left)
+                  {preview.daysRemaining} (
+                  {Math.round((preview.prorationFraction ?? 0) * 100)}% of cycle
+                  left)
                 </strong>
               </li>
               {preview.chargeBreakdown.map((line, i) => (
@@ -178,7 +183,7 @@ export function PlanSwitchConfirmModal({
                 </li>
               ))}
               <li className="plan-switch-modal__calc-total">
-                <span>You pay today</span>
+                <span>You pay the difference</span>
                 <strong>
                   {formatEUR(preview.charge)}
                   {preview.taxIncluded ? " (VAT included)" : ""}
@@ -186,23 +191,22 @@ export function PlanSwitchConfirmModal({
               </li>
             </ul>
             <p className="plan-switch-modal__calc-note">
-              We prorate the same way Stripe does: we credit you for the days
-              you haven't used on your old plan, then charge for the same days
-              on your new plan. Money and letters move in step — each extra
-              letter you unlock costs the same per letter as your new plan's
-              full-price rate.
+              We prorate the same way Stripe does: refund unused time on your
+              old plan, charge new-plan price for the same days. Money and
+              letters move in step — each extra letter costs the same per-letter
+              rate as your new plan.
             </p>
           </section>
         ) : null}
 
-        {/* NEXT INVOICE / RENEWAL block */}
+        {/* NEXT RENEWAL / GOING FORWARD */}
         <section className="plan-switch-modal__section">
           <h3 className="plan-switch-modal__section-title">
             {isDowngrade ? "On your next renewal" : "Going forward"}
             {preview.cycleAnchorDate ? (
               <span className="plan-switch-modal__section-sub">
                 {" "}
-                ({formatDate(preview.cycleAnchorDate)})
+                ({formatLongDate(preview.cycleAnchorDate)})
               </span>
             ) : null}
           </h3>
@@ -210,16 +214,15 @@ export function PlanSwitchConfirmModal({
             {isDowngrade ? (
               <>
                 <li>
-                  Your plan switches to <strong>{toPlanLabel}</strong>.
+                  Plan switches to <strong>{toPlanLabel}</strong>.
                 </li>
                 <li>
-                  Your letter cap becomes{" "}
-                  <strong>{preview.letterCapAfter}</strong> for the new cycle.
+                  Letter cap becomes <strong>{preview.letterCapAfter}</strong>{" "}
+                  for the new cycle.
                 </li>
                 <li>
-                  You'll be charged{" "}
-                  <strong>{formatEUR(preview.newFullPrice)}</strong> for the
-                  first {toPlanLabel} cycle.
+                  <strong>{formatEUR(preview.newFullPrice)}</strong> charged for
+                  the first {toPlanLabel} cycle.
                 </li>
                 <li>
                   You can cancel this scheduled change anytime before then from
@@ -229,12 +232,12 @@ export function PlanSwitchConfirmModal({
             ) : (
               <>
                 <li>
-                  Next renewal price:{" "}
+                  Next renewal charge:{" "}
                   <strong>{formatEUR(preview.newFullPrice)}</strong>
-                  {preview.taxIncluded ? " (VAT included)" : ""}
+                  {preview.taxIncluded ? " (VAT included)" : ""}.
                 </li>
                 <li>
-                  Your full {toPlanLabel} letter cap will apply.
+                  Full {toPlanLabel} letter cap applies for that cycle.
                 </li>
               </>
             )}
@@ -258,10 +261,10 @@ export function PlanSwitchConfirmModal({
             />
             <span>
               {isUpgrade
-                ? `I understand I'll be charged ${formatEUR(preview.charge)} now and I agree to the prorated charge.`
+                ? `I agree to the ${formatEUR(preview.charge)} charge today, calculated as shown above.`
                 : isDowngrade
-                  ? `I understand my plan will change on ${formatDate(preview.cycleAnchorDate)} and that I keep my current plan and letters until then.`
-                  : `I agree to the terms shown.`}
+                  ? `I understand my plan changes to ${toPlanLabel} on ${formatLongDate(preview.cycleAnchorDate)} and I keep my current plan and letters until then.`
+                  : `I agree to the terms shown above.`}
             </span>
           </label>
           {isUpgrade ? (
@@ -274,7 +277,7 @@ export function PlanSwitchConfirmModal({
               />
               <span>
                 I waive my 14-day right of withdrawal because this upgrade
-                takes effect and provides me access immediately.
+                gives me access immediately.
               </span>
             </label>
           ) : null}
