@@ -107,6 +107,52 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    // Idempotency: reject if the same user already confirmed a switch
+    // in the last 60 seconds. Protects against double-clicks racing
+    // through despite the client debounce, and against the page
+    // mid-reload re-firing the request.
+    const recencyWindowMs = 60_000
+    try {
+      const since = new Date(Date.now() - recencyWindowMs).toISOString()
+      const { data: recent } = await supabaseAdmin
+        .from("consent_log")
+        .select("created_at, to_plan, action")
+        .eq("user_id", user.id)
+        .in("action", ["upgrade_confirm", "downgrade_confirm"])
+        .gte("created_at", since)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      if (recent) {
+        // If the user already confirmed the SAME plan switch we treat
+        // this as a duplicate and pretend it succeeded so the client
+        // doesn't show a scary error.
+        if (recent.to_plan === toStoredPlan) {
+          return NextResponse.json({
+            ok: true,
+            flow: direction === "upgrade" ? "immediate" : "scheduled",
+            duplicate: true,
+            message: "This plan change was already confirmed.",
+          })
+        }
+        // A different recent switch — block to prevent thrash.
+        return NextResponse.json(
+          {
+            error:
+              "You changed your plan very recently. Please wait a minute before making another change.",
+          },
+          { status: 429 }
+        )
+      }
+    } catch (err) {
+      console.warn(
+        "[/api/stripe/switch] idempotency check failed:",
+        err instanceof Error ? err.message : err
+      )
+      // Don't fail the request just because the audit log read errored —
+      // continue with the normal flow.
+    }
+
     const stripe = getStripe()
     const customers = await stripe.customers.list({
       email: user.email,

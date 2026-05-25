@@ -248,6 +248,13 @@ export function LetterDetailClient({
             >
               Download PDF
             </button>
+            <Link
+              className="button-secondary"
+              href={`/dashboard?duplicateFrom=${encodeURIComponent(letter.id)}`}
+              title="Pre-fill the workspace with this letter's role, company and tone — then paste a new job description"
+            >
+              Duplicate for new job
+            </Link>
             <button
               className="button-ghost danger-link"
               onClick={() => setShowDeleteConfirm(true)}

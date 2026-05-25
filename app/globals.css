@@ -17083,3 +17083,172 @@ button.tone-chip:hover {
     width: 100%;
   }
 }
+
+/* ----- Cover textarea + experience picker counters ----- */
+
+.cover-textarea-counter {
+  display: inline-block;
+  font-size: 12px;
+  letter-spacing: 0.01em;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 999px;
+  margin-top: 6px;
+}
+
+.cover-textarea-counter--insufficient {
+  background: rgba(176, 58, 58, 0.08);
+  color: #8a2d2d;
+}
+
+.cover-textarea-counter--ok {
+  background: rgba(27, 111, 77, 0.1);
+  color: #1b6f4d;
+}
+
+/* Position the counter inside the JD textarea shell consistently
+ * with the older char-count display. */
+.cover-textarea-shell .cover-textarea-counter {
+  position: absolute;
+  right: 12px;
+  bottom: 10px;
+  margin: 0;
+}
+
+.cover-textarea-shell {
+  position: relative;
+}
+
+/* ----- Letters filter bar ----- */
+
+.letters-filter-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 14px 18px;
+  margin-bottom: 16px;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid rgba(16, 82, 80, 0.12);
+  box-shadow: 0 6px 14px -16px rgba(8, 25, 24, 0.3);
+  transition: opacity 0.18s ease;
+}
+
+.letters-filter-bar.is-pending {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.letters-filter-bar__chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.letters-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(16, 82, 80, 0.18);
+  background: rgba(255, 255, 255, 0.7);
+  color: #1f3a39;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.letters-filter-chip:hover:not(:disabled) {
+  background: rgba(16, 82, 80, 0.06);
+}
+
+.letters-filter-chip:disabled {
+  cursor: not-allowed;
+}
+
+.letters-filter-chip.is-active {
+  background: linear-gradient(135deg, #0c403e 0%, #105250 100%);
+  color: #f9e8c4;
+  border-color: rgba(16, 82, 80, 0.45);
+}
+
+.letters-filter-chip--offer.is-active {
+  background: linear-gradient(135deg, #b8862b 0%, #d9a644 50%, #b8862b 100%);
+  color: #281908;
+  border-color: rgba(184, 134, 43, 0.7);
+}
+
+.letters-filter-chip--interviewing.is-active {
+  background: #c89638;
+  color: #281908;
+  border-color: rgba(184, 134, 43, 0.7);
+}
+
+.letters-filter-chip--rejected.is-active {
+  background: rgba(176, 58, 58, 0.85);
+  color: #fdecec;
+  border-color: rgba(176, 58, 58, 0.7);
+}
+
+.letters-filter-chip__count {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(31, 58, 57, 0.12);
+  color: currentColor;
+  letter-spacing: 0.04em;
+}
+
+.letters-filter-chip.is-active .letters-filter-chip__count {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.letters-filter-bar__sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: rgba(31, 58, 57, 0.7);
+  font-weight: 600;
+}
+
+.letters-filter-bar__sort select {
+  border: 1px solid rgba(16, 82, 80, 0.2);
+  border-radius: 10px;
+  padding: 6px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1f3a39;
+  background: #fbfaf6;
+  cursor: pointer;
+}
+
+/* ----- Settings: export-before-delete prompt ----- */
+
+.settings-export-prompt {
+  display: block;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(245, 233, 200, 0.55) 0%, rgba(254, 247, 230, 0.85) 100%);
+  border: 1px solid rgba(200, 150, 56, 0.32);
+  color: #1f3a39;
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+.settings-export-prompt strong {
+  font-weight: 700;
+}
+
+.settings-export-prompt__link {
+  color: #8a6516;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

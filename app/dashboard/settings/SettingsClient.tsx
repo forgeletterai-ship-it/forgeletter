@@ -276,6 +276,14 @@ export function SettingsClient({
           <div className="settings-card__divider" />
           <div className="settings-danger-zone">
             <strong className="settings-danger-zone__heading">Danger zone</strong>
+            <div className="settings-export-prompt" role="note">
+              <strong>Heads-up:</strong> deletion is permanent. We strongly
+              recommend{" "}
+              <a className="settings-export-prompt__link" href="/api/account/export" download>
+                downloading your data as JSON first
+              </a>
+              . You can always re-import letters into another workspace later.
+            </div>
             <label htmlFor="delete-confirm">
               Type DELETE to permanently clear workspace data
             </label>

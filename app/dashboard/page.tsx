@@ -55,10 +55,16 @@ async function getLatestLetter(userId: string): Promise<LatestLetter | null> {
   }
 }
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ duplicateFrom?: string }>
+}) {
   const { user } = await getCurrentAppUser()
   const userId = user?.id || ""
   const plan = user?.plan || "free"
+  const sp = (await searchParams) || {}
+  const duplicateFromId = sp.duplicateFrom?.trim() || ""
   const [
     { briefs, setupError: briefsError },
     { profile, setupError: profileError },
@@ -97,6 +103,35 @@ export default async function DashboardPage() {
       })
     : undefined
 
+  // If we arrived via /dashboard?duplicateFrom=LETTER_ID, fetch the
+  // role/company/tone from that letter so the workspace can pre-fill.
+  // We deliberately do NOT carry over the job_description — the whole
+  // point of duplicating is to write to a different job posting.
+  let duplicateSource: {
+    role?: string
+    company?: string
+    tone?: string
+  } | null = null
+  if (duplicateFromId && userId) {
+    try {
+      const { data: dup } = await supabaseAdmin
+        .from("generated_letters")
+        .select("job_title, company_name, tone")
+        .eq("id", duplicateFromId)
+        .eq("user_id", userId)
+        .maybeSingle()
+      if (dup) {
+        duplicateSource = {
+          role: (dup.job_title as string | null) ?? "",
+          company: (dup.company_name as string | null) ?? "",
+          tone: (dup.tone as string | null) ?? "",
+        }
+      }
+    } catch {
+      // ignore; falls back to empty workspace
+    }
+  }
+
   return (
     <DashboardClient
       initialBriefs={briefs}
@@ -111,6 +146,7 @@ export default async function DashboardPage() {
       disputedAt={user?.disputedAt ?? null}
       fairCap={fairCap}
       scheduledPlanChange={user?.scheduledPlanChange ?? null}
+      duplicateSource={duplicateSource}
     />
   )
 }
