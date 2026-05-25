@@ -1,3 +1,4 @@
+import Image from "next/image"
 import Link from "next/link"
 import { AnimatedSeparator } from "@/components/AnimatedSeparator"
 import { ExampleShowcase } from "@/components/ExampleShowcase"
@@ -203,7 +204,14 @@ export default function HomePage() {
 
             <div className="hero-media">
               <div className="hero-image-frame">
-                <img src="/hero-image-transparent.png" alt="ForgeLetter brain workspace illustration" />
+                <Image
+                  src="/hero-image-transparent.png"
+                  alt="ForgeLetter brain workspace illustration"
+                  width={1254}
+                  height={1254}
+                  priority
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 600px"
+                />
               </div>
               <div className="mini-metrics">
                 <div className="mini-metric">
