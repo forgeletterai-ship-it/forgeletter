@@ -60,9 +60,18 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ error: authz.message }, { status: authz.status })
   }
 
+  const { data: existing } = await supabaseAdmin
+    .from("generated_letters")
+    .select("submitted_at")
+    .eq("id", id)
+    .eq("user_id", user.id)
+    .maybeSingle()
+
   const body = (await req.json().catch(() => ({}))) as {
     finalCoverLetter?: unknown
     templateChosen?: unknown
+    applicationStatus?: unknown
+    outcomeNotes?: unknown
   }
 
   const updates: Record<string, unknown> = {}
@@ -76,6 +85,46 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: "Invalid template" }, { status: 400 })
     }
     updates.template_chosen = body.templateChosen
+  }
+
+  if (typeof body.applicationStatus === "string") {
+    const allowed = [
+      "not_submitted",
+      "submitted",
+      "interviewing",
+      "offer",
+      "rejected",
+      "ghosted",
+    ] as const
+    if (!(allowed as readonly string[]).includes(body.applicationStatus)) {
+      return NextResponse.json({ error: "Invalid application status" }, { status: 400 })
+    }
+    const now = new Date().toISOString()
+    updates.application_status = body.applicationStatus
+    if (body.applicationStatus === "submitted") {
+      updates.submitted_at = now
+      updates.outcome_at = null
+    } else if (body.applicationStatus === "not_submitted") {
+      updates.submitted_at = null
+      updates.outcome_at = null
+    } else {
+      // interviewing / offer / rejected / ghosted — backfill
+      // submitted_at if the user skipped the explicit "submitted"
+      // step, then stamp the outcome moment.
+      if (!existing?.submitted_at) {
+        updates.submitted_at = now
+      }
+      updates.outcome_at = now
+    }
+  }
+
+  if (typeof body.outcomeNotes === "string") {
+    if (body.outcomeNotes.length > 2000) {
+      return NextResponse.json({ error: "Notes must be 2000 characters or fewer" }, { status: 400 })
+    }
+    updates.outcome_notes = body.outcomeNotes
+  } else if (body.outcomeNotes === null) {
+    updates.outcome_notes = null
   }
 
   if (Object.keys(updates).length === 0) {

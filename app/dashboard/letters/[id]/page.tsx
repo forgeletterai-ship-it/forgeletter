@@ -49,6 +49,10 @@ export default async function LetterDetailPage({ params }: PageProps) {
         generationStatus: data.generation_status,
         failureReason: data.failure_reason,
         createdAt: data.created_at,
+        applicationStatus: data.application_status ?? "not_submitted",
+        submittedAt: data.submitted_at ?? null,
+        outcomeAt: data.outcome_at ?? null,
+        outcomeNotes: data.outcome_notes ?? "",
       }}
       basePlan={basePlan}
     />
