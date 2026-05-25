@@ -17489,3 +17489,47 @@ button.tone-chip:hover {
   font-size: 14.5px;
   padding: 32px;
 }
+
+/* ----- Prorated cycle indicator on the plan meter ----- */
+
+.plan-prorated-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: 10px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: linear-gradient(135deg, #b8862b 0%, #d9a644 50%, #b8862b 100%);
+  color: #281908;
+  border: 1px solid rgba(184, 134, 43, 0.55);
+  box-shadow: 0 4px 10px -6px rgba(184, 134, 43, 0.5);
+  cursor: help;
+  vertical-align: middle;
+  /* Don't inherit the h2 letter-spacing */
+  white-space: nowrap;
+  position: relative;
+  top: -2px;
+}
+
+.plan-prorated-pill svg {
+  width: 10px;
+  height: 10px;
+  stroke: rgba(40, 25, 8, 0.85);
+  stroke-width: 1.5;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.cover-plan-meta__prorated {
+  font-style: normal;
+  color: rgba(138, 101, 22, 0.95);
+  font-weight: 600;
+  font-size: 12px;
+  margin-left: 4px;
+  cursor: help;
+}

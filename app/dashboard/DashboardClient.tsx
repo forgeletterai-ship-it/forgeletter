@@ -760,7 +760,26 @@ export function DashboardClient({
           <div className="cover-plan-content">
             <div className="cover-section-row">
               <div>
-                <h2>{planUsage.label} plan</h2>
+                <h2>
+                  {planUsage.label} plan
+                  {planUsage.limit < planUsage.planLimit ? (
+                    <span
+                      className="plan-prorated-pill"
+                      title={`This cycle is prorated because you upgraded mid-period. Your full ${planUsage.planLimit} letters per ${planUsage.periodNoun} starts on your next renewal.`}
+                    >
+                      <svg
+                        viewBox="0 0 12 12"
+                        aria-hidden="true"
+                        width="10"
+                        height="10"
+                      >
+                        <circle cx="6" cy="6" r="5" />
+                        <path d="M6 3v4M6 8.5v.5" />
+                      </svg>
+                      Prorated this cycle
+                    </span>
+                  ) : null}
+                </h2>
                 <p>{planUsage.copy}</p>
               </div>
             </div>
@@ -770,7 +789,16 @@ export function DashboardClient({
             <div className="cover-plan-meta">
               <strong>{planUsage.remaining} <span>letters left</span></strong>
               <span>
-                {planUsage.used} of {planUsage.limit} used this {planUsage.periodNoun}
+                {planUsage.used} of {planUsage.limit} this {planUsage.periodNoun}
+                {planUsage.limit < planUsage.planLimit ? (
+                  <em
+                    className="cover-plan-meta__prorated"
+                    title={`Your full ${planUsage.planLimit}/${planUsage.periodNoun} starts on your next renewal.`}
+                  >
+                    {" "}
+                    (full {planUsage.planLimit} on renewal)
+                  </em>
+                ) : null}
               </span>
             </div>
           </div>

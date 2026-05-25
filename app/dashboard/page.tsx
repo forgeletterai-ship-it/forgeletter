@@ -8,6 +8,7 @@ import {
   getUserProfile,
   getUserSettings,
 } from "@/lib/app-data"
+import { computeFairLetterCap } from "@/lib/plans"
 import { supabaseAdmin } from "@/lib/supabase"
 import { DashboardClient, type LatestLetter } from "./DashboardClient"
 
@@ -93,15 +94,20 @@ export default async function DashboardPage({
         },
       ]
 
-  // The dashboard meter always shows the nominal plan letter cap
-  // (35 for Ultra Monthly, 240 for Pro Annual, etc.) — what we
-  // marketed on the pricing cards. Fair-cap proration math still
-  // runs server-side in /api/generate for enforcement, so a
-  // mid-cycle upgrader who would exceed their prorated allowance
-  // gets blocked before generation — but the meter doesn't surface
-  // the prorated number, which always feels like "fewer letters
-  // than promised" to customers.
-  const fairCap = undefined
+  // Dashboard meter uses fair-cap math: mid-cycle upgraders see
+  // their actual prorated allowance, plus a "Prorated" indicator
+  // in the meter when fairCap < planLimit. Clean-cycle users see
+  // the nominal plan cap (35 / 240 / 20 / etc.) because the
+  // fast-path inside computeFairLetterCap returns planLimit when
+  // accrued === 0 and segment_start aligns with period_start.
+  const fairCap = user
+    ? computeFairLetterCap({
+        plan: user.plan,
+        accruedCapThisPeriod: user.accruedCapThisPeriod ?? 0,
+        currentSegmentStartedAt: user.currentSegmentStartedAt,
+        currentPeriodStart: user.currentPeriodStart,
+      })
+    : undefined
 
   // If we arrived via /dashboard?duplicateFrom=LETTER_ID, fetch the
   // role/company/tone from that letter so the workspace can pre-fill.
