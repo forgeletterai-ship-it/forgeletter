@@ -16809,9 +16809,11 @@ button.tone-chip:hover {
 .plan-switch-modal {
   position: relative;
   width: 100%;
-  max-width: 640px;
+  /* Was 640px — bumped so longer calc rows (e.g. "May 24 → Jun 24
+   * (31 days)") fit on one line and the modal feels less tall. */
+  max-width: 760px;
   margin: clamp(24px, 6vh, 80px) auto;
-  padding: 32px 32px 24px;
+  padding: 32px 36px 26px;
   border-radius: 24px;
   background: linear-gradient(180deg, #fbf6ea 0%, #f4ecd6 100%);
   border: 1px solid rgba(16, 82, 80, 0.2);
@@ -16821,7 +16823,7 @@ button.tone-chip:hover {
   animation: plan-switch-modal-in 0.26s ease;
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  gap: 18px;
 }
 
 @keyframes plan-switch-modal-in {

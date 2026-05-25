@@ -7,6 +7,9 @@ export type SwitchPreview = {
   flow: "immediate" | "scheduled" | "checkout"
   fromPlan: string
   toPlan: string
+  /** "month" or "year" — used to label the full-period cap in
+   *  "Going forward" so customers know what 420 letters covers. */
+  toPlanPeriodNoun?: "month" | "year"
   cycleAnchorDate: string | null
   cycleStart: string | null
   cycleEnd: string | null
@@ -17,7 +20,14 @@ export type SwitchPreview = {
   chargeBreakdown: Array<{ description: string; amount: number }>
   newFullPrice: number
   letterCapNow: number
+  /** Letter cap for what remains of the CURRENT cycle after the
+   *  switch (prorated). For mid-cycle upgrades this is a small
+   *  number relative to the full plan cap. */
   letterCapAfter: number
+  /** Full letter cap for the NEXT renewal cycle on the new plan.
+   *  Critical for Monthly→Annual where the proration math gives a
+   *  misleadingly low number for the rest-of-cycle. */
+  nextCycleLetterCap?: number
   lettersUsedThisPeriod: number
   currency: string
   taxIncluded: boolean
@@ -132,11 +142,23 @@ export function PlanSwitchConfirmModal({
                   <strong>{formatEUR(preview.charge)}</strong> charged to your
                   card now{preview.taxIncluded ? " (VAT included)" : ""}.
                 </li>
-                <li>
-                  Letter cap: <strong>{preview.letterCapNow}</strong> →{" "}
-                  <strong>{preview.letterCapAfter}</strong> for the rest of this
-                  cycle.
-                </li>
+                {preview.letterCapAfter > preview.letterCapNow ? (
+                  <li>
+                    You gain{" "}
+                    <strong>
+                      {preview.letterCapAfter - preview.letterCapNow} extra
+                      letter{preview.letterCapAfter - preview.letterCapNow === 1 ? "" : "s"}
+                    </strong>{" "}
+                    for the rest of this cycle (cap is now{" "}
+                    <strong>{preview.letterCapAfter}</strong>).
+                  </li>
+                ) : (
+                  <li>
+                    Letter cap for the rest of this cycle stays around{" "}
+                    <strong>{preview.letterCapAfter}</strong> — the big change
+                    arrives at your next renewal (below).
+                  </li>
+                )}
               </>
             ) : (
               <>
@@ -191,10 +213,13 @@ export function PlanSwitchConfirmModal({
               </li>
             </ul>
             <p className="plan-switch-modal__calc-note">
-              We prorate the same way Stripe does: refund unused time on your
-              old plan, charge new-plan price for the same days. Money and
-              letters move in step — each extra letter costs the same per-letter
-              rate as your new plan.
+              <strong>What proration means in plain language:</strong> think of
+              it like changing hotel rooms mid-stay. We refund the unused nights
+              on your old plan at its rate, then charge for the same nights on
+              your new plan at its rate. You pay only the difference — never
+              the full new plan price on top of what you already paid. Your
+              letter allowance moves in lockstep, so you're never overpaying or
+              undergetting.
             </p>
           </section>
         ) : null}
@@ -217,8 +242,11 @@ export function PlanSwitchConfirmModal({
                   Plan switches to <strong>{toPlanLabel}</strong>.
                 </li>
                 <li>
-                  Letter cap becomes <strong>{preview.letterCapAfter}</strong>{" "}
-                  for the new cycle.
+                  Letter cap becomes{" "}
+                  <strong>
+                    {preview.nextCycleLetterCap ?? preview.letterCapAfter}
+                  </strong>{" "}
+                  per {preview.toPlanPeriodNoun ?? "cycle"}.
                 </li>
                 <li>
                   <strong>{formatEUR(preview.newFullPrice)}</strong> charged for
@@ -234,10 +262,16 @@ export function PlanSwitchConfirmModal({
                 <li>
                   Next renewal charge:{" "}
                   <strong>{formatEUR(preview.newFullPrice)}</strong>
-                  {preview.taxIncluded ? " (VAT included)" : ""}.
+                  {preview.taxIncluded ? " (VAT included)" : ""}, every{" "}
+                  {preview.toPlanPeriodNoun ?? "cycle"}.
                 </li>
                 <li>
-                  Full {toPlanLabel} letter cap applies for that cycle.
+                  Full letter cap:{" "}
+                  <strong>
+                    {preview.nextCycleLetterCap ?? preview.letterCapAfter}{" "}
+                    letters per {preview.toPlanPeriodNoun ?? "cycle"}
+                  </strong>
+                  .
                 </li>
               </>
             )}

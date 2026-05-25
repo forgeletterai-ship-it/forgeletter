@@ -95,11 +95,13 @@ export async function POST(req: NextRequest) {
     // preview just describes the first-period charge in full.
     if (!customer || getBasePlan(user.plan) === "free") {
       const fullPrice = billingPlans[newPlan].unitAmount[newPeriod] / 100
+      const newCycleCap = getPlanLetterLimit(toStoredPlan)
       return NextResponse.json({
         direction,
         flow: "checkout",
         fromPlan: user.plan,
         toPlan: toStoredPlan,
+        toPlanPeriodNoun: newPeriod === "annual" ? "year" : "month",
         cycleAnchorDate: null,
         cycleStart: null,
         cycleEnd: null,
@@ -115,7 +117,8 @@ export async function POST(req: NextRequest) {
         ],
         newFullPrice: fullPrice,
         letterCapNow: 0,
-        letterCapAfter: getPlanLetterLimit(toStoredPlan),
+        letterCapAfter: newCycleCap,
+        nextCycleLetterCap: newCycleCap,
         lettersUsedThisPeriod: 0,
         currency: "EUR",
         taxIncluded: true,
@@ -139,11 +142,13 @@ export async function POST(req: NextRequest) {
     }
     if (!sub) {
       const fullPrice = billingPlans[newPlan].unitAmount[newPeriod] / 100
+      const newCycleCap = getPlanLetterLimit(toStoredPlan)
       return NextResponse.json({
         direction,
         flow: "checkout",
         fromPlan: user.plan,
         toPlan: toStoredPlan,
+        toPlanPeriodNoun: newPeriod === "annual" ? "year" : "month",
         charge: fullPrice,
         chargeBreakdown: [
           {
@@ -152,6 +157,10 @@ export async function POST(req: NextRequest) {
           },
         ],
         newFullPrice: fullPrice,
+        letterCapNow: 0,
+        letterCapAfter: newCycleCap,
+        nextCycleLetterCap: newCycleCap,
+        lettersUsedThisPeriod: 0,
         currency: "EUR",
         taxIncluded: true,
         message:
@@ -198,12 +207,13 @@ export async function POST(req: NextRequest) {
     if (direction === "downgrade") {
       // Mode A: downgrade is scheduled for cycle end. Nothing charged today.
       // The next invoice on the cycle anchor will be the new plan's full price.
-      const lettersUsedThisPeriod = 0 // not relevant to display for downgrades
+      const newCycleCap = getPlanLetterLimit(toStoredPlan)
       return NextResponse.json({
         direction,
         flow: "scheduled",
         fromPlan: user.plan,
         toPlan: toStoredPlan,
+        toPlanPeriodNoun: newPeriod === "annual" ? "year" : "month",
         cycleAnchorDate: cycleEnd.toISOString(),
         cycleStart: cycleStart.toISOString(),
         cycleEnd: cycleEnd.toISOString(),
@@ -219,8 +229,9 @@ export async function POST(req: NextRequest) {
           currentSegmentStartedAt: user.currentSegmentStartedAt,
           currentPeriodStart: user.currentPeriodStart,
         }),
-        letterCapAfter: getPlanLetterLimit(toStoredPlan),
-        lettersUsedThisPeriod,
+        letterCapAfter: newCycleCap,
+        nextCycleLetterCap: newCycleCap,
+        lettersUsedThisPeriod: 0,
         currency: "EUR",
         taxIncluded: true,
         message:
@@ -292,6 +303,7 @@ export async function POST(req: NextRequest) {
       flow: "immediate",
       fromPlan: user.plan,
       toPlan: toStoredPlan,
+      toPlanPeriodNoun: newPeriod === "annual" ? "year" : "month",
       cycleAnchorDate: cycleEnd.toISOString(),
       cycleStart: cycleStart.toISOString(),
       cycleEnd: cycleEnd.toISOString(),
@@ -303,6 +315,11 @@ export async function POST(req: NextRequest) {
       newFullPrice: newPlanFullPrice,
       letterCapNow,
       letterCapAfter,
+      // The full letter cap that applies on the next renewal cycle
+      // (e.g. 420 for ultra_annual). Critical for Monthly→Annual
+      // upgrades where the current-cycle proration (~35) doesn't
+      // reflect what the customer is really buying.
+      nextCycleLetterCap: getPlanLetterLimit(toStoredPlan),
       lettersUsedThisPeriod: 0,
       currency: "EUR",
       taxIncluded,
