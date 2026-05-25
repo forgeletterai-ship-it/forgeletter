@@ -25,6 +25,11 @@ const handledEventTypes = new Set([
   "invoice.payment_succeeded",
   "invoice.payment_failed",
   "charge.dispute.created",
+  // subscription_schedule.released fires when a scheduled downgrade
+  // either completes (Stripe applied the new phase) or is manually
+  // released. We use it to clear the scheduled_plan_change banner.
+  "subscription_schedule.released",
+  "subscription_schedule.completed",
 ])
 
 /**
@@ -101,6 +106,12 @@ export async function POST(req: NextRequest) {
         break
       case "charge.dispute.created":
         await handleDisputeCreated(event.data.object as Stripe.Dispute)
+        break
+      case "subscription_schedule.released":
+      case "subscription_schedule.completed":
+        await handleSubscriptionScheduleReleased(
+          event.data.object as Stripe.SubscriptionSchedule
+        )
         break
     }
   } catch (error) {
@@ -269,9 +280,10 @@ function lookupFromInvoice(invoice: Stripe.Invoice): UserLookup {
 }
 
 async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
-  // Renewal payment cleared. Clear any past_due flag, and refresh
-  // the period anniversary so the letter quota resets in step with
-  // the new billing cycle.
+  // Renewal payment cleared. Clear any past_due flag, refresh the
+  // period anniversary, and (on renewal invoices) reset the
+  // fair-cap segment fields so the letter quota cleanly starts
+  // over for the new cycle.
   const lookup = lookupFromInvoice(invoice)
   if (!lookup.userId && !lookup.email) return
 
@@ -283,12 +295,43 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
     (invoice as { period_start?: number }).period_start ??
     invoice.lines?.data?.[0]?.period?.start
   if (typeof periodStartSeconds === "number") {
-    patch.current_period_start = new Date(
-      periodStartSeconds * 1000
-    ).toISOString()
+    const periodStartIso = new Date(periodStartSeconds * 1000).toISOString()
+    patch.current_period_start = periodStartIso
+    // Renewal invoices (billing_reason: 'subscription_cycle') indicate
+    // a fresh period. Reset accrued cap + segment start so the
+    // fair-cap math starts over. Subscription-update / proration
+    // invoices keep the existing segment data intact.
+    const reason = (invoice as { billing_reason?: string }).billing_reason
+    if (reason === "subscription_cycle" || reason === "subscription_create") {
+      patch.accrued_cap_this_period = 0
+      patch.current_segment_started_at = periodStartIso
+    }
   }
 
   await updateUsersRow(lookup, patch)
+}
+
+async function handleSubscriptionScheduleReleased(
+  schedule: Stripe.SubscriptionSchedule
+) {
+  // The schedule completed (Stripe applied the second phase, i.e.
+  // the downgrade rollover happened cleanly) or was manually
+  // released. Either way, clear scheduled_plan_change so the UI
+  // banner disappears. The subscription.updated event that fires
+  // alongside will set the actual plan via handleSubscriptionChange.
+  const userId = schedule.metadata?.userId || null
+  if (!userId) return
+  try {
+    await supabaseAdmin
+      .from("users")
+      .update({ scheduled_plan_change: null })
+      .eq("id", userId)
+  } catch (err) {
+    console.warn(
+      "[stripe webhook] could not clear scheduled_plan_change:",
+      err instanceof Error ? err.message : err
+    )
+  }
 }
 
 async function handlePaymentFailed(invoice: Stripe.Invoice) {

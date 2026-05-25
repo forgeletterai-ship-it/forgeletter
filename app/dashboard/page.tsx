@@ -8,6 +8,7 @@ import {
   getUserProfile,
   getUserSettings,
 } from "@/lib/app-data"
+import { computeFairLetterCap } from "@/lib/plans"
 import { supabaseAdmin } from "@/lib/supabase"
 import { DashboardClient, type LatestLetter } from "./DashboardClient"
 
@@ -87,6 +88,15 @@ export default async function DashboardPage() {
         },
       ]
 
+  const fairCap = user
+    ? computeFairLetterCap({
+        plan: user.plan,
+        accruedCapThisPeriod: user.accruedCapThisPeriod ?? 0,
+        currentSegmentStartedAt: user.currentSegmentStartedAt,
+        currentPeriodStart: user.currentPeriodStart,
+      })
+    : undefined
+
   return (
     <DashboardClient
       initialBriefs={briefs}
@@ -99,6 +109,8 @@ export default async function DashboardPage() {
       experiencePersistenceAvailable={capabilities.userProfileExperienceBlocks}
       pastDueSince={user?.pastDueSince ?? null}
       disputedAt={user?.disputedAt ?? null}
+      fairCap={fairCap}
+      scheduledPlanChange={user?.scheduledPlanChange ?? null}
     />
   )
 }

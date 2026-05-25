@@ -198,6 +198,58 @@ export function getOneTimeLineItem(
   }
 }
 
+/**
+ * Build an invoice preview for the upcoming proration on a subscription
+ * switch. Used by /api/stripe/preview-switch to show the customer
+ * exactly what they'll be charged before they confirm.
+ *
+ * For upgrades we mirror the "always_invoice" proration_behavior the
+ * real switch will use, so the preview matches the charge to the cent.
+ *
+ * Returns null if the Stripe SDK on this version doesn't support the
+ * preview API shape — callers should fall back to a calculated preview.
+ */
+export async function previewSwitchInvoice(args: {
+  stripe: Stripe
+  customerId: string
+  subscriptionId: string
+  itemId: string
+  newPriceId: string
+}): Promise<Stripe.Invoice | null> {
+  const { stripe, customerId, subscriptionId, itemId, newPriceId } = args
+  // Stripe API 2026-04 exposes invoices.createPreview; older versions
+  // expose invoices.retrieveUpcoming. Try the newer one first.
+  type InvoicesWithPreview = Stripe["invoices"] & {
+    createPreview?: (
+      params: Record<string, unknown>
+    ) => Promise<Stripe.Invoice>
+    retrieveUpcoming?: (
+      params: Record<string, unknown>
+    ) => Promise<Stripe.Invoice>
+  }
+  const invoices = stripe.invoices as InvoicesWithPreview
+  const params = {
+    customer: customerId,
+    subscription: subscriptionId,
+    subscription_details: {
+      items: [{ id: itemId, price: newPriceId }],
+      proration_behavior: "always_invoice" as const,
+    },
+  }
+  try {
+    if (typeof invoices.createPreview === "function") {
+      return await invoices.createPreview(params)
+    }
+    if (typeof invoices.retrieveUpcoming === "function") {
+      return await invoices.retrieveUpcoming(params)
+    }
+    return null
+  } catch (err) {
+    console.warn("[previewSwitchInvoice] preview API failed:", err)
+    return null
+  }
+}
+
 export function getAppUrl(requestOrigin?: string) {
   return (
     process.env.NEXT_PUBLIC_APP_URL ||

@@ -16691,3 +16691,393 @@ button.tone-chip:hover {
     }
   }
 }
+
+/* ----- Billing: scheduled-change banner ----- */
+
+.billing-scheduled-banner {
+  display: grid;
+  grid-template-columns: 44px 1fr auto;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 18px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(245, 233, 200, 0.7) 0%, rgba(254, 247, 230, 0.95) 100%);
+  border: 1px solid rgba(200, 150, 56, 0.34);
+  margin-bottom: 18px;
+  box-shadow: 0 8px 22px -16px rgba(184, 134, 43, 0.4);
+}
+
+.billing-scheduled-banner__icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #b8862b 0%, #d9a644 100%);
+  color: #281908;
+  display: grid;
+  place-items: center;
+}
+
+.billing-scheduled-banner__icon svg {
+  width: 22px;
+  height: 22px;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.billing-scheduled-banner__copy strong {
+  display: block;
+  font-size: 13.5px;
+  color: #1f3a39;
+  letter-spacing: 0.02em;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.billing-scheduled-banner__copy p {
+  margin: 0;
+  font-size: 14px;
+  color: rgba(31, 58, 57, 0.78);
+  line-height: 1.55;
+}
+
+.billing-scheduled-banner__cancel {
+  padding: 9px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(176, 58, 58, 0.32);
+  background: rgba(176, 58, 58, 0.08);
+  color: #8a2d2d;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.18s ease;
+}
+
+.billing-scheduled-banner__cancel:hover:not(:disabled) {
+  background: rgba(176, 58, 58, 0.14);
+}
+
+.billing-scheduled-banner__cancel:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+@media (max-width: 640px) {
+  .billing-scheduled-banner {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .billing-scheduled-banner__icon {
+    grid-row: 1;
+  }
+}
+
+/* ----- Plan switch confirmation modal (luxury) ----- */
+
+.plan-switch-modal-root {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  overflow-y: auto;
+  animation: plan-switch-modal-root-in 0.18s ease;
+}
+
+@keyframes plan-switch-modal-root-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.plan-switch-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  background:
+    radial-gradient(ellipse at top, rgba(34, 110, 92, 0.32) 0%, transparent 60%),
+    rgba(8, 25, 24, 0.62);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.plan-switch-modal {
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+  margin: clamp(24px, 6vh, 80px) auto;
+  padding: 32px 32px 24px;
+  border-radius: 24px;
+  background: linear-gradient(180deg, #fbf6ea 0%, #f4ecd6 100%);
+  border: 1px solid rgba(16, 82, 80, 0.2);
+  box-shadow:
+    0 50px 100px -28px rgba(8, 25, 24, 0.55),
+    0 2px 0 rgba(255, 255, 255, 0.55) inset;
+  animation: plan-switch-modal-in 0.26s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+@keyframes plan-switch-modal-in {
+  from { opacity: 0; transform: translateY(-12px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.plan-switch-modal--upgrade {
+  border-color: rgba(184, 134, 43, 0.48);
+}
+
+.plan-switch-modal--downgrade {
+  border-color: rgba(16, 82, 80, 0.32);
+}
+
+.plan-switch-modal__header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.plan-switch-modal__kicker {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(31, 58, 57, 0.55);
+}
+
+.plan-switch-modal h2 {
+  margin: 0;
+  font-size: clamp(22px, 3vw, 28px);
+  letter-spacing: -0.02em;
+  color: #1f3a39;
+  font-weight: 600;
+}
+
+.plan-switch-modal__section {
+  padding: 18px 20px;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid rgba(16, 82, 80, 0.12);
+}
+
+.plan-switch-modal__section--calc {
+  background: linear-gradient(180deg, #fdf7e6 0%, #fbf2d3 100%);
+  border-color: rgba(184, 134, 43, 0.28);
+}
+
+.plan-switch-modal__section-title {
+  margin: 0 0 10px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #1f3a39;
+  text-transform: uppercase;
+}
+
+.plan-switch-modal__section-sub {
+  text-transform: none;
+  letter-spacing: 0.01em;
+  font-weight: 500;
+  color: rgba(31, 58, 57, 0.6);
+  margin-left: 6px;
+  font-size: 13px;
+}
+
+.plan-switch-modal__bullets {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14.5px;
+  color: rgba(31, 58, 57, 0.85);
+  line-height: 1.55;
+}
+
+.plan-switch-modal__bullets li::before {
+  content: "•";
+  display: inline-block;
+  width: 14px;
+  color: rgba(16, 82, 80, 0.55);
+  font-weight: 700;
+}
+
+.plan-switch-modal__calc {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.plan-switch-modal__calc li {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 14px;
+  font-size: 13.5px;
+  color: rgba(31, 58, 57, 0.75);
+  border-bottom: 1px dashed rgba(184, 134, 43, 0.22);
+  padding-bottom: 7px;
+}
+
+.plan-switch-modal__calc li:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.plan-switch-modal__calc li strong {
+  font-weight: 700;
+  color: #1f3a39;
+  white-space: nowrap;
+}
+
+.plan-switch-modal__calc li strong.neg {
+  color: #1b6f4d;
+}
+
+.plan-switch-modal__calc-total {
+  font-size: 15px !important;
+  padding-top: 8px !important;
+  border-top: 1px solid rgba(184, 134, 43, 0.45) !important;
+  border-bottom: 0 !important;
+}
+
+.plan-switch-modal__calc-total strong {
+  font-size: 17px;
+  color: #8a6516 !important;
+}
+
+.plan-switch-modal__calc-note {
+  margin: 12px 0 0;
+  font-size: 12.5px;
+  color: rgba(31, 58, 57, 0.6);
+  line-height: 1.55;
+}
+
+.plan-switch-modal__error {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(176, 58, 58, 0.08);
+  border: 1px solid rgba(176, 58, 58, 0.25);
+  color: #8a2d2d;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.plan-switch-modal__consents {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(16, 82, 80, 0.14);
+}
+
+.plan-switch-modal__consent {
+  display: grid;
+  grid-template-columns: 22px 1fr;
+  align-items: start;
+  gap: 12px;
+  font-size: 13.5px;
+  color: #1f3a39;
+  line-height: 1.55;
+  cursor: pointer;
+}
+
+.plan-switch-modal__consent input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin-top: 3px;
+  accent-color: #105250;
+  cursor: pointer;
+}
+
+.plan-switch-modal__consent input[type="checkbox"]:disabled {
+  cursor: not-allowed;
+}
+
+.plan-switch-modal__actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.plan-switch-modal__cancel,
+.plan-switch-modal__confirm {
+  padding: 12px 22px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition:
+    transform 0.18s ease,
+    background 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.plan-switch-modal__cancel {
+  background: transparent;
+  border-color: rgba(16, 82, 80, 0.25);
+  color: #1f3a39;
+}
+
+.plan-switch-modal__cancel:hover:not(:disabled) {
+  background: rgba(16, 82, 80, 0.06);
+}
+
+.plan-switch-modal__confirm {
+  background: linear-gradient(135deg, #0c403e 0%, #105250 60%, #1b6b65 100%);
+  color: #f9e8c4;
+  box-shadow: 0 14px 28px -16px rgba(16, 82, 80, 0.6);
+}
+
+.plan-switch-modal--upgrade .plan-switch-modal__confirm {
+  background: linear-gradient(135deg, #b8862b 0%, #d9a644 50%, #b8862b 100%);
+  color: #281908;
+  box-shadow: 0 14px 28px -16px rgba(184, 134, 43, 0.55);
+}
+
+.plan-switch-modal__confirm:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.plan-switch-modal__confirm:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.plan-switch-modal__cancel:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+@media (max-width: 640px) {
+  .plan-switch-modal {
+    padding: 22px 18px 18px;
+    border-radius: 20px;
+  }
+  .plan-switch-modal__section {
+    padding: 14px 16px;
+  }
+  .plan-switch-modal__actions {
+    flex-direction: column-reverse;
+  }
+  .plan-switch-modal__cancel,
+  .plan-switch-modal__confirm {
+    width: 100%;
+  }
+}

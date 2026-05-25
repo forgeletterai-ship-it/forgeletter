@@ -21,7 +21,10 @@ export default async function BillingPage() {
         </span>
       </div>
 
-      <BillingClient currentPlan={user?.plan || "free"} />
+      <BillingClient
+        currentPlan={user?.plan || "free"}
+        scheduledPlanChange={user?.scheduledPlanChange ?? null}
+      />
     </>
   )
 }
