@@ -58,14 +58,26 @@ export async function runWriterAgent(args: {
   if (args.examples && args.examples.length > 0) {
     const exampleBlock = args.examples
       .slice(0, 3)
-      .map(
-        (ex, i) =>
-          `Example ${i + 1} (${ex.role}, ${ex.industry}, score ${ex.qualityScore}):\n${safeSlice(ex.excerpt, 800)}${ex.whyItWorks ? `\nWhy it works: ${ex.whyItWorks}` : ""}`
-      )
+      .map((ex, i) => {
+        let label: string
+        if (ex.source === "user_offer") {
+          label = `Example ${i + 1} — CANDIDATE'S OWN OFFER-WINNING LETTER (${ex.role || "prior role"})`
+        } else if (ex.source === "user_interview") {
+          label = `Example ${i + 1} — CANDIDATE'S OWN INTERVIEW-WINNING LETTER (${ex.role || "prior role"})`
+        } else {
+          label = `Example ${i + 1} (${ex.role}, ${ex.industry}, score ${ex.qualityScore})`
+        }
+        return `${label}:\n${safeSlice(ex.excerpt, 800)}${ex.whyItWorks ? `\nWhy it works: ${ex.whyItWorks}` : ""}`
+      })
       .join("\n\n")
-    userParts.push(
-      `Reference examples (study the openings, structure, and specificity — do NOT copy phrasing):\n\n${exampleBlock}`
-    )
+    const personalCount = args.examples.filter(
+      (e) => e.source === "user_offer" || e.source === "user_interview"
+    ).length
+    const guidance =
+      personalCount > 0
+        ? `Reference examples below. ${personalCount} ${personalCount === 1 ? "is" : "are"} the candidate's OWN past letter that got results (an offer or interview booking) — preserve their authentic voice, rhythm, and signature phrases from those. Use curated examples (if any) for structural patterns. Do NOT lift sentences verbatim from any source.`
+        : `Reference examples (study the openings, structure, and specificity — do NOT copy phrasing):`
+    userParts.push(`${guidance}\n\n${exampleBlock}`)
   }
 
   if (args.rewriteFeedback) {

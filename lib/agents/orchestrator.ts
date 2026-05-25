@@ -169,15 +169,44 @@ export async function generateCoverLetter(
     let examples: RetrievedExample[] = []
     if (shouldRun(config, "ExampleRetrieval")) {
       await emit("ExampleRetrieval", "running")
-      examples = await runExampleRetrieval({ supabase, job, limit: 3 })
+      examples = await runExampleRetrieval({
+        supabase,
+        job,
+        userId: input.userId,
+        limit: 3,
+      })
       logAgent(
         "ExampleRetrieval",
         0,
-        { examplesUsed: examples.map((e) => e.id) },
+        {
+          examplesUsed: examples.map((e) => e.id),
+          userOffersIncluded: examples.filter((e) => e.source === "user_offer").length,
+          userInterviewsIncluded: examples.filter((e) => e.source === "user_interview").length,
+          curatedIncluded: examples.filter((e) => e.source === "curated").length,
+        },
         { modelUsed: "supabase", tokensInput: 0, tokensOutput: 0, durationMs: 0 },
         false
       )
-      await emit("ExampleRetrieval", "done", PROGRESS_WEIGHTS.ExampleRetrieval)
+      const offersUsed = examples.filter((e) => e.source === "user_offer").length
+      const interviewsUsed = examples.filter((e) => e.source === "user_interview").length
+      const personalUsed = offersUsed + interviewsUsed
+      let examplesMessage: string | undefined
+      if (personalUsed > 0) {
+        const parts: string[] = []
+        if (offersUsed > 0) {
+          parts.push(`${offersUsed} offer-winning`)
+        }
+        if (interviewsUsed > 0) {
+          parts.push(`${interviewsUsed} interview-winning`)
+        }
+        const noun = personalUsed === 1 ? "letter" : "letters"
+        examplesMessage = `Conditioning on ${parts.join(" + ")} of your ${noun}`
+      } else if (examples.length > 0) {
+        examplesMessage = `Drawing on ${examples.length} curated ${
+          examples.length === 1 ? "example" : "examples"
+        }`
+      }
+      await emit("ExampleRetrieval", "done", PROGRESS_WEIGHTS.ExampleRetrieval, examplesMessage)
     }
 
     // 6. Writer — the load-bearing call. Failure here is fatal.
