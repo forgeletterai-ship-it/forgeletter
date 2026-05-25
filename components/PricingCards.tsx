@@ -17,6 +17,10 @@ const plans = [
     letters: 8,
     rewrites: 0,
     monthlyCents: 999,
+    // The bar each plan auto-improves letters to before delivery.
+    // Quality rewrites happen for free in the background — never
+    // counted against the user's letter allowance.
+    qualityBar: 90,
     features: [
       "Both templates",
       "Photo upload",
@@ -25,8 +29,8 @@ const plans = [
     agents: [
       "Resume Analyst",
       "Job Analyst",
-      "Example Retrieval",
-      "Writer Agent",
+      "Writer",
+      "Final Editor",
       "Hallucination Check",
       "Quality Gate",
     ],
@@ -41,6 +45,7 @@ const plans = [
     letters: 20,
     rewrites: 1,
     monthlyCents: 1999,
+    qualityBar: 93,
     features: [
       "ATS score",
       "LinkedIn import",
@@ -50,10 +55,10 @@ const plans = [
       "Resume Analyst",
       "Job Analyst",
       "Match Analyst",
-      "Example Retrieval",
-      "Writer Agent",
-      "Tone Adapter",
+      "Writer",
       "ATS Agent",
+      "Final Editor",
+      "Hallucination Check",
       "Quality Gate",
     ],
     rewriteCopy: "1 different-tone rewrite is included before another letter is used.",
@@ -68,6 +73,7 @@ const plans = [
     letters: 35,
     rewrites: 3,
     monthlyCents: 3499,
+    qualityBar: 95,
     features: [
       "All 12 agents",
       "3 tone rewrites included",
@@ -78,14 +84,14 @@ const plans = [
       "Resume Analyst",
       "Job Analyst",
       "Match Analyst",
-      "Evidence Mapper",
       "Example Retrieval",
-      "Writer Agent",
-      "Tone Adapter",
+      "Writer",
       "ATS Agent",
       "HM Critic",
       "Final Editor",
+      "Hallucination Check",
       "Quality Gate",
+      "Rewrite Agent",
     ],
     rewriteCopy: "3 different-tone rewrites are included before another letter is used.",
     cta: "Choose Ultra",
@@ -270,7 +276,7 @@ export function PricingCards({
                     onClick={() => setPlanPeriod(plan.key, "annual")}
                   >
                     Annual
-                    <span>-10%</span>
+                    <span>-25%</span>
                   </button>
                 </div>
 
@@ -287,7 +293,7 @@ export function PricingCards({
                 </ul>
 
                 <div className="pricing-ai-label pricing-ai-label--agents">
-                  AI agents included
+                  {plan.agents.length} AI agents
                 </div>
 
                 <ul className="pricing-agent-list" aria-label={`${plan.name} included AI agents`}>
@@ -299,10 +305,19 @@ export function PricingCards({
                 <div className="pricing-rewrite-note">
                   <strong>
                     {plan.rewrites === 0
-                      ? "No included rewrites"
-                      : `${plan.rewrites} included ${plan.rewrites === 1 ? "rewrite" : "rewrites"}`}
+                      ? "No included tone rewrites"
+                      : `${plan.rewrites} included tone ${plan.rewrites === 1 ? "rewrite" : "rewrites"}`}
                   </strong>
                   <span>{plan.rewriteCopy}</span>
+                </div>
+
+                <div
+                  className="pricing-quality-bar"
+                  aria-label={`Letters auto-improved to ${plan.qualityBar} percent quality bar`}
+                  title="Quality rewrites happen in the background — free, never counted against your letter allowance."
+                >
+                  <strong>{plan.qualityBar}%</strong>
+                  <span>quality bar · auto-improved free</span>
                 </div>
 
                 {onSelectPlan ? (

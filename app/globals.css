@@ -11802,6 +11802,50 @@ button.tone-chip:hover {
   color: rgba(247, 244, 238, 0.84);
 }
 
+.pricing-quality-bar {
+  width: min(356px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  margin: 0 0 16px;
+  padding: 10px 12px;
+  text-align: center;
+  border-top: 1px dashed rgba(40, 120, 94, 0.32);
+  cursor: help;
+}
+
+.pricing-quality-bar strong {
+  font-family: var(--font-serif, "Plus Jakarta Sans"), serif;
+  font-size: 36px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: #1b6f4d;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.pricing-quality-bar span {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: lowercase;
+  color: rgba(31, 58, 57, 0.66);
+}
+
+.pricing-arch-card--featured .pricing-quality-bar {
+  border-top-color: rgba(34, 188, 138, 0.42);
+}
+
+.pricing-arch-card--featured .pricing-quality-bar strong {
+  color: #34c47d;
+  text-shadow: 0 1px 0 rgba(0, 30, 24, 0.5);
+}
+
+.pricing-arch-card--featured .pricing-quality-bar span {
+  color: rgba(220, 232, 220, 0.7);
+}
+
 .pricing-arch-button {
   width: min(252px, 100%);
   min-height: 48px;

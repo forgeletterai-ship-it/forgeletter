@@ -165,9 +165,13 @@ export async function generateCoverLetter(
       await emit("MatchAnalyst", "done", PROGRESS_WEIGHTS.MatchAnalyst)
     }
 
-    // 5. Example Retrieval (ultra only, gracefully empty in v1)
+    // 5. Example Retrieval — runs for every paid tier as background
+    //    infrastructure. Gated on enableExampleRetrieval rather than
+    //    shouldRun(config, ...) so Starter/Pro can benefit from the
+    //    feedback loop without having to advertise it as a visible
+    //    agent on the pricing card.
     let examples: RetrievedExample[] = []
-    if (shouldRun(config, "ExampleRetrieval")) {
+    if (config.enableExampleRetrieval) {
       await emit("ExampleRetrieval", "running")
       examples = await runExampleRetrieval({
         supabase,
