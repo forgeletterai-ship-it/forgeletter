@@ -26,15 +26,25 @@ answer: because they paid for the period it was generated in.
 
 ### Stripe webhook divergence recovery
 
-Webhooks can be lost (network, retry exhaustion, regional outage).
-`/api/cron/stripe-reconcile` runs every 6h via Vercel cron and:
+Webhooks can be lost (network, retry exhaustion, regional outage). We
+do not run a cron-based reconciler — webhook is the only source of
+state sync. If you observe a user whose Stripe and DB state have
+drifted (rare), the manual fix is to fire the relevant
+`customer.subscription.updated` event from the Stripe dashboard
+(Webhooks → endpoint → recent events → resend).
 
-1. Purges `data_recovery_snapshots` past their 30-day expiry.
-2. Pulls users with plan != 'free' whose `current_period_start` is null
-   or older than 6h, and for each: reads the canonical state from
-   Stripe and patches our DB.
+### Recovery snapshot purge
 
-Webhook is still primary; the cron is a safety net.
+`data_recovery_snapshots` rows older than 30 days should be purged
+periodically. Two options:
+
+1. Manual: connect to Supabase SQL editor monthly and run
+   `select purge_expired_data_recovery_snapshots();`.
+2. Supabase pg_cron: schedule the same function nightly via the
+   Database → Cron page in Supabase Studio.
+
+Without a purge job the table grows by ~1 row per deletion, which
+is fine for the current customer count.
 
 ### Card decline during upgrade
 
