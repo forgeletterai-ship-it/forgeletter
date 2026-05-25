@@ -777,9 +777,9 @@ export function DashboardClient({
         </section>
       ) : (
         <Link
-          href="/#pricing"
+          href="/dashboard/billing"
           className="cover-panel cover-plan-panel cover-plan-panel--cta"
-          aria-label="View plans and purchase a subscription"
+          aria-label="Choose a plan to start generating cover letters"
         >
           <div className="cover-plan-icon">
             <Icon name="crown" />
@@ -787,10 +787,11 @@ export function DashboardClient({
           <div className="cover-plan-content">
             <div className="cover-section-row">
               <div>
-                <h2>Plans</h2>
+                <h2>Choose a plan to start writing</h2>
                 <p>
-                  Choose a plan to unlock the workspace, your monthly letter
-                  allowance, and the full set of features.
+                  Your account is ready. Pick Starter, Pro, or Ultra to
+                  unlock cover-letter generation with the full agent
+                  pipeline — billed monthly or annually, cancel anytime.
                 </p>
               </div>
               <span className="cover-plan-cta-arrow" aria-hidden="true">→</span>
@@ -972,6 +973,21 @@ export function DashboardClient({
         {(() => {
           const jdShort = jobDescription.trim().length < MIN_JD_CHARS
           const resumeShort = resumePreviewLength < MIN_RESUME_CHARS
+          // Free users (no active plan) get a "Choose a plan" CTA in
+          // place of the disabled Generate button so they have a
+          // single clear next step.
+          if (!hasActivePlan) {
+            return (
+              <Link
+                href="/dashboard/billing"
+                className="cover-save-button"
+                style={{ textDecoration: "none" }}
+              >
+                <Icon name="crown" />
+                Choose a plan to generate letters
+              </Link>
+            )
+          }
           const disabled = phase === "running" || jdShort || resumeShort
           return (
             <button

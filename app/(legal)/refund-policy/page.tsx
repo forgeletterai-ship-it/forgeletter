@@ -38,7 +38,7 @@ export default function RefundPolicyPage() {
         },
         {
           title: "7. Failed payments and dunning",
-          body: "If a renewal payment fails, Stripe will retry the charge for up to seven days. During this period your account may be downgraded to the free tier and saved drafts remain accessible. After seven days of unresolved non-payment the subscription is cancelled automatically.",
+          body: "If a renewal payment fails, Stripe will retry the charge for up to seven days. During this period your account remains active and saved drafts stay accessible. After seven days of unresolved non-payment the subscription is cancelled automatically and new-letter generation is paused — your existing letters and outcome history remain available, and you can resubscribe at any time to resume generation.",
         },
         {
           title: "8. Chargebacks",

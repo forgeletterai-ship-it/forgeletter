@@ -116,6 +116,16 @@ export async function POST(req: NextRequest) {
   // current_period_start when available, falls back to the calendar
   // boundary otherwise. Running rows older than 7 minutes are
   // treated as orphaned inside the function and do not count.
+  // No active subscription = no generation. Explicit short-circuit so
+  // the customer sees a clear "subscribe to continue" message instead
+  // of a confusing "0 of 0 letters" quota error from try_start_letter.
+  if (getBasePlan(user.plan) === "free") {
+    return sseError(
+      "You don't have an active plan. Choose a subscription to start generating letters.",
+      402
+    )
+  }
+
   const tier = planToTier(user.plan)
   const periodForFallback = getBillingPeriod(user.plan)
   const periodStart = user.currentPeriodStart
