@@ -436,8 +436,8 @@ export default function HomePage() {
                 Clear plans, secured by <span className="headline-teal">Stripe</span>.
               </h2>
               <p>
-                Start free, then upgrade when you&apos;re ready for a smoother
-                application workflow.
+                Pick the plan that fits your job search. Signup is free; you
+                only pay when you choose a plan to start generating letters.
               </p>
             </div>
 

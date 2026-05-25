@@ -11,9 +11,11 @@ type PlanConfig = {
 
 export const planCatalog: Record<BasePlanId, PlanConfig> = {
   free: {
-    label: "Regular",
-    monthlyLetters: 3,
-    copy: "Your workspace is active. Create focused cover letter briefs and upgrade when you need more.",
+    // Internal state for "no active subscription". Customer-facing
+    // copy never markets a free tier — generation is paywalled.
+    label: "No active plan",
+    monthlyLetters: 0,
+    copy: "Your account is active but new-letter generation is paused. Choose a plan to start writing.",
   },
   starter: {
     label: "Starter",
