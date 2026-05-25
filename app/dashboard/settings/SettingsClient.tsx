@@ -303,12 +303,16 @@ export function SettingsClient({
               {deleting ? "Deleting workspace data..." : "Delete workspace data"}
             </button>
             <p className="settings-danger-zone__note">
-              This permanently deletes all generated cover letters, agent
-              audit traces, application briefs, your profile and your
-              settings. Your subscription, billing history, and account
-              login stay in place. To also delete your account, cancel your
-              subscription first from the Billing page, then email{" "}
-              <a href="mailto:forgeletterai@gmail.com">forgeletterai@gmail.com</a>.
+              This removes all generated cover letters, agent audit
+              traces, application briefs, your profile and your settings
+              from the workspace. Your subscription, billing history,
+              and account login stay in place. A recovery snapshot is
+              kept for <strong>30 days</strong> — email{" "}
+              <a href="mailto:forgeletterai@gmail.com">forgeletterai@gmail.com</a>{" "}
+              if you change your mind in that window. After 30 days
+              the snapshot is purged and the data is unrecoverable.
+              To also delete your account itself, cancel your
+              subscription first from the Billing page.
             </p>
           </div>
         </section>

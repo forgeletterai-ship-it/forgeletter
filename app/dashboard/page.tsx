@@ -107,6 +107,27 @@ export default async function DashboardPage({
   // role/company/tone from that letter so the workspace can pre-fill.
   // We deliberately do NOT carry over the job_description — the whole
   // point of duplicating is to write to a different job posting.
+  // Outcome reminder count: letters marked 'submitted' >7 days ago
+  // that still have no outcome. Surface on the dashboard so users
+  // are prompted to feed the example-retrieval base.
+  let staleSubmittedCount = 0
+  if (userId) {
+    try {
+      const sevenDaysAgo = new Date(
+        Date.now() - 7 * 24 * 60 * 60 * 1000
+      ).toISOString()
+      const { count } = await supabaseAdmin
+        .from("generated_letters")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", userId)
+        .eq("application_status", "submitted")
+        .lt("submitted_at", sevenDaysAgo)
+      staleSubmittedCount = count ?? 0
+    } catch {
+      // ignore; banner just won't appear
+    }
+  }
+
   let duplicateSource: {
     role?: string
     company?: string
@@ -147,6 +168,7 @@ export default async function DashboardPage({
       fairCap={fairCap}
       scheduledPlanChange={user?.scheduledPlanChange ?? null}
       duplicateSource={duplicateSource}
+      staleSubmittedCount={staleSubmittedCount}
     />
   )
 }

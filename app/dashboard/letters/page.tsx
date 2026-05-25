@@ -72,6 +72,36 @@ type SearchParams = {
   sort?: string
 }
 
+/**
+ * Mid-pipeline crash recovery. The pipeline marks rows as 'running'
+ * at insert and finalises them at the end. If Vercel kills the
+ * function (300s max) the row stays 'running' forever. The quota
+ * gate's 7-min orphan window already ignores these for letter
+ * counting, but we also flip them to 'failed' here so they stop
+ * showing as in-flight in any future report. Safe to run on every
+ * page load; UPDATE is a no-op when no rows match.
+ */
+async function finalizeStalledLetters(userId: string): Promise<number> {
+  const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString()
+  try {
+    const { data } = await supabaseAdmin
+      .from("generated_letters")
+      .update({
+        generation_status: "failed",
+        failure_reason:
+          "Pipeline timed out — function exceeded the runtime limit. Try again.",
+        completed_at: new Date().toISOString(),
+      })
+      .eq("user_id", userId)
+      .in("generation_status", ["running", "queued"])
+      .lt("created_at", tenMinutesAgo)
+      .select("id")
+    return data?.length ?? 0
+  } catch {
+    return 0
+  }
+}
+
 export default async function LettersPage({
   searchParams,
 }: {
@@ -79,6 +109,10 @@ export default async function LettersPage({
 }) {
   const { user } = await getCurrentAppUser()
   if (!user) redirect("/auth/login")
+
+  // Lazy crash recovery: any letter stuck in 'running' for >10 min
+  // gets finalised to 'failed' so the books stay clean.
+  await finalizeStalledLetters(user.id)
 
   const sp = await searchParams
   const statusFilter = ALL_STATUSES.includes(sp.status as ApplicationStatus)

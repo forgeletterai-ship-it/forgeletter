@@ -17252,3 +17252,86 @@ button.tone-chip:hover {
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+
+/* ----- Outcome reminder banner ----- */
+
+.outcome-reminder-banner {
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  margin-bottom: 14px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(245, 233, 200, 0.6) 0%, rgba(254, 247, 230, 0.92) 100%);
+  border: 1px solid rgba(200, 150, 56, 0.32);
+  box-shadow: 0 8px 20px -16px rgba(184, 134, 43, 0.35);
+}
+
+.outcome-reminder-banner__icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #b8862b 0%, #d9a644 100%);
+  color: #281908;
+}
+
+.outcome-reminder-banner__icon svg {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.outcome-reminder-banner__copy strong {
+  display: block;
+  font-size: 13.5px;
+  color: #1f3a39;
+  letter-spacing: 0.02em;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.outcome-reminder-banner__copy p {
+  margin: 0;
+  font-size: 13.5px;
+  color: rgba(31, 58, 57, 0.78);
+  line-height: 1.55;
+}
+
+.outcome-reminder-banner__cta {
+  display: inline-flex;
+  align-items: center;
+  padding: 9px 16px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #b8862b 0%, #d9a644 50%, #b8862b 100%);
+  color: #281908;
+  font-weight: 700;
+  font-size: 13.5px;
+  text-decoration: none;
+  white-space: nowrap;
+  box-shadow: 0 8px 16px -12px rgba(184, 134, 43, 0.5);
+  transition: transform 0.18s ease;
+}
+
+.outcome-reminder-banner__cta:hover {
+  transform: translateY(-1px);
+}
+
+@media (max-width: 640px) {
+  .outcome-reminder-banner {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .outcome-reminder-banner__icon {
+    grid-row: 1;
+  }
+  .outcome-reminder-banner__cta {
+    justify-self: start;
+  }
+}

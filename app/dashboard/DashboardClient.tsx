@@ -68,6 +68,11 @@ type DashboardClientProps = {
     company?: string
     tone?: string
   } | null
+  /** Number of letters marked 'submitted' more than 7 days ago that
+   *  still have no outcome. When > 0 we surface a tasteful banner
+   *  prompting the user to update outcomes (which feeds the
+   *  retrieval base). */
+  staleSubmittedCount?: number
 }
 
 type ToneName = "Professional" | "Warm" | "Direct"
@@ -278,6 +283,7 @@ export function DashboardClient({
   fairCap,
   scheduledPlanChange = null,
   duplicateSource = null,
+  staleSubmittedCount = 0,
 }: DashboardClientProps) {
   const normalizedTone = tones.some((item) => item.name === settings.default_tone)
     ? (settings.default_tone as ToneName)
@@ -718,6 +724,34 @@ export function DashboardClient({
   return (
     <div className="cover-workspace" aria-label="Cover letter workspace">
       <AccountStateBanner pastDueSince={pastDueSince} disputedAt={disputedAt} />
+      {staleSubmittedCount > 0 ? (
+        <div className="outcome-reminder-banner" role="status">
+          <span className="outcome-reminder-banner__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 7v5l3 2" />
+            </svg>
+          </span>
+          <div className="outcome-reminder-banner__copy">
+            <strong>
+              {staleSubmittedCount} letter{staleSubmittedCount === 1 ? "" : "s"}{" "}
+              awaiting outcomes
+            </strong>
+            <p>
+              You marked {staleSubmittedCount === 1 ? "it" : "them"} as
+              submitted more than a week ago. Heard back yet? Marking the
+              outcome trains your gold-standard examples base so future
+              letters mirror what works for you.
+            </p>
+          </div>
+          <Link
+            className="outcome-reminder-banner__cta"
+            href="/dashboard/letters?status=submitted"
+          >
+            Mark outcomes →
+          </Link>
+        </div>
+      ) : null}
       {hasActivePlan ? (
         <section className="cover-panel cover-plan-panel">
           <div className="cover-plan-icon">
