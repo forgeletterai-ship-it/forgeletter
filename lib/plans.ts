@@ -95,12 +95,22 @@ export function annualAmountCents(monthlyCents: number) {
   return Math.round(monthlyCents * 12 * 0.9)
 }
 
-export function getPlanUsageDetails(plan: unknown, usedCount: number) {
+export function getPlanUsageDetails(
+  plan: unknown,
+  usedCount: number,
+  /** Optional override — when present, used instead of the static plan
+   *  letter limit. The dashboard meter passes the fair cap here. */
+  overrideLimit?: number
+) {
   const storedPlan = normalizeStoredPlan(plan)
   const basePlan = getBasePlan(storedPlan)
   const period = getBillingPeriod(storedPlan)
   const config = planCatalog[basePlan]
-  const limit = getPlanLetterLimit(storedPlan)
+  const planLimit = getPlanLetterLimit(storedPlan)
+  const limit =
+    typeof overrideLimit === "number" && overrideLimit >= 0
+      ? Math.floor(overrideLimit)
+      : planLimit
   const used = Math.max(0, Math.min(usedCount, limit))
   const remaining = Math.max(0, limit - usedCount)
   const usedPercent = limit > 0 ? Math.min(100, Math.round((used / limit) * 100)) : 0
@@ -112,6 +122,9 @@ export function getPlanUsageDetails(plan: unknown, usedCount: number) {
     label: config.label,
     copy: config.copy,
     limit,
+    /** The static, pre-proration plan limit. Useful for "your plan
+     *  is rated at X letters / period" messaging. */
+    planLimit,
     used,
     remaining,
     usedPercent,
@@ -125,4 +138,113 @@ export function formatPlanLabel(plan: unknown) {
   return details.period === "annual" && details.basePlan !== "free"
     ? `${details.label} annual`
     : details.label
+}
+
+// ---------------------------------------------------------------------------
+// Fair-letter-cap helpers
+// ---------------------------------------------------------------------------
+
+const DAYS_PER_MONTH = 30
+const DAYS_PER_YEAR = 365
+
+/**
+ * Letters per day a given stored plan grants. Used to prorate the
+ * letter allowance the same way Stripe prorates the money: a customer
+ * who was on Pro for 12 days then Ultra for 18 days gets
+ * 12*ProDaily + 18*UltraDaily letters this period.
+ */
+export function getDailyLetterRate(plan: unknown): number {
+  const stored = normalizeStoredPlan(plan)
+  const basePlan = getBasePlan(stored)
+  const period = getBillingPeriod(stored)
+  const monthly = planCatalog[basePlan].monthlyLetters
+  if (period === "annual") {
+    return (monthly * 12) / DAYS_PER_YEAR
+  }
+  return monthly / DAYS_PER_MONTH
+}
+
+/**
+ * Rank used by direction detection. Higher = more revenue per period.
+ * Tier dominates interval, matching Mode A convention: if you change
+ * tier, that determines direction regardless of monthly vs annual.
+ */
+export function getPlanRank(plan: unknown): number {
+  const stored = normalizeStoredPlan(plan)
+  const basePlan = getBasePlan(stored)
+  const period = getBillingPeriod(stored)
+  const tierWeight =
+    basePlan === "ultra" ? 300 : basePlan === "pro" ? 200 : basePlan === "starter" ? 100 : 0
+  const intervalWeight = period === "annual" ? 10 : 0
+  return tierWeight + intervalWeight
+}
+
+export type SwitchDirection = "upgrade" | "downgrade" | "same"
+
+/**
+ * Mode A direction detection.
+ *
+ *  - Tier change always wins (lower → higher tier = upgrade; higher → lower = downgrade)
+ *  - Same tier: monthly → annual = upgrade; annual → monthly = downgrade
+ *  - Same tier + same interval = same (blocked)
+ */
+export function resolveSwitchDirection(
+  fromPlan: unknown,
+  toPlan: unknown
+): SwitchDirection {
+  const fromRank = getPlanRank(fromPlan)
+  const toRank = getPlanRank(toPlan)
+  if (toRank > fromRank) return "upgrade"
+  if (toRank < fromRank) return "downgrade"
+  return "same"
+}
+
+/**
+ * Compute the user's fair letter cap for the current period.
+ *
+ *   fair_cap = accruedCapThisPeriod + (days_since_segment_started × current_daily_rate)
+ *
+ * Returns Math.floor of the result — letters are discrete, fractional
+ * entitlement is dropped to the customer's slight disadvantage (~half
+ * a letter at most, equivalent to a few cents of value).
+ *
+ * Pass the user's currentPeriodStart so we can clamp the segment start
+ * if it sits before the period boundary (defensive — shouldn't happen
+ * if the webhook resets things on renewal).
+ */
+export function computeFairLetterCap(args: {
+  plan: unknown
+  accruedCapThisPeriod: number
+  currentSegmentStartedAt: Date | string | null
+  currentPeriodStart: Date | string | null
+  now?: Date
+}): number {
+  const now = args.now ?? new Date()
+  const periodStart = args.currentPeriodStart
+    ? new Date(args.currentPeriodStart)
+    : null
+  const rawSegmentStart = args.currentSegmentStartedAt
+    ? new Date(args.currentSegmentStartedAt)
+    : periodStart
+  const segmentStart =
+    periodStart && rawSegmentStart && rawSegmentStart < periodStart
+      ? periodStart
+      : rawSegmentStart
+  if (!segmentStart) {
+    // No anchoring data at all — fall back to the static plan limit so
+    // the user is never locked out due to missing migration state.
+    return getPlanLetterLimit(args.plan)
+  }
+  const daysSinceSegment = Math.max(
+    0,
+    (now.getTime() - segmentStart.getTime()) / (24 * 60 * 60 * 1000)
+  )
+  const dailyRate = getDailyLetterRate(args.plan)
+  const segmentCap = daysSinceSegment * dailyRate
+  const accrued = Math.max(0, args.accruedCapThisPeriod || 0)
+  const total = accrued + segmentCap
+  // Never grant more than the full-period plan limit (defensive ceiling
+  // for unusual segment math during interval changes).
+  const planCeiling = getPlanLetterLimit(args.plan)
+  return Math.max(0, Math.min(planCeiling, Math.floor(total)))
 }

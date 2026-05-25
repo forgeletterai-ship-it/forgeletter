@@ -9,6 +9,7 @@ import {
   resetSchemaCapabilitiesCache,
 } from "@/lib/app-data"
 import {
+  computeFairLetterCap,
   getBasePlan,
   getBillingPeriod,
   getCurrentPlanPeriodStart,
@@ -120,7 +121,17 @@ export async function POST(req: NextRequest) {
   const periodStart = user.currentPeriodStart
     ? new Date(user.currentPeriodStart).toISOString()
     : getCurrentPlanPeriodStart(periodForFallback).toISOString()
-  const planLimit = getPlanUsageDetails(user.plan, 0).limit
+  // Fair cap: letters earned at past plans + letters earned so far
+  // on the current plan. Replaces the static plan limit so a mid-cycle
+  // upgrade gets the prorated cap they paid for and a mid-cycle
+  // downgrade keeps the cap they already earned.
+  const fairCap = computeFairLetterCap({
+    plan: user.plan,
+    accruedCapThisPeriod: user.accruedCapThisPeriod ?? 0,
+    currentSegmentStartedAt: user.currentSegmentStartedAt,
+    currentPeriodStart: user.currentPeriodStart ?? periodStart,
+  })
+  const planLimit = fairCap
 
   let generationId: string | null = null
   let postCount: number | null = null

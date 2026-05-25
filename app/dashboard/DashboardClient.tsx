@@ -51,6 +51,14 @@ type DashboardClientProps = {
    *  Both null is the happy path. */
   pastDueSince?: string | null
   disputedAt?: string | null
+  /** Server-computed fair letter cap for the current period. When
+   *  present, the plan meter uses this as the limit; otherwise it
+   *  falls back to the static plan limit. */
+  fairCap?: number
+  scheduledPlanChange?: {
+    toPlan: string
+    effectiveAt: string
+  } | null
 }
 
 type ToneName = "Professional" | "Warm" | "Direct"
@@ -252,6 +260,8 @@ export function DashboardClient({
   experiencePersistenceAvailable = true,
   pastDueSince = null,
   disputedAt = null,
+  fairCap,
+  scheduledPlanChange = null,
 }: DashboardClientProps) {
   const normalizedTone = tones.some((item) => item.name === settings.default_tone)
     ? (settings.default_tone as ToneName)
@@ -300,7 +310,7 @@ export function DashboardClient({
   // PDF template picker
   const [showPdfPicker, setShowPdfPicker] = useState(false)
 
-  const planUsage = getPlanUsageDetails(plan, periodBriefCount)
+  const planUsage = getPlanUsageDetails(plan, periodBriefCount, fairCap)
   const hasActivePlan = plan !== "free"
   const isBasicTier = plan === "free" || plan.startsWith("starter")
 

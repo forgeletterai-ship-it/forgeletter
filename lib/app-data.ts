@@ -161,6 +161,27 @@ export type AppUser = {
    */
   currentPeriodStart: string | null
   /**
+   * Fair-cap accumulator: letters earned at previous plans during the
+   * current period, frozen in. Reset to 0 on every renewal.
+   */
+  accruedCapThisPeriod: number
+  /**
+   * When the user's current plan stretch began. Used with
+   * accruedCapThisPeriod to compute the fair letter cap. Reset to the
+   * new period start on every renewal.
+   */
+  currentSegmentStartedAt: string | null
+  /**
+   * Deferred downgrade record. Set when the user confirms a
+   * downgrade; cleared by the webhook when Stripe applies it on the
+   * renewal boundary. UI uses this to render the "your plan will
+   * change on X" banner.
+   */
+  scheduledPlanChange: {
+    toPlan: string
+    effectiveAt: string
+  } | null
+  /**
    * ISO timestamp set when invoice.payment_failed fires; cleared on
    * invoice.payment_succeeded. UI surfaces a "your card was declined"
    * banner while this is non-null.
@@ -337,61 +358,78 @@ export async function getCurrentAppUser(): Promise<{
   }
 
   try {
-    const { data, error } = await supabaseAdmin
-      .from("users")
-      .select(
-        "id,email,name,image,plan,current_period_start,past_due_since,disputed_at"
-      )
-      .eq("email", email)
-      .maybeSingle()
+    // Try with all columns including the fair-cap and scheduled-change
+    // fields. Fall back through two narrower column sets if the
+    // migrations haven't all been applied — keeps the dashboard
+    // working during a partial rollout.
+    const fullCols =
+      "id,email,name,image,plan,current_period_start,past_due_since,disputed_at,accrued_cap_this_period,current_segment_started_at,scheduled_plan_change"
+    const mediumCols =
+      "id,email,name,image,plan,current_period_start,past_due_since,disputed_at"
+    const baseCols = "id,email,name,image,plan"
 
-    if (error) {
-      // PGRST204 / column-missing means the new columns have not yet
-      // been added in this Supabase instance. Fall back to the older
-      // column set so the dashboard keeps working.
-      const code = (error as { code?: string }).code
-      if (code === "42703" || code === "PGRST204") {
-        const retry = await supabaseAdmin
-          .from("users")
-          .select("id,email,name,image,plan")
-          .eq("email", email)
-          .maybeSingle()
-        if (retry.error) {
-          return { user: null, error: dataErrorMessage(retry.error, "users") }
-        }
-        if (!retry.data) {
-          return { user: null, error: "Account record not found" }
-        }
-        return {
-          user: {
-            id: retry.data.id,
-            email: retry.data.email,
-            name: retry.data.name,
-            image: retry.data.image,
-            plan: normalizePlan(retry.data.plan),
-            currentPeriodStart: null,
-            pastDueSince: null,
-            disputedAt: null,
-          },
-        }
+    let row: Record<string, unknown> | null = null
+    let lastError: { code?: string | null; message?: string | null } | null = null
+
+    for (const cols of [fullCols, mediumCols, baseCols]) {
+      const attempt = await supabaseAdmin
+        .from("users")
+        .select(cols)
+        .eq("email", email)
+        .maybeSingle()
+      if (!attempt.error) {
+        row = attempt.data as Record<string, unknown> | null
+        lastError = null
+        break
       }
-      return { user: null, error: dataErrorMessage(error, "users") }
+      lastError = attempt.error
+      const code = (attempt.error as { code?: string }).code
+      if (code !== "42703" && code !== "PGRST204") {
+        // Real error, not a missing-column. Don't keep retrying with
+        // ever-smaller projections.
+        break
+      }
     }
 
-    if (!data) {
+    if (lastError) {
+      return { user: null, error: dataErrorMessage(lastError, "users") }
+    }
+    if (!row) {
       return { user: null, error: "Account record not found" }
     }
 
+    const scheduledRaw = row.scheduled_plan_change as
+      | { toPlan?: unknown; effectiveAt?: unknown }
+      | null
+      | undefined
+    const scheduledPlanChange =
+      scheduledRaw &&
+      typeof scheduledRaw === "object" &&
+      typeof scheduledRaw.toPlan === "string" &&
+      typeof scheduledRaw.effectiveAt === "string"
+        ? {
+            toPlan: scheduledRaw.toPlan,
+            effectiveAt: scheduledRaw.effectiveAt,
+          }
+        : null
+
     return {
       user: {
-        id: data.id,
-        email: data.email,
-        name: data.name,
-        image: data.image,
-        plan: normalizePlan(data.plan),
-        currentPeriodStart: data.current_period_start ?? null,
-        pastDueSince: data.past_due_since ?? null,
-        disputedAt: data.disputed_at ?? null,
+        id: row.id as string,
+        email: row.email as string,
+        name: (row.name as string | null) ?? null,
+        image: (row.image as string | null) ?? null,
+        plan: normalizePlan(row.plan),
+        currentPeriodStart: (row.current_period_start as string | null) ?? null,
+        accruedCapThisPeriod:
+          typeof row.accrued_cap_this_period === "number"
+            ? row.accrued_cap_this_period
+            : Number(row.accrued_cap_this_period ?? 0) || 0,
+        currentSegmentStartedAt:
+          (row.current_segment_started_at as string | null) ?? null,
+        scheduledPlanChange,
+        pastDueSince: (row.past_due_since as string | null) ?? null,
+        disputedAt: (row.disputed_at as string | null) ?? null,
       },
     }
   } catch (error) {
