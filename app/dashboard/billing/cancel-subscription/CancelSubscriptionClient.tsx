@@ -180,9 +180,10 @@ export function CancelSubscriptionClient({
           <h2>Confirm cancellation</h2>
           <p>
             Your <strong>{currentPlanLabel}</strong> plan will end at the
-            close of your current billing period. After that you'll be
-            moved to the free tier (3 letters / month). All your existing
-            letters stay accessible.
+            close of your current billing period. After that, new-letter
+            generation is paused — your existing letters and outcome
+            history stay accessible, and you can resubscribe anytime to
+            resume generation.
           </p>
           {error ? <div className="alert">{error}</div> : null}
           <div className="cancel-page__actions">
