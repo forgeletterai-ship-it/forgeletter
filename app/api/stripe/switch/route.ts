@@ -227,19 +227,46 @@ export async function POST(req: NextRequest) {
 
     if (direction === "upgrade") {
       // --------------------- UPGRADE PATH ---------------------
-      // Charge immediately for the prorated delta. Stripe creates a
-      // real invoice and attempts the card charge synchronously.
-      const updated = await stripe.subscriptions.update(sub.id, {
-        items: [{ id: item.id, price: newPriceId }],
-        proration_behavior: "always_invoice",
-        metadata: {
-          ...sub.metadata,
-          plan: newPlan,
-          period: newPeriod,
-          planId: toStoredPlan,
-          userId: user.id,
-        },
-      })
+      // Charge immediately for the prorated delta AND refuse to flip
+      // the subscription unless the payment clears synchronously.
+      //
+      // - proration_behavior: "always_invoice" forces Stripe to draw
+      //   an invoice immediately for the delta (closes the
+      //   dangling-proration exploit).
+      // - payment_behavior: "error_if_incomplete" rolls the change
+      //   back if the card declines. Without this, the subscription
+      //   would flip to the higher tier but the invoice would enter
+      //   dunning — giving the customer a free upgrade for up to 7
+      //   days while Stripe retries.
+      let updated
+      try {
+        updated = await stripe.subscriptions.update(sub.id, {
+          items: [{ id: item.id, price: newPriceId }],
+          proration_behavior: "always_invoice",
+          payment_behavior: "error_if_incomplete",
+          metadata: {
+            ...sub.metadata,
+            plan: newPlan,
+            period: newPeriod,
+            planId: toStoredPlan,
+            userId: user.id,
+          },
+        })
+      } catch (err) {
+        // Stripe throws here when the card decline keeps the
+        // subscription out of an active state. Surface a
+        // customer-readable message and abort cleanly.
+        const message =
+          err instanceof Error ? err.message : "Card was declined"
+        return NextResponse.json(
+          {
+            error:
+              "Your card was declined for the prorated charge. The plan has not changed. Please update your payment method from the billing portal and try again.",
+            details: message,
+          },
+          { status: 402 }
+        )
+      }
 
       // Snapshot the segment so the fair-cap math stays accurate.
       // Days the user spent on the previous plan during this period

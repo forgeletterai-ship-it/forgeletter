@@ -17335,3 +17335,157 @@ button.tone-chip:hover {
     justify-self: start;
   }
 }
+
+/* ----- In-app cancellation page ----- */
+
+.cancel-page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 32px 20px 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.cancel-page__back {
+  align-self: flex-start;
+  color: rgba(31, 58, 57, 0.7);
+  font-size: 13.5px;
+  font-weight: 600;
+  text-decoration: none;
+  padding: 6px 12px;
+  border-radius: 8px;
+  transition: background 0.15s ease;
+}
+
+.cancel-page__back:hover {
+  background: rgba(16, 82, 80, 0.06);
+}
+
+.cancel-page__header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cancel-page__kicker {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(176, 58, 58, 0.7);
+}
+
+.cancel-page h1 {
+  margin: 0;
+  font-size: clamp(24px, 3.4vw, 32px);
+  letter-spacing: -0.02em;
+  color: #1f3a39;
+  font-weight: 600;
+}
+
+.cancel-page__sub {
+  margin: 4px 0 0;
+  color: rgba(31, 58, 57, 0.68);
+  font-size: 14.5px;
+  line-height: 1.55;
+}
+
+.cancel-page__section {
+  padding: 24px 26px;
+  border-radius: 22px;
+  background: #ffffff;
+  border: 1px solid rgba(16, 82, 80, 0.12);
+  box-shadow: 0 10px 24px -22px rgba(8, 25, 24, 0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.cancel-page__section h2 {
+  margin: 0;
+  font-size: 19px;
+  color: #1f3a39;
+  letter-spacing: -0.01em;
+}
+
+.cancel-page__section--offer {
+  background: linear-gradient(135deg, #fdf7e6 0%, #fbf2d3 100%);
+  border-color: rgba(184, 134, 43, 0.32);
+}
+
+.cancel-page__section--success {
+  background: linear-gradient(135deg, #e6f4ec 0%, #f4faf3 100%);
+  border-color: rgba(34, 110, 92, 0.3);
+}
+
+.cancel-page__reasons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.cancel-page__reason {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(16, 82, 80, 0.18);
+  background: #fbfaf6;
+  cursor: pointer;
+  font-size: 14px;
+  color: #1f3a39;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.cancel-page__reason:hover {
+  border-color: rgba(16, 82, 80, 0.3);
+}
+
+.cancel-page__reason.is-active {
+  border-color: rgba(176, 58, 58, 0.5);
+  background: rgba(176, 58, 58, 0.05);
+}
+
+.cancel-page__reason input[type="radio"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #b03a3a;
+}
+
+.cancel-page__detail label {
+  display: block;
+  font-size: 13.5px;
+  color: rgba(31, 58, 57, 0.78);
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.cancel-page__detail textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(16, 82, 80, 0.2);
+  background: #fbfaf6;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.55;
+  color: #1f3a39;
+  resize: vertical;
+}
+
+.cancel-page__actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.cancel-page__working {
+  text-align: center;
+  color: rgba(31, 58, 57, 0.6);
+  font-size: 14.5px;
+  padding: 32px;
+}
