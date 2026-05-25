@@ -169,15 +169,35 @@ export async function generateCoverLetter(
     let examples: RetrievedExample[] = []
     if (shouldRun(config, "ExampleRetrieval")) {
       await emit("ExampleRetrieval", "running")
-      examples = await runExampleRetrieval({ supabase, job, limit: 3 })
+      examples = await runExampleRetrieval({
+        supabase,
+        job,
+        userId: input.userId,
+        limit: 3,
+      })
       logAgent(
         "ExampleRetrieval",
         0,
-        { examplesUsed: examples.map((e) => e.id) },
+        {
+          examplesUsed: examples.map((e) => e.id),
+          userOffersIncluded: examples.filter((e) => e.source === "user_offer").length,
+          curatedIncluded: examples.filter((e) => e.source === "curated").length,
+        },
         { modelUsed: "supabase", tokensInput: 0, tokensOutput: 0, durationMs: 0 },
         false
       )
-      await emit("ExampleRetrieval", "done", PROGRESS_WEIGHTS.ExampleRetrieval)
+      const userOffersUsed = examples.filter((e) => e.source === "user_offer").length
+      const examplesMessage =
+        userOffersUsed > 0
+          ? `Conditioning on ${userOffersUsed} of your offer-winning ${
+              userOffersUsed === 1 ? "letter" : "letters"
+            }`
+          : examples.length > 0
+            ? `Drawing on ${examples.length} curated ${
+                examples.length === 1 ? "example" : "examples"
+              }`
+            : undefined
+      await emit("ExampleRetrieval", "done", PROGRESS_WEIGHTS.ExampleRetrieval, examplesMessage)
     }
 
     // 6. Writer — the load-bearing call. Failure here is fatal.

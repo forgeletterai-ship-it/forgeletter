@@ -52,6 +52,11 @@ export interface RetrievedExample {
   excerpt: string
   whyItWorks: string | null
   qualityScore: number
+  /** Provenance of this example. "curated" = editor-vetted entry in
+   *  cover_letter_examples. "user_offer" = the requesting user's
+   *  own letter that earned an offer — used to condition future
+   *  generations on patterns the user has personally proven out. */
+  source: "curated" | "user_offer"
 }
 
 export interface WriterOutput {

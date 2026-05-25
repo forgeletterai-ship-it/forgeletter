@@ -58,14 +58,20 @@ export async function runWriterAgent(args: {
   if (args.examples && args.examples.length > 0) {
     const exampleBlock = args.examples
       .slice(0, 3)
-      .map(
-        (ex, i) =>
-          `Example ${i + 1} (${ex.role}, ${ex.industry}, score ${ex.qualityScore}):\n${safeSlice(ex.excerpt, 800)}${ex.whyItWorks ? `\nWhy it works: ${ex.whyItWorks}` : ""}`
-      )
+      .map((ex, i) => {
+        const label =
+          ex.source === "user_offer"
+            ? `Example ${i + 1} — CANDIDATE'S OWN OFFER-WINNING LETTER (${ex.role || "prior role"})`
+            : `Example ${i + 1} (${ex.role}, ${ex.industry}, score ${ex.qualityScore})`
+        return `${label}:\n${safeSlice(ex.excerpt, 800)}${ex.whyItWorks ? `\nWhy it works: ${ex.whyItWorks}` : ""}`
+      })
       .join("\n\n")
-    userParts.push(
-      `Reference examples (study the openings, structure, and specificity — do NOT copy phrasing):\n\n${exampleBlock}`
-    )
+    const userOfferCount = args.examples.filter((e) => e.source === "user_offer").length
+    const guidance =
+      userOfferCount > 0
+        ? `Reference examples below. ${userOfferCount} ${userOfferCount === 1 ? "is" : "are"} the candidate's OWN past letter that earned an offer — preserve their authentic voice, rhythm, and signature phrases from those. Use curated examples (if any) for structural patterns. Do NOT lift sentences verbatim from any source.`
+        : `Reference examples (study the openings, structure, and specificity — do NOT copy phrasing):`
+    userParts.push(`${guidance}\n\n${exampleBlock}`)
   }
 
   if (args.rewriteFeedback) {
