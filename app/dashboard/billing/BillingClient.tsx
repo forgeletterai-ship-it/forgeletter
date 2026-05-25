@@ -275,7 +275,8 @@ export function BillingClient({
       {modal.kind === "open" || modal.kind === "submitting" ? (
         <PlanSwitchConfirmModal
           preview={modal.preview}
-          toPlanLabel={`${formatPlanLabel(modal.preview.toPlan)}`}
+          toPlanLabel={formatPlanLabel(modal.preview.toPlan)}
+          fromPlanLabel={formatPlanLabel(modal.preview.fromPlan)}
           submitting={modal.kind === "submitting"}
           errorMessage={modalError}
           onConfirm={confirmSwitch}
