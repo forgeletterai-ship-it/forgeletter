@@ -94,6 +94,12 @@ export default async function DashboardPage({
         },
       ]
 
+  // Dashboard meter uses fair-cap math: mid-cycle upgraders see
+  // their actual prorated allowance, plus a "Prorated" indicator
+  // in the meter when fairCap < planLimit. Clean-cycle users see
+  // the nominal plan cap (35 / 240 / 20 / etc.) because the
+  // fast-path inside computeFairLetterCap returns planLimit when
+  // accrued === 0 and segment_start aligns with period_start.
   const fairCap = user
     ? computeFairLetterCap({
         plan: user.plan,
