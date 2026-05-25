@@ -273,14 +273,29 @@ export function computeFairLetterCap(args: {
     return getPlanLetterLimit(args.plan)
   }
 
+  const accrued = Math.max(0, args.accruedCapThisPeriod || 0)
+  const planLimit = getPlanLetterLimit(args.plan)
+
+  // Fast path: customer hasn't switched plans mid-cycle, so the
+  // segment IS the whole period. Just return the nominal plan limit
+  // exactly. This avoids floating-point drift (e.g. 30 × 35/30 in
+  // IEEE-754) and timestamp-tolerance issues (e.g. segment_started_at
+  // and period_start differing by a few microseconds from a migration
+  // backfill or from Stripe's per-event timestamp). Also handles the
+  // variable-length-month case correctly without needing the exact
+  // current_period_end from Stripe.
+  if (accrued === 0 && periodStart && segmentStart.getTime() <= periodStart.getTime() + 1000) {
+    return planLimit
+  }
+
+  // Slow path: user upgraded mid-cycle, so the fair cap is
+  //   accrued (from prior plan segment) + remaining segment at new rate
   const segmentDurationMs = Math.max(0, periodEnd.getTime() - segmentStart.getTime())
   const segmentDays = segmentDurationMs / 86400000
   const dailyRate = getDailyLetterRate(args.plan)
   const segmentCap = segmentDays * dailyRate
-  const accrued = Math.max(0, args.accruedCapThisPeriod || 0)
   const total = accrued + segmentCap
-  // Add a small epsilon before flooring so values that are
-  // mathematically integers but land at 34.999999… due to IEEE-754
-  // rounding (e.g. 30 × 35/30) snap to 35 not 34.
+  // Small epsilon before flooring catches values that are
+  // mathematically integers but land at e.g. 34.99999… due to IEEE-754.
   return Math.max(0, Math.floor(total + 1e-6))
 }
