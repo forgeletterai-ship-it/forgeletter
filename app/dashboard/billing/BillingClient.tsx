@@ -8,6 +8,7 @@ import {
 } from "@/components/PlanSwitchConfirmModal"
 import {
   formatPlanLabel,
+  getBasePlan,
   type BillingPeriod,
   type StoredPlanId,
 } from "@/lib/plans"
@@ -259,17 +260,28 @@ export function BillingClient({
       <section className="dashboard-card" style={{ marginTop: 16 }}>
         <h3>Manage subscription</h3>
         <p>
-          Update payment method, download invoices, and cancel inside the secure
-          Stripe billing portal.
+          Update payment method and download invoices in the secure Stripe
+          billing portal. Or cancel directly here.
         </p>
-        <button
-          className="button-soft"
-          type="button"
-          onClick={openPortal}
-          disabled={portalLoading}
-        >
-          {portalLoading ? "Opening portal..." : "Open billing portal"}
-        </button>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <button
+            className="button-soft"
+            type="button"
+            onClick={openPortal}
+            disabled={portalLoading}
+          >
+            {portalLoading ? "Opening portal..." : "Open billing portal"}
+          </button>
+          {getBasePlan(currentPlan) !== "free" ? (
+            <a
+              className="button-ghost"
+              href="/dashboard/billing/cancel-subscription"
+              style={{ color: "var(--red, #b03a3a)" }}
+            >
+              Cancel subscription
+            </a>
+          ) : null}
+        </div>
       </section>
 
       {modal.kind === "open" || modal.kind === "submitting" ? (

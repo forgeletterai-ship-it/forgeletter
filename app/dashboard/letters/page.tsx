@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
+import { LettersFilterBar } from "@/components/LettersFilterBar"
 import { getCurrentAppUser } from "@/lib/app-data"
 import { supabaseAdmin } from "@/lib/supabase"
 
@@ -12,6 +13,31 @@ type ApplicationStatus =
   | "offer"
   | "rejected"
   | "ghosted"
+
+const STATUS_LABEL: Record<ApplicationStatus, string> = {
+  not_submitted: "Not submitted",
+  submitted: "Submitted",
+  interviewing: "Interviewing",
+  offer: "Offer",
+  rejected: "Rejected",
+  ghosted: "Ghosted",
+}
+
+const ALL_STATUSES: ApplicationStatus[] = [
+  "not_submitted",
+  "submitted",
+  "interviewing",
+  "offer",
+  "rejected",
+  "ghosted",
+]
+
+type SortKey =
+  | "created_desc"
+  | "created_asc"
+  | "score_desc"
+  | "ats_desc"
+  | "outcome_desc"
 
 interface LetterRow {
   id: string
@@ -28,15 +54,6 @@ interface LetterRow {
   outcome_at: string | null
 }
 
-const STATUS_LABEL: Record<ApplicationStatus, string> = {
-  not_submitted: "Not submitted",
-  submitted: "Submitted",
-  interviewing: "Interviewing",
-  offer: "Offer",
-  rejected: "Rejected",
-  ghosted: "Ghosted",
-}
-
 function formatRelative(iso: string): string {
   const date = new Date(iso)
   const diffMs = Date.now() - date.getTime()
@@ -50,38 +67,171 @@ function formatRelative(iso: string): string {
   return date.toLocaleDateString()
 }
 
-export default async function LettersPage() {
+type SearchParams = {
+  status?: string
+  sort?: string
+}
+
+/**
+ * Mid-pipeline crash recovery. The pipeline marks rows as 'running'
+ * at insert and finalises them at the end. If Vercel kills the
+ * function (300s max) the row stays 'running' forever. The quota
+ * gate's 7-min orphan window already ignores these for letter
+ * counting, but we also flip them to 'failed' here so they stop
+ * showing as in-flight in any future report. Safe to run on every
+ * page load; UPDATE is a no-op when no rows match.
+ */
+async function finalizeStalledLetters(userId: string): Promise<number> {
+  const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString()
+  try {
+    const { data } = await supabaseAdmin
+      .from("generated_letters")
+      .update({
+        generation_status: "failed",
+        failure_reason:
+          "Pipeline timed out — function exceeded the runtime limit. Try again.",
+        completed_at: new Date().toISOString(),
+      })
+      .eq("user_id", userId)
+      .in("generation_status", ["running", "queued"])
+      .lt("created_at", tenMinutesAgo)
+      .select("id")
+    return data?.length ?? 0
+  } catch {
+    return 0
+  }
+}
+
+export default async function LettersPage({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>
+}) {
   const { user } = await getCurrentAppUser()
   if (!user) redirect("/auth/login")
 
-  // A letter is "generated" if the pipeline produced text. Quality-gate
-  // verdicts ("passed" vs "failed") are scoring metadata, not delivery
-  // state — both surface a final_cover_letter and both consume quota.
-  // Only excludes still-running rows and catastrophic crashes (which
-  // leave final_cover_letter null).
-  //
-  // application_status columns are tolerant — if the SQL migration in
-  // docs/supabase-application-tracking.sql hasn't been applied yet,
-  // Supabase returns null for the missing columns and the UI still
-  // renders. The "track" affordance becomes available once columns exist.
-  const { data: letters, count: totalCount } = await supabaseAdmin
+  // Lazy crash recovery: any letter stuck in 'running' for >10 min
+  // gets finalised to 'failed' so the books stay clean.
+  await finalizeStalledLetters(user.id)
+
+  const sp = await searchParams
+  const statusFilter = ALL_STATUSES.includes(sp.status as ApplicationStatus)
+    ? (sp.status as ApplicationStatus)
+    : null
+  const sort: SortKey = ([
+    "created_desc",
+    "created_asc",
+    "score_desc",
+    "ats_desc",
+    "outcome_desc",
+  ] as const).includes(sp.sort as SortKey)
+    ? (sp.sort as SortKey)
+    : "created_desc"
+
+  // Aggregate counts — one COUNT query per status, in parallel. Far
+  // more accurate than computing from the first 100 rows; cheap
+  // because each is a single index lookup on (user_id, application_status).
+  const baseFilter = supabaseAdmin
+    .from("generated_letters")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", user.id)
+    .not("final_cover_letter", "is", null)
+
+  const countQueries = await Promise.all([
+    // Total
+    baseFilter,
+    // Per-status counts
+    ...ALL_STATUSES.map((s) =>
+      supabaseAdmin
+        .from("generated_letters")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .not("final_cover_letter", "is", null)
+        .eq("application_status", s)
+    ),
+  ])
+
+  const totalCount = countQueries[0]?.count ?? 0
+  const byStatus: Record<ApplicationStatus, number> = {
+    not_submitted: 0,
+    submitted: 0,
+    interviewing: 0,
+    offer: 0,
+    rejected: 0,
+    ghosted: 0,
+  }
+  ALL_STATUSES.forEach((s, i) => {
+    byStatus[s] = countQueries[i + 1]?.count ?? 0
+  })
+  // Letters without application_status column (pre-migration) count
+  // as "not_submitted" for display. Derive that bucket by subtraction
+  // so totals always reconcile.
+  const buckedSum = ALL_STATUSES.reduce((sum, s) => sum + byStatus[s], 0)
+  if (buckedSum < totalCount) {
+    byStatus.not_submitted += totalCount - buckedSum
+  }
+
+  // Build the list query with the chosen filter + sort.
+  let listQuery = supabaseAdmin
     .from("generated_letters")
     .select(
-      "id,job_title,company_name,final_score,ats_score,generation_status,template_chosen,tier,created_at,application_status,submitted_at,outcome_at",
-      { count: "exact" }
+      "id,job_title,company_name,final_score,ats_score,generation_status,template_chosen,tier,created_at,application_status,submitted_at,outcome_at"
     )
     .eq("user_id", user.id)
     .not("final_cover_letter", "is", null)
-    .order("created_at", { ascending: false })
-    .limit(100)
-
+  if (statusFilter) {
+    listQuery = listQuery.eq("application_status", statusFilter)
+  }
+  switch (sort) {
+    case "created_asc":
+      listQuery = listQuery.order("created_at", { ascending: true })
+      break
+    case "score_desc":
+      listQuery = listQuery.order("final_score", {
+        ascending: false,
+        nullsFirst: false,
+      })
+      break
+    case "ats_desc":
+      listQuery = listQuery.order("ats_score", {
+        ascending: false,
+        nullsFirst: false,
+      })
+      break
+    case "outcome_desc":
+      listQuery = listQuery.order("outcome_at", {
+        ascending: false,
+        nullsFirst: false,
+      })
+      break
+    default:
+      listQuery = listQuery.order("created_at", { ascending: false })
+  }
+  const { data: letters } = await listQuery.limit(100)
   const rows = (letters || []) as LetterRow[]
-  const generatedCount = totalCount ?? rows.length
 
-  // Aggregate insights from the page's row set. For users with > 100
-  // letters this becomes an approximation; happy to introduce a
-  // dedicated count query later if anyone hits that limit.
-  const insights = aggregateInsights(rows)
+  // Insights aggregator now reads the accurate per-status counts.
+  const insights = (() => {
+    const submitted =
+      byStatus.submitted +
+      byStatus.interviewing +
+      byStatus.offer +
+      byStatus.rejected +
+      byStatus.ghosted
+    const responded = byStatus.interviewing + byStatus.offer + byStatus.rejected
+    const responseRate = submitted > 0 ? Math.round((responded / submitted) * 100) : null
+    const goldStandard = byStatus.offer + byStatus.interviewing
+    return {
+      byStatus,
+      submitted,
+      responded,
+      offers: byStatus.offer,
+      interviews: byStatus.interviewing,
+      goldStandard,
+      responseRate,
+      tracked: submitted,
+    }
+  })()
 
   return (
     <div className="letters-page">
@@ -113,11 +263,11 @@ export default async function LettersPage() {
         <div>
           <h1>My letters</h1>
           <p>
-            {generatedCount === 0
+            {totalCount === 0
               ? "Generate your first cover letter in the workspace — it'll appear here."
-              : `${generatedCount} cover ${
-                  generatedCount === 1 ? "letter" : "letters"
-                } generated. Click any to view, edit, or download.`}
+              : `${totalCount} cover ${
+                  totalCount === 1 ? "letter" : "letters"
+                } generated${statusFilter ? ` · ${rows.length} shown` : ""}. Click any to view, edit, or download.`}
           </p>
         </div>
       </header>
@@ -133,10 +283,8 @@ export default async function LettersPage() {
                   : "Tracking outcomes"}
               </h2>
               <p className="letters-insights__sub">
-                {insights.submitted} submitted · {insights.responded} heard back ·
-                {" "}
-                {insights.interviews} {insights.interviews === 1 ? "interview" : "interviews"} ·
-                {" "}
+                {insights.submitted} submitted · {insights.responded} heard back ·{" "}
+                {insights.interviews} {insights.interviews === 1 ? "interview" : "interviews"} ·{" "}
                 {insights.offers} {insights.offers === 1 ? "offer" : "offers"}
               </p>
             </div>
@@ -196,6 +344,15 @@ export default async function LettersPage() {
         </section>
       ) : null}
 
+      {totalCount > 0 ? (
+        <LettersFilterBar
+          currentStatus={statusFilter ?? ""}
+          currentSort={sort}
+          counts={byStatus}
+          total={totalCount}
+        />
+      ) : null}
+
       {rows.length === 0 ? (
         <div className="letters-empty">
           <div className="letters-empty__icon" aria-hidden="true">
@@ -205,10 +362,11 @@ export default async function LettersPage() {
               <path d="M11 17h10M11 21h6" />
             </svg>
           </div>
-          <h2>No letters yet</h2>
+          <h2>{statusFilter ? "No letters in this filter" : "No letters yet"}</h2>
           <p>
-            Your generated cover letters will land here automatically. Head to
-            the workspace to brief the agents.
+            {statusFilter
+              ? "Try clearing the filter, or generate one in the workspace."
+              : "Your generated cover letters will land here automatically. Head to the workspace to brief the agents."}
           </p>
         </div>
       ) : (
@@ -259,43 +417,4 @@ export default async function LettersPage() {
       )}
     </div>
   )
-}
-
-function aggregateInsights(rows: LetterRow[]) {
-  const byStatus: Record<ApplicationStatus, number> = {
-    not_submitted: 0,
-    submitted: 0,
-    interviewing: 0,
-    offer: 0,
-    rejected: 0,
-    ghosted: 0,
-  }
-  for (const r of rows) {
-    const s = (r.application_status as ApplicationStatus | null) || "not_submitted"
-    byStatus[s] += 1
-  }
-  const submitted =
-    byStatus.submitted +
-    byStatus.interviewing +
-    byStatus.offer +
-    byStatus.rejected +
-    byStatus.ghosted
-  const responded = byStatus.interviewing + byStatus.offer + byStatus.rejected
-  const responseRate = submitted > 0 ? Math.round((responded / submitted) * 100) : null
-  const tracked = submitted
-  // Gold-standard = letters that empirically worked. Both offers and
-  // interviews feed the example-retrieval base; offers carry more
-  // weight than interviews but both are validation the letter did
-  // its job (got the candidate past the screening filter at minimum).
-  const goldStandard = byStatus.offer + byStatus.interviewing
-  return {
-    byStatus,
-    submitted,
-    responded,
-    offers: byStatus.offer,
-    interviews: byStatus.interviewing,
-    goldStandard,
-    responseRate,
-    tracked,
-  }
 }

@@ -59,6 +59,20 @@ type DashboardClientProps = {
     toPlan: string
     effectiveAt: string
   } | null
+  /** When the user arrived via /dashboard?duplicateFrom=ID, the
+   *  prior letter's role/company/tone are surfaced here so the
+   *  workspace pre-fills. JD is intentionally NOT carried — that's
+   *  the whole point of duplicating. */
+  duplicateSource?: {
+    role?: string
+    company?: string
+    tone?: string
+  } | null
+  /** Number of letters marked 'submitted' more than 7 days ago that
+   *  still have no outcome. When > 0 we surface a tasteful banner
+   *  prompting the user to update outcomes (which feeds the
+   *  retrieval base). */
+  staleSubmittedCount?: number
 }
 
 type ToneName = "Professional" | "Warm" | "Direct"
@@ -84,6 +98,12 @@ const tones: Array<{
     icon: "send",
   },
 ]
+
+// Server-side minimums in app/api/generate/route.ts. Mirrored here
+// so the client can show a live counter instead of letting the user
+// submit and hit a 400.
+const MIN_JD_CHARS = 200
+const MIN_RESUME_CHARS = 200
 
 const AGENT_LABELS: Record<string, string> = {
   InputCleaner: "Cleaning inputs",
@@ -262,20 +282,37 @@ export function DashboardClient({
   disputedAt = null,
   fairCap,
   scheduledPlanChange = null,
+  duplicateSource = null,
+  staleSubmittedCount = 0,
 }: DashboardClientProps) {
   const normalizedTone = tones.some((item) => item.name === settings.default_tone)
     ? (settings.default_tone as ToneName)
     : "Professional"
   const [briefs, setBriefs] = useState(initialBriefs)
   const [periodBriefCount, setPeriodBriefCount] = useState(initialPeriodBriefCount)
-  // Brief-form state, seeded from (in priority order): the most recent
-  // brief returned by the server, then any localStorage draft from a
-  // previous session that was abandoned mid-edit. Autosave below
-  // keeps both in sync.
-  const [role, setRole] = useState(initialBriefs[0]?.role || "")
-  const [company, setCompany] = useState(initialBriefs[0]?.company || "")
-  const [tone, setTone] = useState<ToneName>(normalizedTone)
-  const [jobDescription, setJobDescription] = useState(initialBriefs[0]?.job_description || "")
+  // Resolve a sensible starting tone when duplicating: server stores
+  // it lowercased ("warm"); UI uses Title-cased ("Warm").
+  const seededToneFromDuplicate: ToneName | null = duplicateSource?.tone
+    ? duplicateSource.tone === "warm"
+      ? "Warm"
+      : duplicateSource.tone === "confident" || duplicateSource.tone === "direct"
+        ? "Direct"
+        : "Professional"
+    : null
+  // Brief-form state. Priority order:
+  //   1. ?duplicateFrom= source (role/company/tone — JD intentionally blank)
+  //   2. Most recent saved brief returned by the server
+  //   3. localStorage draft (restored in a useEffect below)
+  const [role, setRole] = useState(
+    duplicateSource?.role || initialBriefs[0]?.role || ""
+  )
+  const [company, setCompany] = useState(
+    duplicateSource?.company || initialBriefs[0]?.company || ""
+  )
+  const [tone, setTone] = useState<ToneName>(seededToneFromDuplicate ?? normalizedTone)
+  const [jobDescription, setJobDescription] = useState(
+    duplicateSource ? "" : initialBriefs[0]?.job_description || ""
+  )
   const [autosaveStatus, setAutosaveStatus] = useState<
     "idle" | "saving" | "saved"
   >("idle")
@@ -314,6 +351,16 @@ export function DashboardClient({
   const hasActivePlan = plan !== "free"
   const isBasicTier = plan === "free" || plan.startsWith("starter")
 
+  // Compute resume length live so the workspace can show a counter
+  // mirroring the server's MIN_RESUME_CHARS gate. Selected experience
+  // blocks change frequently; keep this cheap.
+  const resumePreviewLength = useMemo(() => {
+    return buildResumeTextFromProfile({
+      profile,
+      selectedExperienceIds,
+    }).trim().length
+  }, [profile, selectedExperienceIds])
+
   // Fetches the authoritative letter count from the server. Called
   // after a generation completes and when the tab regains focus, so
   // the meter recovers from anything that drifted client-side.
@@ -351,10 +398,16 @@ export function DashboardClient({
 
   // Restore once on mount, only if the localStorage draft is newer
   // than whatever seeded the form from initialBriefs.
+  //
+  // EXCEPTION: when ?duplicateFrom= is present, the user explicitly
+  // asked to seed from a prior letter. Skip the localStorage restore
+  // so the duplicate inputs aren't silently overwritten by an old
+  // autosaved draft.
   const restoredRef = useRef(false)
   useEffect(() => {
     if (restoredRef.current) return
     restoredRef.current = true
+    if (duplicateSource) return
     if (typeof window === "undefined") return
     try {
       const raw = window.localStorage.getItem(AUTOSAVE_KEY)
@@ -385,7 +438,7 @@ export function DashboardClient({
     } catch {
       // corrupt draft — fall back to whatever the server seeded
     }
-  }, [initialBriefs])
+  }, [initialBriefs, duplicateSource])
 
   // Debounced save: write to localStorage 800 ms after the last edit
   // to any of the four tracked fields.
@@ -671,6 +724,34 @@ export function DashboardClient({
   return (
     <div className="cover-workspace" aria-label="Cover letter workspace">
       <AccountStateBanner pastDueSince={pastDueSince} disputedAt={disputedAt} />
+      {staleSubmittedCount > 0 ? (
+        <div className="outcome-reminder-banner" role="status">
+          <span className="outcome-reminder-banner__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 7v5l3 2" />
+            </svg>
+          </span>
+          <div className="outcome-reminder-banner__copy">
+            <strong>
+              {staleSubmittedCount} letter{staleSubmittedCount === 1 ? "" : "s"}{" "}
+              awaiting outcomes
+            </strong>
+            <p>
+              You marked {staleSubmittedCount === 1 ? "it" : "them"} as
+              submitted more than a week ago. Heard back yet? Marking the
+              outcome trains your gold-standard examples base so future
+              letters mirror what works for you.
+            </p>
+          </div>
+          <Link
+            className="outcome-reminder-banner__cta"
+            href="/dashboard/letters?status=submitted"
+          >
+            Mark outcomes →
+          </Link>
+        </div>
+      ) : null}
       {hasActivePlan ? (
         <section className="cover-panel cover-plan-panel">
           <div className="cover-plan-icon">
@@ -845,8 +926,21 @@ export function DashboardClient({
               value={jobDescription}
               onChange={(event) => setJobDescription(event.target.value)}
               placeholder="Paste the full job posting — responsibilities, required skills, nice-to-haves, company context."
+              aria-describedby="cover-job-counter"
             />
-            <span>{jobDescription.length}/5000</span>
+            <span
+              id="cover-job-counter"
+              className={`cover-textarea-counter${
+                jobDescription.trim().length < MIN_JD_CHARS
+                  ? " cover-textarea-counter--insufficient"
+                  : " cover-textarea-counter--ok"
+              }`}
+              aria-live="polite"
+            >
+              {jobDescription.trim().length < MIN_JD_CHARS
+                ? `${jobDescription.trim().length} / ${MIN_JD_CHARS} minimum — ${MIN_JD_CHARS - jobDescription.trim().length} more characters`
+                : `${jobDescription.length}/5000 — looks good`}
+            </span>
           </div>
         </div>
 
@@ -860,17 +954,44 @@ export function DashboardClient({
             profileExperienceHref="/dashboard/profile"
             persistenceAvailable={experiencePersistenceAvailable}
           />
+          <span
+            className={`cover-textarea-counter${
+              resumePreviewLength < MIN_RESUME_CHARS
+                ? " cover-textarea-counter--insufficient"
+                : " cover-textarea-counter--ok"
+            }`}
+            aria-live="polite"
+            style={{ marginTop: 8, display: "block" }}
+          >
+            {resumePreviewLength < MIN_RESUME_CHARS
+              ? `Selected experience: ${resumePreviewLength} / ${MIN_RESUME_CHARS} chars minimum — select more entries or expand your profile.`
+              : `Selected experience: ${resumePreviewLength} characters — ready.`}
+          </span>
         </div>
 
-        <button
-          className="cover-save-button"
-          type="button"
-          onClick={saveBriefAndGenerate}
-          disabled={phase === "running"}
-        >
-          <Icon name="sparkle" />
-          {phase === "running" ? "Generating…" : "Save brief & generate letter"}
-        </button>
+        {(() => {
+          const jdShort = jobDescription.trim().length < MIN_JD_CHARS
+          const resumeShort = resumePreviewLength < MIN_RESUME_CHARS
+          const disabled = phase === "running" || jdShort || resumeShort
+          return (
+            <button
+              className="cover-save-button"
+              type="button"
+              onClick={saveBriefAndGenerate}
+              disabled={disabled}
+              title={
+                jdShort
+                  ? `Job description needs ${MIN_JD_CHARS - jobDescription.trim().length} more characters`
+                  : resumeShort
+                    ? `Add more selected experience (need ${MIN_RESUME_CHARS - resumePreviewLength} more chars)`
+                    : undefined
+              }
+            >
+              <Icon name="sparkle" />
+              {phase === "running" ? "Generating…" : "Save brief & generate letter"}
+            </button>
+          )
+        })()}
 
         <p className="cover-privacy">
           <Icon name="lock" />
