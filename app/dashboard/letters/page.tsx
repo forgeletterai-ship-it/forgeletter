@@ -135,20 +135,26 @@ export default async function LettersPage() {
               <p className="letters-insights__sub">
                 {insights.submitted} submitted · {insights.responded} heard back ·
                 {" "}
+                {insights.interviews} {insights.interviews === 1 ? "interview" : "interviews"} ·
+                {" "}
                 {insights.offers} {insights.offers === 1 ? "offer" : "offers"}
               </p>
             </div>
-            {insights.offers > 0 ? (
-              <div className="letters-insights__gold" aria-label="Gold-standard letters">
+            {insights.goldStandard > 0 ? (
+              <div
+                className="letters-insights__gold"
+                aria-label="Gold-standard letters — letters that earned an offer or interview, used to train future generations"
+                title="Both offer-winning and interview-winning letters feed the example-retrieval base. Offers carry more weight than interviews."
+              >
                 <span className="letters-insights__gold-icon" aria-hidden="true">
                   <svg viewBox="0 0 24 24">
                     <path d="M12 2.8 14.3 9l6.2 2.3-6.2 2.4L12 20l-2.3-6.3-6.2-2.4L9.7 9 12 2.8Z" />
                   </svg>
                 </span>
                 <div>
-                  <strong>{insights.offers}</strong>
+                  <strong>{insights.goldStandard}</strong>
                   <span>
-                    gold-standard {insights.offers === 1 ? "letter" : "letters"}
+                    gold-standard {insights.goldStandard === 1 ? "letter" : "letters"}
                   </span>
                 </div>
               </div>
@@ -277,12 +283,18 @@ function aggregateInsights(rows: LetterRow[]) {
   const responded = byStatus.interviewing + byStatus.offer + byStatus.rejected
   const responseRate = submitted > 0 ? Math.round((responded / submitted) * 100) : null
   const tracked = submitted
+  // Gold-standard = letters that empirically worked. Both offers and
+  // interviews feed the example-retrieval base; offers carry more
+  // weight than interviews but both are validation the letter did
+  // its job (got the candidate past the screening filter at minimum).
+  const goldStandard = byStatus.offer + byStatus.interviewing
   return {
     byStatus,
     submitted,
     responded,
     offers: byStatus.offer,
     interviews: byStatus.interviewing,
+    goldStandard,
     responseRate,
     tracked,
   }
