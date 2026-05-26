@@ -20,8 +20,8 @@ import type {
   HMCritique,
   HallucinationCheck,
   JobAnalysis,
+  LegacyPipelineInput,
   MatchAnalysis,
-  PipelineInput,
   PipelineResult,
   ProgressCallback,
   QualityVerdict,
@@ -30,9 +30,15 @@ import type {
   Tone,
 } from "./types"
 
+// During migration the orchestrator continues to accept the legacy
+// resumeText shape. A future commit will switch it to the structured
+// PipelineInput.
+type PipelineInput = LegacyPipelineInput
+
 const PROGRESS_WEIGHTS: Record<AgentName | "Complete", number> = {
   InputCleaner: 5,
-  ResumeAnalyst: 10,
+  ProfileAnalyst: 10,
+  ResumeAnalyst: 10, // legacy alias — same weight as ProfileAnalyst
   JobAnalyst: 10,
   MatchAnalyst: 8,
   ExampleRetrieval: 3,
@@ -40,7 +46,8 @@ const PROGRESS_WEIGHTS: Record<AgentName | "Complete", number> = {
   ATSAgent: 4,
   HMCritic: 10,
   FinalEditor: 10,
-  HallucinationDetector: 8,
+  HallucinationCheck: 8,
+  HallucinationDetector: 8, // legacy alias
   QualityGate: 5,
   RewriteAgent: 0, // counted into Writer weight on rewrite
   Complete: 2,
