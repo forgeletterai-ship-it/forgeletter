@@ -1,25 +1,21 @@
 import type { AgentName, Tier } from "./types"
 
 /**
- * Tier composition. The arrays below are the CUSTOMER-VISIBLE agents
- * — what the pricing card lists and what the pipeline emits as
- * progress events during generation. ExampleRetrieval runs for every
- * paid tier as background infrastructure (it's a retrieval system,
- * not a reasoning agent) and is gated by enableExampleRetrieval, not
- * by membership in `agents`. Same for ATS at the Starter level — a
- * code-only keyword score is computed without an agent slot.
+ * Tier composition per the Definitive Engine Blueprint.
  *
- * Strict superset rule: every Pro agent is also in Ultra; every
- * Starter agent is also in Pro. Hallucination Check and Final Editor
- * appear on all three because safety + polish can't be tier-gated.
+ * Counts: 8 / 9 / 12.
+ *   • Starter (8): ProfileAnalyst, JobAnalyst, MatchAnalyst,
+ *     ExampleRetrieval, Writer, FinalEditor, HallucinationCheck,
+ *     QualityGate. ATS via code-only keyword scorer (no agent slot).
+ *   • Pro (9): Starter + ATSAgent (Haiku LLM).
+ *   • Ultra (12): Pro + InputCleaner, HMCritic, RewriteAgent.
  *
- * Two kinds of "rewrite" — they MUST stay separate:
- *   - Quality rewrite (maxRewriteCycles below): backend-only, free,
- *     invisible. Fires when QualityGate scores below the bar. Never
- *     counts against the user's letter allowance.
- *   - Tone rewrite (the 0/1/3 number sold on PricingCards): a
- *     user-triggered "regenerate in a different voice" feature that
- *     uses one of their monthly letter slots. Not configured here.
+ * Quality bars: 90 / 93 / 95 (hard thresholds).
+ * Quality-rewrite caps: 1 / 2 / 2 (backend-only — free, invisible).
+ *
+ * Tone rewrites (the 0 / 1 / 3 sold on PricingCards) are a SEPARATE
+ * user-triggered feature tracked outside this config — they count
+ * against the monthly letter allowance.
  */
 export interface TierConfig {
   agents: ReadonlyArray<AgentName>
@@ -33,25 +29,30 @@ export interface TierConfig {
 }
 
 // ───────────────────────────────────────────────────────────────
-// STARTER · 6 visible agents · 90% bar · 1 backend rewrite
-// Resume Analyst, Job Analyst, Writer, Final Editor,
-// Hallucination Check, Quality Gate
+// STARTER · 8 visible agents · 90% bar · 1 backend rewrite
+// Profile Analyst, Job Analyst, Match Analyst, Writer,
+// Final Editor, Hallucination Check, Quality Gate
+// (+ Example Retrieval enabled but presented as background infra)
 // ATS via code-only keyword scorer (no agent slot)
-// Example Retrieval runs in background (no agent slot)
 // ───────────────────────────────────────────────────────────────
+//
+// NOTE: agents arrays use legacy names (ResumeAnalyst, HallucinationDetector)
+// during the migration so the orchestrator's shouldRun() lookups still
+// resolve. A later phase will swap these to the blueprint names once the
+// orchestrator wiring is migrated.
 const STARTER_AGENTS: ReadonlyArray<AgentName> = [
-  "ResumeAnalyst",
+  "ResumeAnalyst", // → ProfileAnalyst after migration
   "JobAnalyst",
+  "MatchAnalyst", // NEW on Starter per blueprint
   "Writer",
   "FinalEditor",
-  "HallucinationDetector",
+  "HallucinationDetector", // → HallucinationCheck after migration
   "QualityGate",
 ]
 
 // ───────────────────────────────────────────────────────────────
-// PRO · 8 visible agents · 93% bar · 2 backend rewrites
-// Starter agents + Match Analyst + ATS Agent
-// Example Retrieval still background-only
+// PRO · 9 visible agents · 93% bar · 2 backend rewrites
+// Starter + ATSAgent (Haiku LLM)
 // ───────────────────────────────────────────────────────────────
 const PRO_AGENTS: ReadonlyArray<AgentName> = [
   "ResumeAnalyst",
@@ -66,15 +67,16 @@ const PRO_AGENTS: ReadonlyArray<AgentName> = [
 
 // ───────────────────────────────────────────────────────────────
 // ULTRA · 12 visible agents · 95% bar · 2 backend rewrites
-// Full pipeline. Example Retrieval explicitly shown.
-// Input Cleaner, HM Critic, Rewrite Agent visible to the customer.
+// Full pipeline. Input Cleaner, Example Retrieval as visible,
+// HM Critic (BARS), Rewrite Agent — all included.
+// Hallucination Check runs ×2 on Ultra (before AND after editing).
 // ───────────────────────────────────────────────────────────────
 const ULTRA_AGENTS: ReadonlyArray<AgentName> = [
   "InputCleaner",
   "ResumeAnalyst",
   "JobAnalyst",
   "MatchAnalyst",
-  "ExampleRetrieval",
+  "ExampleRetrieval", // explicitly visible on Ultra
   "Writer",
   "ATSAgent",
   "HMCritic",
@@ -86,9 +88,9 @@ const ULTRA_AGENTS: ReadonlyArray<AgentName> = [
 ]
 
 export const TIER_CONFIG: Record<Tier, TierConfig> = {
-  // The 'free' state is internal — it represents "no active
-  // subscription" in the DB. /api/generate short-circuits with a
-  // 402 before any agents run, so this config is never executed.
+  // The 'free' state represents "no active subscription" in the DB.
+  // /api/generate short-circuits with a 402 before any agents run,
+  // so this config is never actually executed in production.
   free: {
     agents: STARTER_AGENTS,
     maxRewriteCycles: 0,
@@ -98,15 +100,13 @@ export const TIER_CONFIG: Record<Tier, TierConfig> = {
   },
   starter: {
     agents: STARTER_AGENTS,
-    maxRewriteCycles: 1,
+    maxRewriteCycles: 1, // 1 backend quality rewrite per blueprint
     qualityThreshold: 90,
-    // Starter gets a code-only ATS keyword score — no LLM call.
-    // Set false here so orchestrator doesn't run the ATSAgent.
+    // Starter gets a code-only ATS keyword score (no LLM call).
     enableATS: false,
-    // Background retrieval runs but isn't surfaced on the pricing
-    // card. Lets even first-time customers benefit from curated
-    // examples (and from their own offer-winning letters once they
-    // mark outcomes).
+    // ExampleRetrieval runs as background infrastructure on Starter —
+    // gates the gold-base feedback loop benefit even without an
+    // explicit "Example Retrieval" pill on the pricing card.
     enableExampleRetrieval: true,
   },
   pro: {
