@@ -99,11 +99,36 @@ export async function POST(req: NextRequest) {
         .slice(0, 40)
     : []
 
-  if (resumeText.length < MIN_RESUME_CHARS) {
-    return sseError(`Resume must be at least ${MIN_RESUME_CHARS} characters.`, 400)
-  }
   if (jobDescription.length < MIN_JD_CHARS) {
     return sseError(`Job description must be at least ${MIN_JD_CHARS} characters.`, 400)
+  }
+
+  // Gate A: the user MUST have something to ground the letter on —
+  // either explicitly selected experience blocks OR (when none were
+  // selected on the dashboard) at least one block saved on their
+  // profile. We never fall back to "use all blocks" when the saved
+  // set is empty, because that produces a generic letter with no
+  // grounding.
+  const { profile: preflightProfile } = await getUserProfile(user.id)
+  const savedBlocks = preflightProfile.experience_blocks ?? []
+  const hasSelection = selectedExperienceIds.length > 0
+  const hasSavedBlocks = savedBlocks.length > 0
+  const hasQualifications =
+    (preflightProfile.qualifications?.trim().length ?? 0) >= 40
+  if (!hasSelection && !hasSavedBlocks && !hasQualifications) {
+    return sseError(
+      "Add at least one experience or fill in qualifications on your profile before generating. We won't ship a letter without something to ground it on.",
+      400
+    )
+  }
+  // Resume-text is now optional — the structured profile is the
+  // primary input. We only require it as a fallback when there is
+  // NO saved profile data at all.
+  if (!hasSelection && !hasSavedBlocks && resumeText.length < MIN_RESUME_CHARS) {
+    return sseError(
+      `Resume / profile must be at least ${MIN_RESUME_CHARS} characters when no structured experience is saved.`,
+      400
+    )
   }
 
   // 3 + 4. Atomic quota gate + row insert.
@@ -296,8 +321,10 @@ export async function POST(req: NextRequest) {
         // the user has no saved profile yet we fall back to a
         // qualifications-only profile built from the raw resume
         // text so the pipeline can still run end-to-end.
-        const { profile: savedProfile } = await getUserProfile(user.id)
-        const blocks = savedProfile.experience_blocks ?? []
+        // Re-use the profile we already loaded in the pre-flight gate
+        // above so we don't double-fetch on the hot path.
+        const savedProfile = preflightProfile
+        const blocks = savedBlocks
         const effectiveSelectedIds =
           selectedExperienceIds.length > 0
             ? selectedExperienceIds

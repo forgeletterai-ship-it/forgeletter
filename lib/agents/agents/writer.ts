@@ -80,6 +80,7 @@ HARD RULES — break any and the letter is rejected:
 - Close with a concrete next step — NEVER "I look forward to hearing from you."
 - Structure: 3-4 paragraphs. Each paragraph does one job (hook / proof / fit / close).
 - If a blueprint is provided, follow its section sequence and featured win ids — those wins must appear as concrete sentences. Supporting wins MAY appear briefly; do not invent extras.
+- Use gold examples for structure, flow, and phrasing only. Never copy their sentences, companies, or achievements. Every fact must come from the user's selected experiences.
 
 Output: ONLY the letter itself. Start with "Dear [name or Hiring Team]," and end with "Sincerely,\\n[Candidate name]". No preamble, no meta-commentary.`
 
@@ -160,6 +161,22 @@ export async function runWriterAgent(args: {
           log = second.log
         }
       }
+    }
+
+    // Deterministic trim-if-over-380: when the body still exceeds
+    // the upper band after the retry, drop the lowest-value
+    // sentences until the count falls back inside. "Lowest-value" =
+    // sentences without numbers and without JD-keyword overlap.
+    // Never trim hook (first body sentence) or close (last body
+    // sentence) — those carry structural weight.
+    const finalWordCount = countBodyWords(letter)
+    const upperBand = args.tone === "concise" ? 300 : 380
+    if (finalWordCount > upperBand) {
+      const jdKeywords: string[] = [
+        ...(args.job.atsKeywords ?? []),
+        ...(args.job.mustHaveSkills ?? []),
+      ].map((k) => k.toLowerCase())
+      letter = trimToUpperBand(letter, upperBand, jdKeywords)
     }
   }
 
@@ -340,18 +357,81 @@ function deterministicFallback(args: {
     args.profile?.candidateName || args.resume?.candidateName || "Candidate"
   const role = args.job.jobTitle || "the role"
   const company = args.job.companyName || "your team"
-  // Pure safety-net body — the orchestrator marks this as fallback
-  // and the rewrite loop will replace it.
+
+  // Compose the fallback body from the user's ACTUAL wins so a
+  // recovered letter still reflects who they are — never a generic
+  // role/company template. Prefer strong wins (those with numbers);
+  // include up to four for body, then a one-line close.
+  const wins = args.profile?.wins ?? []
+  const strongWins = wins.filter((w) => w.strength === "strong").slice(0, 3)
+  const weakWins = wins.filter((w) => w.strength === "weak").slice(0, 2)
+  const featured =
+    strongWins.length > 0
+      ? strongWins
+      : weakWins.length > 0
+        ? weakWins
+        : wins.slice(0, 3)
+
+  // Build the hook: lead with the strongest quantified win.
+  const hook = featured[0]
+    ? winToSentence(featured[0], { lead: true, role, company })
+    : `I'm writing about ${role} at ${company} and want to share the experience most directly relevant to the role.`
+
+  // Build the proof paragraph: two more concrete wins, comma-joined
+  // into one paragraph so the deterministic body still reads as
+  // coherent prose rather than a bulleted list.
+  const proofSentences = featured.slice(1, 4).map((w) =>
+    winToSentence(w, { lead: false })
+  )
+
+  // Fit sentence: surface qualifications when present so the letter
+  // still feels grounded in the user's claims.
+  const fit = args.profile?.qualifications
+    ? `My background also includes ${truncate(args.profile.qualifications.replace(/\s+/g, " ").trim(), 180)}.`
+    : ""
+
+  const close = `I'd welcome a short conversation about how this maps to your priorities for ${role}${args.job.companyName ? ` at ${args.job.companyName}` : ""}.`
+
   return [
     "Dear Hiring Team,",
     "",
-    `I am applying for ${role} at ${company}. Below is a short summary of the most directly relevant experience drawn from my profile.`,
+    hook,
     "",
-    "I would welcome a short conversation to walk through specific work that maps to your priorities.",
+    proofSentences.length > 0 ? proofSentences.join(" ") : "",
+    "",
+    fit,
+    "",
+    close,
     "",
     "Sincerely,",
     name,
-  ].join("\n")
+  ]
+    .filter((line) => line !== "" || true) // keep paragraph spacing
+    .join("\n")
+}
+
+function winToSentence(
+  w: { what: string; number: string; whyItMattered: string; entryLabel: string },
+  ctx: { lead?: boolean; role?: string; company?: string }
+): string {
+  const what = w.what.replace(/\.$/, "").trim()
+  const num = w.number ? ` (${w.number})` : ""
+  const why = w.whyItMattered ? `, ${w.whyItMattered.replace(/\.$/, "").trim()}` : ""
+  const at = w.entryLabel ? ` at ${w.entryLabel}` : ""
+  if (ctx.lead) {
+    return `In my work${at}, I ${lowerFirst(what)}${num}${why}, which is the kind of impact I'd bring to ${ctx.role || "this role"}${ctx.company ? ` at ${ctx.company}` : ""}.`
+  }
+  return `${capFirst(what)}${num}${why}${at}.`
+}
+
+function lowerFirst(s: string): string {
+  return s ? s[0].toLowerCase() + s.slice(1) : s
+}
+function capFirst(s: string): string {
+  return s ? s[0].toUpperCase() + s.slice(1) : s
+}
+function truncate(s: string, n: number): string {
+  return s.length > n ? `${s.slice(0, n - 1).trim()}…` : s
 }
 
 function countBodyWords(letter: string): number {
@@ -398,4 +478,162 @@ function findBannedPhrases(letter: string): string[] {
     if (lower.includes(phrase)) hits.push(phrase)
   }
   return hits
+}
+
+/**
+ * Deterministic over-band trimmer. Splits the letter into greeting +
+ * body paragraphs + sign-off, scores each body sentence by
+ * "tradability" (no number AND no JD-keyword overlap = most
+ * tradable), and drops the most tradable sentences until the body
+ * word count falls under the upper band. Hook (first body sentence)
+ * and close (last body sentence) are never trimmed.
+ *
+ * Used as a fallback when the Writer's banned-phrase / band retry
+ * still leaves the body too long.
+ */
+function trimToUpperBand(letter: string, upperBand: number, jdKeywords: string[]): string {
+  const lines = letter.split(/\r?\n/)
+  // Identify greeting (first non-empty line starting with "Dear") and
+  // sign-off block (first "Sincerely" / "Regards" line onwards).
+  let greetingEnd = -1
+  let signoffStart = -1
+  for (let i = 0; i < lines.length; i += 1) {
+    const lower = lines[i].trim().toLowerCase()
+    if (greetingEnd === -1 && lower.startsWith("dear ")) {
+      greetingEnd = i
+    }
+    if (
+      signoffStart === -1 &&
+      (lower === "sincerely," || lower === "sincerely" ||
+       lower === "regards," || lower === "best,")
+    ) {
+      signoffStart = i
+      break
+    }
+  }
+  if (greetingEnd === -1) greetingEnd = 0
+  if (signoffStart === -1) signoffStart = lines.length
+
+  const greeting = lines.slice(0, greetingEnd + 1)
+  const signoff = lines.slice(signoffStart)
+  const bodyLines = lines.slice(greetingEnd + 1, signoffStart)
+
+  // Split body into sentences while preserving paragraph boundaries.
+  // Each "node" is either a paragraph break (blank line) or a sentence.
+  type Node =
+    | { kind: "break" }
+    | { kind: "sent"; text: string; tradability: number; isHook: boolean; isClose: boolean }
+  const nodes: Node[] = []
+  const paragraphs = bodyLines.join("\n").split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean)
+  let sentenceCount = 0
+  paragraphs.forEach((para, pIdx) => {
+    if (pIdx > 0) nodes.push({ kind: "break" })
+    const sents = splitSentences(para)
+    for (const s of sents) {
+      nodes.push({
+        kind: "sent",
+        text: s,
+        tradability: scoreTradability(s, jdKeywords),
+        isHook: false,
+        isClose: false,
+      })
+      sentenceCount += 1
+    }
+  })
+  // Mark hook + close.
+  let firstSentIdx = -1
+  let lastSentIdx = -1
+  for (let i = 0; i < nodes.length; i += 1) {
+    if (nodes[i].kind === "sent") {
+      if (firstSentIdx === -1) firstSentIdx = i
+      lastSentIdx = i
+    }
+  }
+  if (firstSentIdx >= 0) (nodes[firstSentIdx] as Extract<Node, { kind: "sent" }>).isHook = true
+  if (lastSentIdx >= 0) (nodes[lastSentIdx] as Extract<Node, { kind: "sent" }>).isClose = true
+
+  // Refuse to trim if we have <=3 trimmable sentences (need to keep
+  // at least hook + middle + close).
+  const trimmable = nodes.filter(
+    (n) => n.kind === "sent" && !n.isHook && !n.isClose
+  ) as Array<Extract<Node, { kind: "sent" }>>
+  if (trimmable.length === 0) return letter
+
+  // Repeatedly drop the highest-tradability sentence until we're
+  // under the band, or we run out of trimmable middle sentences.
+  let currentWordCount = wordCountOfNodes(nodes)
+  while (currentWordCount > upperBand) {
+    const candidates = nodes
+      .map((n, idx) => ({ n, idx }))
+      .filter(
+        (x) => x.n.kind === "sent" && !(x.n as Extract<Node, { kind: "sent" }>).isHook &&
+          !(x.n as Extract<Node, { kind: "sent" }>).isClose
+      ) as Array<{ n: Extract<Node, { kind: "sent" }>; idx: number }>
+    if (candidates.length === 0) break
+    candidates.sort((a, b) => b.n.tradability - a.n.tradability)
+    nodes.splice(candidates[0].idx, 1)
+    currentWordCount = wordCountOfNodes(nodes)
+  }
+
+  // Rebuild the letter.
+  const rebuiltBody = nodes
+    .map((n) => (n.kind === "break" ? "" : n.text))
+    .join(" ")
+    .replace(/\s+\.\s*/g, ". ") // tidy punctuation
+    .replace(/\s+,\s*/g, ", ")
+    .replace(/\s{2,}/g, " ")
+    .trim()
+  // Re-paragraph: break on the "break" nodes by walking again.
+  const paragraphsOut: string[] = []
+  let buf: string[] = []
+  for (const n of nodes) {
+    if (n.kind === "break") {
+      if (buf.length) paragraphsOut.push(buf.join(" ").trim())
+      buf = []
+    } else {
+      buf.push(n.text)
+    }
+  }
+  if (buf.length) paragraphsOut.push(buf.join(" ").trim())
+
+  return [
+    ...greeting,
+    "",
+    ...paragraphsOut.flatMap((p, i) => (i === 0 ? [p] : ["", p])),
+    "",
+    ...signoff,
+  ].join("\n").replace(/\n{3,}/g, "\n\n").trim() + (rebuiltBody ? "" : "")
+}
+
+function splitSentences(paragraph: string): string[] {
+  // Split on .!? followed by whitespace + capital, keeping the
+  // punctuation. Conservative — better to under-split than to
+  // shred a quote.
+  const out: string[] = []
+  const regex = /[^.!?]+[.!?]+(?=\s|$)/g
+  let m: RegExpExecArray | null
+  while ((m = regex.exec(paragraph)) !== null) {
+    out.push(m[0].trim())
+  }
+  // If nothing matched (no terminal punctuation), keep the whole para.
+  if (out.length === 0 && paragraph.trim()) out.push(paragraph.trim())
+  return out
+}
+
+function scoreTradability(sentence: string, jdKeywords: string[]): number {
+  const lower = sentence.toLowerCase()
+  const hasNumber = /\b\d+(\.\d+)?(%|x|k|m|\+|\b)/.test(lower)
+  const keywordHits = jdKeywords.filter((k) => k && lower.includes(k)).length
+  // Lower tradability = MORE valuable / less safe to drop.
+  // We DROP the highest-tradability sentence first.
+  let score = 1.0
+  if (hasNumber) score -= 0.6
+  score -= 0.15 * Math.min(keywordHits, 4)
+  return score
+}
+
+function wordCountOfNodes(nodes: Array<{ kind: "break" } | { kind: "sent"; text: string }>): number {
+  const text = nodes.filter((n) => n.kind === "sent").map((n) => (n as { text: string }).text).join(" ")
+  const words = text.match(/[A-Za-z0-9][A-Za-z0-9'-]*/g)
+  return words ? words.length : 0
 }

@@ -100,11 +100,48 @@ export async function runFinalEditor(args: {
   // model's pass, surface them as warnings — orchestrator can
   // decide to push another quality cycle.
   const surviving = detectBannedPhrases(result.data.letter).map((s) => s.phrase)
-  const wordCount = countBodyWords(result.data.letter)
+  const editedWordCount = countBodyWords(result.data.letter)
+  const originalWordCount = countBodyWords(args.letter)
+
+  // Revert guard: if the Final Editor's output is suspicious, return
+  // the original draft unchanged. Triggers when:
+  //   • edited word count falls outside the tier's tone band, OR
+  //   • edited word count grew more than 20% (expansion attack), OR
+  //   • the body shrank by more than 35% (over-cutting / corruption)
+  // The deliberate exception is when the original was ALSO out-of-band
+  // and the editor pulled it back inside — that's the editor doing
+  // its job; we keep that result.
+  const [bandLo, bandHi] = tone === "concise" ? [220, 300] : [300, 380]
+  const editedInBand = editedWordCount >= bandLo && editedWordCount <= bandHi
+  const originalInBand =
+    originalWordCount >= bandLo && originalWordCount <= bandHi
+  const expandedSuspiciously = editedWordCount > originalWordCount * 1.2
+  const shrankSuspiciously = editedWordCount < originalWordCount * 0.65
+
+  let finalLetter = result.data.letter
+  let finalChanges = result.data.changesMade
+  let revertReason: string | null = null
+
+  if (result.log.fallbackTriggered) {
+    // Already fell back inside runAgent; nothing extra to do.
+  } else if (!editedInBand && originalInBand) {
+    revertReason = `Reverted: edit moved word count from ${originalWordCount} (in band) to ${editedWordCount} (out of ${bandLo}-${bandHi} band).`
+  } else if (expandedSuspiciously) {
+    revertReason = `Reverted: edit expanded body from ${originalWordCount} to ${editedWordCount} words (>20% growth).`
+  } else if (shrankSuspiciously) {
+    revertReason = `Reverted: edit shrank body from ${originalWordCount} to ${editedWordCount} words (>35% loss).`
+  }
+
+  if (revertReason) {
+    finalLetter = args.letter
+    finalChanges = [revertReason]
+  }
+
+  const wordCount = revertReason ? originalWordCount : editedWordCount
 
   const data: FinalEdit = {
-    letter: result.data.letter,
-    changesMade: result.data.changesMade,
+    letter: finalLetter,
+    changesMade: finalChanges,
     bannedPhrasesRemoved: dedupe([
       ...result.data.bannedPhrasesRemoved,
       ...surviving.map((p) => `WARNING: still present after edit: ${p}`),

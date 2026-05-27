@@ -161,6 +161,40 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
   const currentCount = (row.tone_rewrite_count as number | null | undefined) ?? 0
   const willConsumeLetterSlot = currentCount >= freeCap
 
+  // Starter explicit block: 0 included tone rewrites. Rather than
+  // silently consume a letter slot, return an actionable 402 the
+  // dashboard can render as an "upgrade or use a letter" prompt.
+  // The client must re-POST with { acknowledgeLetterSpend: true }
+  // to proceed.
+  const body2 = body as { acknowledgeLetterSpend?: unknown }
+  const acknowledged = body2.acknowledgeLetterSpend === true
+  if (tier === "starter" && !acknowledged) {
+    return NextResponse.json(
+      {
+        error:
+          "Starter doesn't include free tone rewrites. Upgrade to Pro for 1 / Ultra for 3, or confirm to use one of your monthly letter slots.",
+        needsLetterSlotConfirmation: true,
+        tier,
+        freeCap,
+        usedCount: currentCount,
+      },
+      { status: 402 }
+    )
+  }
+  // Pro / Ultra: same prompt once they've exhausted the free cap.
+  if (willConsumeLetterSlot && tier !== "starter" && !acknowledged) {
+    return NextResponse.json(
+      {
+        error: `You've used all ${freeCap} included tone ${freeCap === 1 ? "rewrite" : "rewrites"} for this letter. Confirm to use one of your monthly letter slots.`,
+        needsLetterSlotConfirmation: true,
+        tier,
+        freeCap,
+        usedCount: currentCount,
+      },
+      { status: 402 }
+    )
+  }
+
   // 5. If a letter slot will be consumed, gate it through the same
   //    fair-cap quota that /api/generate uses. We DO NOT insert a new
   //    generated_letters row for the rewrite — we update the existing

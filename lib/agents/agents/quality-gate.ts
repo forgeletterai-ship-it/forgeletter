@@ -57,7 +57,7 @@ OUTPUT RULES:
 - "reasoning" — 2-3 sentences explaining where points were lost.
 - "weakestElement" — the SINGLE biggest weakness, named by section ("opening hook", "proof / specifics", "fit narrative", "close / CTA", or "voice"). This guides the Rewrite Agent.`
 
-const FALLBACK: QualityVerdictFull = {
+const FALLBACK_QUALITY_GATE: QualityVerdictFull = {
   pass: false,
   score: 70,
   reasoning: "Quality gate could not run; defaulting to manual review.",
@@ -130,7 +130,7 @@ export async function runQualityGate(args: {
     schema: QualityVerdictSchema,
     schemaName: "submit_quality_verdict",
     schemaDescription: "Submit the final quality verdict (manipulation-proof).",
-    fallback: FALLBACK,
+    fallback: FALLBACK_QUALITY_GATE,
     maxTokens: 1200,
     temperature: 0.1,
     timeoutMs: 25_000,

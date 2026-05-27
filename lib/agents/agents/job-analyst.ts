@@ -75,7 +75,7 @@ Your output drives every downstream agent. Be precise.`
 
 type JobAnalysisFull = z.infer<typeof JobAnalysisSchema>
 
-const FALLBACK: JobAnalysisFull = {
+const FALLBACK_JOB_ANALYST: JobAnalysisFull = {
   jobTitle: "",
   companyName: "",
   industry: "",
@@ -123,7 +123,7 @@ export async function runJobAnalyst(args: {
     schemaName: "submit_job_analysis",
     schemaDescription:
       "Submit the structured analysis of the job description, including hiring-manager priorities and recommended tone.",
-    fallback: FALLBACK,
+    fallback: FALLBACK_JOB_ANALYST,
     maxTokens: 1200,
     temperature: 0.1,
     timeoutMs: 30_000,

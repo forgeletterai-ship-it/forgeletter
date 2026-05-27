@@ -62,7 +62,7 @@ Output:
 
 Be strict — false positives are better than false negatives. Always quote letter sentences verbatim.`
 
-const FALLBACK: HallucinationCheckFull = {
+const FALLBACK_HALLUCINATION_CHECK: HallucinationCheckFull = {
   risk: "low",
   unverifiedClaims: [],
   fabricatedFacts: [],
@@ -108,7 +108,7 @@ export async function runHallucinationDetector(args: {
     schemaName: "submit_hallucination_check",
     schemaDescription:
       "Submit the grounding check for the cover letter, including per-sentence winId mapping.",
-    fallback: FALLBACK,
+    fallback: FALLBACK_HALLUCINATION_CHECK,
     maxTokens: 1800,
     temperature: 0.1,
     timeoutMs: 25_000,
@@ -141,6 +141,117 @@ export async function runHallucinationDetector(args: {
     },
     fallback: result.log.fallbackTriggered,
   }
+}
+
+/**
+ * Deterministic hallucination auto-cleaner.
+ *
+ * Strips any sentence that the HallucinationCheck flagged as
+ * fabricated OR unmapped. Hard guard: NEVER reduce the body to
+ * fewer than 3 sentences — if doing so would, leave the letter
+ * untouched and let the rewrite loop handle it.
+ *
+ * Returns { letter, removed } so the orchestrator can persist what
+ * was scrubbed in agent_outputs.
+ */
+export function autoCleanHallucinations(args: {
+  letter: string
+  check: HallucinationCheck
+}): { letter: string; removed: string[]; skipped: string[]; reason?: string } {
+  const offending = new Set<string>(
+    [...args.check.fabricatedFacts, ...(args.check.unmappedClaims ?? [])]
+      .map((s) => s.trim())
+      .filter(Boolean)
+  )
+  if (offending.size === 0) {
+    return { letter: args.letter, removed: [], skipped: [] }
+  }
+
+  // Split into greeting / body sentences / signoff.
+  const { greeting, bodySentences, signoff } = splitLetter(args.letter)
+  const total = bodySentences.length
+  if (total <= 3) {
+    return {
+      letter: args.letter,
+      removed: [],
+      skipped: Array.from(offending),
+      reason: `Body has only ${total} sentence(s); cannot trim without dropping below the 3-sentence floor.`,
+    }
+  }
+
+  const removed: string[] = []
+  const skipped: string[] = []
+  const kept: string[] = []
+  let remaining = total
+  for (const s of bodySentences) {
+    const isOffending = offending.has(s.trim()) ||
+      Array.from(offending).some((o) => s.includes(o))
+    if (isOffending && remaining - 1 >= 3) {
+      removed.push(s)
+      remaining -= 1
+    } else if (isOffending) {
+      // Hit the floor — keep the rest.
+      skipped.push(s)
+      kept.push(s)
+    } else {
+      kept.push(s)
+    }
+  }
+
+  if (removed.length === 0) {
+    return {
+      letter: args.letter,
+      removed: [],
+      skipped,
+      reason: skipped.length > 0 ? "Would have dropped below 3-sentence floor." : undefined,
+    }
+  }
+
+  const rebuiltBody = kept.join(" ")
+  const out = [
+    greeting,
+    "",
+    rebuiltBody,
+    "",
+    signoff,
+  ].join("\n").replace(/\n{3,}/g, "\n\n").trim()
+  return { letter: out, removed, skipped }
+}
+
+function splitLetter(letter: string): {
+  greeting: string
+  bodySentences: string[]
+  signoff: string
+} {
+  const lines = letter.split(/\r?\n/)
+  let greetingEnd = -1
+  let signoffStart = -1
+  for (let i = 0; i < lines.length; i += 1) {
+    const lower = lines[i].trim().toLowerCase()
+    if (greetingEnd === -1 && lower.startsWith("dear ")) {
+      greetingEnd = i
+    }
+    if (
+      signoffStart === -1 &&
+      (lower === "sincerely," || lower === "sincerely" ||
+       lower === "regards," || lower === "best,")
+    ) {
+      signoffStart = i
+      break
+    }
+  }
+  if (greetingEnd === -1) greetingEnd = 0
+  if (signoffStart === -1) signoffStart = lines.length
+
+  const greeting = lines.slice(0, greetingEnd + 1).join("\n").trim()
+  const signoff = lines.slice(signoffStart).join("\n").trim()
+  const bodyText = lines.slice(greetingEnd + 1, signoffStart).join(" ").trim()
+  const sents: string[] = []
+  const regex = /[^.!?]+[.!?]+(?=\s|$)/g
+  let m: RegExpExecArray | null
+  while ((m = regex.exec(bodyText)) !== null) sents.push(m[0].trim())
+  if (sents.length === 0 && bodyText) sents.push(bodyText)
+  return { greeting, bodySentences: sents, signoff }
 }
 
 function renderWinsForVerifier(p: ProfileAnalysis): string {

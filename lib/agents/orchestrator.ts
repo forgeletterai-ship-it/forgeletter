@@ -4,7 +4,7 @@ import { runATSAgentTiered } from "./agents/ats"
 import { runExampleRetrieval } from "./agents/example-retrieval"
 import { runFinalEditor } from "./agents/final-editor"
 import { runHMCritic } from "./agents/hm-critic"
-import { runHallucinationDetector } from "./agents/hallucination-detector"
+import { autoCleanHallucinations, runHallucinationDetector } from "./agents/hallucination-detector"
 import { runInputCleaner, scanProfileForInjection } from "./agents/input-cleaner"
 import { runJobAnalyst } from "./agents/job-analyst"
 import { runMatchAnalyst } from "./agents/match-analyst"
@@ -293,7 +293,12 @@ async function runBlueprintPipeline(
     let blueprint: MatchBlueprint | null = null
     if (shouldRun(config, "MatchAnalyst")) {
       await emit("MatchAnalyst", "running")
-      const matchRes = await runMatchAnalyst({ profile, job, cycleNumber: 0 })
+      const matchRes = await runMatchAnalyst({
+        profile,
+        job,
+        examples,
+        cycleNumber: 0,
+      })
       match = matchRes.data
       blueprint = matchRes.blueprint
       recordLog(matchRes.log)
@@ -392,6 +397,51 @@ async function runBlueprintPipeline(
         recordLog(postEditHal.log)
       }
 
+      // ── 10b. Hallucination auto-cleaner (every tier) ──────
+      // If the verifier flagged fabricated or unmapped claims, try
+      // to strip them deterministically — with a hard 3-sentence
+      // floor. The cleaner refuses to drop if doing so would leave
+      // <3 body sentences. If something was scrubbed, we re-verify
+      // before continuing so the orchestrator's downstream
+      // decisions reflect the cleaned text.
+      if (
+        hallucinationCheck.fabricatedFacts.length > 0 ||
+        (hallucinationCheck.unmappedClaims?.length ?? 0) > 0
+      ) {
+        const cleaned = autoCleanHallucinations({
+          letter: currentLetter,
+          check: hallucinationCheck,
+        })
+        recordLog({
+          agent: "HallucinationCheck",
+          cycle: cycle + 0.75,
+          outputJson: {
+            cleanerRan: true,
+            removed: cleaned.removed,
+            skipped: cleaned.skipped,
+            reason: cleaned.reason,
+          },
+          modelUsed: "deterministic",
+          durationMs: 0,
+          tokensInput: 0,
+          tokensOutput: 0,
+          fallbackTriggered: false,
+        })
+        if (cleaned.removed.length > 0) {
+          currentLetter = cleaned.letter
+          // Re-verify the cleaned letter so downstream gate sees the
+          // accurate post-clean risk.
+          const reVerify = await runHallucinationDetector({
+            letter: currentLetter,
+            profile,
+            jobDescription: sanitizedJobDescription,
+            cycleNumber: cycle + 0.85,
+          })
+          hallucinationCheck = reVerify.data
+          recordLog(reVerify.log)
+        }
+      }
+
       // ── 11. QualityGate (every tier) ──────────────────────
       if (cycle === 0) await emit("QualityGate", "running")
       const gateRes = await runQualityGate({
@@ -405,17 +455,53 @@ async function runBlueprintPipeline(
       recordLog(gateRes.log)
       if (cycle === 0) await emit("QualityGate", "done", PROGRESS_WEIGHTS.QualityGate)
 
+      // ── 11b. Coverage check (every tier) ──────────────────
+      // Verify every SELECTED experience block is reflected in the
+      // letter. If not, the letter is incomplete — flip the verdict
+      // and trigger a rewrite. We never silently ship a letter that
+      // drops one of the user's chosen experiences.
+      const coverage = computeExperienceCoverage(currentLetter, profile, input.selectedExperienceIds)
+      if (coverage.missing.length > 0 && verdict.pass) {
+        verdict.pass = false
+        verdict.recommendRewrite = true
+        verdict.reasoning = `${verdict.reasoning} (Coverage gap: ${coverage.missing.length} selected experience(s) missing from the letter — ${coverage.missing.slice(0, 3).join("; ")}.)`
+      }
+      recordLog({
+        agent: "QualityGate",
+        cycle: cycle + 0.5,
+        outputJson: {
+          coverage: {
+            selectedCount: coverage.selectedCount,
+            referencedCount: coverage.referenced.length,
+            missing: coverage.missing,
+          },
+        },
+        modelUsed: "deterministic",
+        durationMs: 0,
+        tokensInput: 0,
+        tokensOutput: 0,
+        fallbackTriggered: false,
+      })
+
       // Ship best-not-last: track the highest-scoring draft across
-      // every cycle.
-      if (verdict.score > bestScore) {
-        bestScore = verdict.score
+      // every cycle. Penalise missing-coverage drafts so a fully-
+      // covered lower-score draft beats a higher-score draft that
+      // dropped an experience.
+      const effectiveScore = coverage.missing.length > 0
+        ? Math.max(0, verdict.score - coverage.missing.length * 8)
+        : verdict.score
+      if (effectiveScore > bestScore) {
+        bestScore = effectiveScore
         bestLetter = currentLetter
         bestATS = atsResult
         bestHallucination = hallucinationCheck
       }
 
       // ── 12. Gate decision ─────────────────────────────────
-      const deliverable = verdict.pass && hallucinationCheck.risk !== "high"
+      const deliverable =
+        verdict.pass &&
+        hallucinationCheck.risk !== "high" &&
+        coverage.missing.length === 0
       if (deliverable) {
         bestLetter = currentLetter
         bestScore = verdict.score
@@ -458,6 +544,14 @@ async function runBlueprintPipeline(
     const passed = bestScore >= config.qualityThreshold
     const rewriteCycles = runLogs.filter((l) => l.agent === "RewriteAgent").length
 
+    // Final coverage snapshot for the delivered letter.
+    const finalCoverage = computeExperienceCoverage(
+      bestLetter,
+      profile,
+      input.selectedExperienceIds
+    )
+    const finalWordCount = countDeliveredWords(bestLetter)
+
     await emit(
       "Complete",
       "done",
@@ -487,6 +581,8 @@ async function runBlueprintPipeline(
         ? undefined
         : `Score ${Math.round(bestScore)} below threshold ${config.qualityThreshold}`,
       totalDurationMs: totalDuration,
+      coverageMissing: finalCoverage.missing,
+      wordCount: finalWordCount,
     }
   } catch (err) {
     console.error("[orchestrator] unrecoverable error:", err)
@@ -508,6 +604,87 @@ function shouldRun(
   agent: AgentName
 ): boolean {
   return config.agents.includes(agent)
+}
+
+/**
+ * Coverage check: does the final letter reference every SELECTED
+ * experience block? We treat an experience as "referenced" if any
+ * of these signals match in the letter (case-insensitive):
+ *   • The block's display label tokens (company / institution name).
+ *   • Any role token from the block (job title / role text).
+ *   • Any number from any win in the block.
+ *
+ * "Qualifications" pseudo-blocks are exempted (they fold in as
+ * background facts rather than being explicitly cited).
+ *
+ * Returns the list of missing display labels — used by the
+ * orchestrator to flip the verdict and trigger a targeted rewrite.
+ */
+function countDeliveredWords(letter: string): number {
+  // Same algorithm as the Writer's body counter; lifted here so the
+  // orchestrator can surface it on PipelineResult.
+  const lines = letter.split(/\r?\n/)
+  const body: string[] = []
+  let inSignature = false
+  for (const line of lines) {
+    const t = line.trim()
+    const lower = t.toLowerCase()
+    if (!t) continue
+    if (lower.startsWith("dear ")) continue
+    if (
+      lower === "sincerely," || lower === "sincerely" ||
+      lower === "regards," || lower === "regards" ||
+      lower === "best," || lower === "best regards," || lower === "best regards"
+    ) {
+      inSignature = true
+      continue
+    }
+    if (inSignature) continue
+    body.push(t)
+  }
+  const words = body.join(" ").match(/[A-Za-z0-9][A-Za-z0-9'-]*/g)
+  return words ? words.length : 0
+}
+
+function computeExperienceCoverage(
+  letter: string,
+  profile: ProfileAnalysis,
+  selectedExperienceIds: string[]
+): { selectedCount: number; referenced: string[]; missing: string[] } {
+  const lower = letter.toLowerCase()
+  // Group wins by entryId so we know per-experience which signals apply.
+  const winsByEntry = new Map<string, typeof profile.wins>()
+  for (const w of profile.wins) {
+    if (w.entryType === "qualifications") continue
+    if (!winsByEntry.has(w.entryId)) winsByEntry.set(w.entryId, [])
+    winsByEntry.get(w.entryId)!.push(w)
+  }
+  // The selected set is the source of truth — but if the upstream
+  // adapted the legacy input shape (selectedExperienceIds = []), fall
+  // back to "every entryId with wins" so we still check coverage.
+  const selected =
+    selectedExperienceIds.length > 0
+      ? selectedExperienceIds.filter((id) => winsByEntry.has(id))
+      : Array.from(winsByEntry.keys())
+
+  const referenced: string[] = []
+  const missing: string[] = []
+  for (const entryId of selected) {
+    const wins = winsByEntry.get(entryId) ?? []
+    if (wins.length === 0) continue
+    const label = wins[0].entryLabel || ""
+    const labelTokens = label
+      .toLowerCase()
+      .split(/[^a-z0-9]+/)
+      .filter((t) => t.length >= 3)
+    const labelHit = labelTokens.some((t) => lower.includes(t))
+    const numberHit = wins.some(
+      (w) => w.number && lower.includes(w.number.toLowerCase())
+    )
+    if (labelHit || numberHit) referenced.push(label || entryId)
+    else missing.push(label || entryId)
+  }
+  return { selectedCount: selected.length, referenced, missing }
 }
 
 /**

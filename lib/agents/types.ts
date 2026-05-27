@@ -286,6 +286,10 @@ export interface PipelineResult {
   status: "passed" | "failed"
   failureReason?: string
   totalDurationMs: number
+  /** Selected experience labels that failed coverage check at delivery. */
+  coverageMissing?: string[]
+  /** Body word count of the delivered letter. */
+  wordCount?: number
 }
 
 export type AgentName =

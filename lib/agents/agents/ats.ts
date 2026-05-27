@@ -123,7 +123,7 @@ const SYSTEM = `You are an ATS-tuning assistant. You're given a cover letter, a 
 
 4. "reasoning" — 1-2 sentences explaining the call.`
 
-const FALLBACK: ATSEnhancementFull = {
+const FALLBACK_ATS: ATSEnhancementFull = {
   stuffingRisk: "none",
   recommendedAdditions: [],
   verdictAdjustment: "keep",
@@ -186,7 +186,7 @@ export async function runATSAgentTiered(args: {
     schemaName: "submit_ats_enhancement",
     schemaDescription:
       "Submit the ATS enhancement — stuffing risk, recommended additions, verdict adjustment.",
-    fallback: FALLBACK,
+    fallback: FALLBACK_ATS,
     maxTokens: 600,
     temperature: 0.1,
     timeoutMs: 15_000,

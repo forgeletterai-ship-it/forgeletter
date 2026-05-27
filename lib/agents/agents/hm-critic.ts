@@ -86,27 +86,37 @@ For each dimension assign a 1-5 anchored score. The standardized rubric IS the d
 
   • JD RELEVANCE (weight 25)
     1 = Letter could be for any role. Generic.
+    2 = Mentions the role title but the rest is generic.
     3 = Mentions some JD requirements without anchoring to specifics.
+    4 = Most paragraphs anchor to a JD priority; one paragraph drifts generic.
     5 = Every paragraph maps tightly to a named JD priority. Mirrors verbatim ATS-relevant language naturally.
 
   • EVIDENCE & CREDIBILITY (weight 25)
     1 = Adjectives and claims with no proof.
-    3 = One quantified achievement.
+    2 = One vague quantification ("led teams", "delivered results").
+    3 = One concretely quantified achievement.
+    4 = Two quantified achievements with scale or named impact.
     5 = Three or more quantified achievements with scale, named impact, or specific outcomes. Each claim provably traceable.
 
   • CLARITY OF COMMUNICATION (weight 20)
     1 = Dense paragraphs, passive voice, cliché-laden.
+    2 = Several long sentences, occasional cliché, but readable.
     3 = Readable but average. Some wordiness.
+    4 = Tight prose with one or two passive constructions; minor filler.
     5 = Active voice, varied sentence length, no filler. Every sentence advances the argument.
 
   • COMPETENCIES & VALUES (weight 15)
     1 = No demonstration of role-relevant competencies.
+    2 = Names a competency but doesn't show it.
     3 = Some implicit competency demonstration.
+    4 = Explicit evidence for most must-have competencies; one missing.
     5 = Explicit behavioural evidence for each must-have competency the JD lists.
 
   • ROLE/CULTURE FIT (weight 15)
     1 = Letter shows no understanding of this company.
+    2 = Names the company but no specific knowledge of it.
     3 = Mentions the company but generically.
+    4 = Specific reference to one company detail or value, lightly connected to the candidate.
     5 = Specific, current evidence of why THIS company. Genuine alignment, not flattery.
 
 ═══════════════════════════════════════════════════════════════════

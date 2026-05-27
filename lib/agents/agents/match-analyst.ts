@@ -1,5 +1,6 @@
 import { z } from "zod"
 import { MODELS, runAgent } from "../run-agent"
+import { safeSlice } from "../utils"
 import type {
   AgentRunLog,
   JobAnalysis,
@@ -7,6 +8,7 @@ import type {
   MatchBlueprint,
   ProfileAnalysis,
   ResumeAnalysis,
+  RetrievedExample,
 } from "../types"
 import type { CallMeta } from "./resume-analyst"
 
@@ -67,9 +69,12 @@ type MatchBlueprintFull = z.infer<typeof MatchBlueprintSchema>
 
 const SYSTEM = `You are a hiring strategist building the structural BLUEPRINT for a cover letter. The Writer agent will follow your blueprint exactly.
 
+If gold examples are provided, STUDY THEIR STRUCTURE — hook style, evidence sequencing, paragraph flow, close pattern — and map the candidate's wins onto that arc. The Writer will be told the same thing: "Use gold examples for structure, flow, and phrasing only. Never copy their sentences, companies, or achievements." Your blueprint inherits that rule. Lift ARC, not language.
+
 CRITICAL RULES:
 - Work ONLY from the wins the user already provided. Never invent a win, employer, or number.
 - Every winId provided as input MUST appear in either featuredWinIds OR supportingWinIds — never drop one.
+- Never reference a gold example's company, role, or numbers in any output field.
 - "featuredWinIds" — wins that will be expanded with full sentences. Up to 4. Choose the strongest (number-heavy) wins that map most directly to the job's top hiring-manager priorities.
 - "supportingWinIds" — every remaining winId, in priority order. The Writer may name-drop these briefly.
 - "hookStyle" — one of: "metric-led", "story-first", "mission-bridge", "credential-anchored", "domain-bridge". Pick what plays best to this JD's culture signals.
@@ -84,7 +89,7 @@ CRITICAL RULES:
 
 You honour the user's selection silently — never tell the writer "we dropped X". Order is your tool, omission is forbidden.`
 
-const FALLBACK: MatchBlueprintFull = {
+const FALLBACK_MATCH_ANALYST: MatchBlueprintFull = {
   hookStyle: "metric-led",
   sections: [
     { purpose: "hook", direction: "Lead with the strongest quantified win.", winIdsFeatured: [] },
@@ -122,6 +127,11 @@ export async function runMatchAnalyst(args: {
   /** Legacy input — used until orchestrator migrates to ProfileAnalysis. */
   resume?: ResumeAnalysis
   job: JobAnalysis
+  /** Retrieved gold examples — used for STRUCTURAL extraction only.
+   *  The analyst studies their hook style, evidence sequencing, and
+   *  paragraph flow, then maps the candidate's wins onto that arc.
+   *  NEVER lifts sentences, employers, or numbers from these. */
+  examples?: RetrievedExample[]
   cycleNumber?: number
 }): Promise<MatchAnalystResult> {
   // Build the analyst-readable summary of the candidate. Prefer
@@ -133,18 +143,19 @@ export async function runMatchAnalyst(args: {
     : renderResumeForAnalyst(args.resume!)
 
   const jobBlock = renderJobForAnalyst(args.job)
+  const goldsBlock = renderGoldsForAnalyst(args.examples ?? [])
 
   const result = await runAgent({
     agent: "MatchAnalyst",
     model: MODELS.sonnet,
     cycleNumber: args.cycleNumber ?? 0,
     system: SYSTEM,
-    user: `${candidateBlock}\n\n${jobBlock}`,
+    user: [candidateBlock, jobBlock, goldsBlock].filter(Boolean).join("\n\n"),
     schema: MatchBlueprintSchema,
     schemaName: "submit_match_blueprint",
     schemaDescription:
       "Submit the structural blueprint for the cover letter, including featured vs supporting win ids.",
-    fallback: FALLBACK,
+    fallback: FALLBACK_MATCH_ANALYST,
     maxTokens: 1800,
     temperature: 0.3,
     timeoutMs: 30_000,
@@ -232,6 +243,29 @@ function renderResumeForAnalyst(r: ResumeAnalysis): string {
     for (const a of r.measurableAchievements) lines.push(`  · ${a}`)
   }
   return lines.join("\n")
+}
+
+function renderGoldsForAnalyst(examples: RetrievedExample[]): string {
+  if (examples.length === 0) return ""
+  const lines: string[] = []
+  lines.push(
+    `Gold examples (${examples.length}) — STRUCTURAL REFERENCE ONLY. ` +
+      "Lift hook style, evidence sequencing, paragraph flow, and close pattern. " +
+      "NEVER copy their sentences, companies, or numbers — those facts come from the candidate's wins, not these."
+  )
+  examples.slice(0, 3).forEach((ex, i) => {
+    const label =
+      ex.source === "user_offer"
+        ? "(candidate's own offer-winning letter)"
+        : ex.source === "user_interview"
+          ? "(candidate's own interview-winning letter)"
+          : `(curated, ${ex.role}, ${ex.industry}, quality ${ex.qualityScore})`
+    lines.push(
+      `Gold ${i + 1} ${label}:\n${safeSlice(ex.excerpt, 700)}` +
+        (ex.whyItWorks ? `\nWhy it works: ${ex.whyItWorks}` : "")
+    )
+  })
+  return lines.join("\n\n")
 }
 
 function renderJobForAnalyst(j: JobAnalysis): string {
