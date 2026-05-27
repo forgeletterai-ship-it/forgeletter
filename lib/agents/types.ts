@@ -21,6 +21,8 @@ export interface PipelineProfile {
   notes?: string
   /** Free-form legacy achievements fallback (used only if blocks empty). */
   keyAchievements?: string
+  /** Portfolio / website / GitHub link the candidate wants surfaced. */
+  portfolioLink?: string
   /** All experience blocks the user has saved. */
   experienceBlocks: ExperienceBlock[]
 }

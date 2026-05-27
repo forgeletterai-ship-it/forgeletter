@@ -98,9 +98,9 @@ export async function runProfileAnalyst(
     const strong: ProfileWin[] = []
     const weak: ProfileWin[] = []
     for (const a of block.achievements) {
-      const what = (a.col0 || "").trim()
-      const number = (a.col1 || "").trim()
-      const whyItMattered = (a.col2 || "").trim()
+      const what = (a.what || "").trim()
+      const number = (a.number || "").trim()
+      const whyItMattered = (a.whyItMattered || "").trim()
       if (!what && !number && !whyItMattered) continue // skip empty rows
       const win: ProfileWin = {
         id: `${block.id}:${a.id}`,
@@ -217,6 +217,7 @@ function collectQualificationsText(profile: PipelineProfile): string {
   if (profile.qualifications) bits.push(profile.qualifications.trim())
   if (profile.strengths) bits.push(`Skills & tools: ${profile.strengths.trim()}`)
   if (profile.notes) bits.push(`Notes: ${profile.notes.trim()}`)
+  if (profile.portfolioLink) bits.push(`Portfolio: ${profile.portfolioLink.trim()}`)
   if (profile.keyAchievements && bits.length === 0)
     bits.push(profile.keyAchievements.trim())
   return bits.join("\n").trim()

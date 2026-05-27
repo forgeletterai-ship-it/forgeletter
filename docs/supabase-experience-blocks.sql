@@ -21,6 +21,9 @@ alter table public.user_profiles
 alter table public.user_profiles
   add column if not exists notes text not null default '';
 
+alter table public.user_profiles
+  add column if not exists portfolio_link text not null default '';
+
 -- ============================================================
 -- application_briefs: which experience block ids the user selected
 -- when saving this brief (empty array = use defaults at generate time)

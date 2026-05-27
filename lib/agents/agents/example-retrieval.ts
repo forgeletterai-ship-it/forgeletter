@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
+import { embedText } from "./embeddings"
 import type { JobAnalysis, RetrievedExample } from "../types"
 
 /**
@@ -9,17 +10,28 @@ import type { JobAnalysis, RetrievedExample } from "../types"
  * available — they preserve voice and have empirically beaten
  * the screening filter once already.
  *
- * 4-STRATEGY WATERFALL (per blueprint section 4):
- *   1. Personal — user's own offer-winning letters first, then
- *      interview-winning letters. Capped so curated still appears.
- *   2. Curated — exact match (same industry × same seniority).
- *   3. Curated — same industry OR same role-family token.
- *   4. Curated — top-quality fallback regardless of match.
+ * RETRIEVAL ORDER:
  *
- * Each strategy contributes until `limit` is filled or the strategy
- * runs out. Personal winners are blended in BEFORE strategy 2 with
- * a hard cap so the writer always sees at least one curated entry
- * when both pools exist.
+ *   0. VECTOR pass (primary). When OPENAI_API_KEY is set and the
+ *      cover_letter_examples table has the `embedding` column,
+ *      we embed a JD signature (role + industry + must-have skills
+ *      + top responsibilities) and call match_examples() — a
+ *      pgvector cosine-similarity top-K with quality floor 90.
+ *      This is the "real" semantic retrieval — synonyms, role
+ *      families, and adjacent industries surface naturally without
+ *      hand-tuned keyword logic.
+ *
+ *   1. PERSONAL — the user's own offer-winning letters first, then
+ *      interview-winning letters. Capped so curated still appears.
+ *
+ *   2. CURATED — exact match (same industry × same seniority).
+ *   3. CURATED — same industry OR same role-family token.
+ *   4. CURATED — top-quality fallback regardless of match.
+ *
+ * Strategies 1-4 are the substring/token waterfall used as a
+ * fallback when vector search isn't available (no API key, RPC
+ * missing, or returned 0 rows) or to back-fill when the vector
+ * top-K didn't fill all `limit` slots.
  *
  * Never crosses user boundaries — personal letters come from the
  * caller's own user_id only. The curated table is the cross-user
@@ -30,11 +42,18 @@ import type { JobAnalysis, RetrievedExample } from "../types"
  */
 
 interface RankedExample extends RetrievedExample {
-  /** Internal — best strategy that yielded the row. */
-  _strategy: 1 | 2 | 3 | 4
+  /** Internal — best strategy that yielded the row.
+   *  0 = vector top-K
+   *  1 = personal winner
+   *  2 = exact industry × seniority
+   *  3 = same industry OR same role-family token
+   *  4 = top-quality fallback */
+  _strategy: 0 | 1 | 2 | 3 | 4
   /** Internal — composite ranking score (higher is better). */
   _score: number
   _seniority?: string
+  /** Internal — cosine similarity when strategy=0 (vector hit). */
+  _similarity?: number
 }
 
 export async function runExampleRetrieval(args: {
@@ -46,14 +65,28 @@ export async function runExampleRetrieval(args: {
   if (!args.supabase) return []
   const limit = args.limit ?? 3
 
+  // ── Strategy 0 — vector top-K (semantic retrieval) ───────────
+  const vectorMatches = await tryVectorRetrieval(args.supabase, args.job, limit * 2)
+
   // ── Strategy 1 — personal winners ────────────────────────────
   const personal = args.userId
     ? await fetchUserWinnerExamples(args.supabase, args.userId, limit * 2)
     : []
 
   // Curated pool — we fetch a wider net once, then partition by
-  // strategy 2 / 3 / 4 in memory to avoid 3 DB round-trips.
+  // strategy 2 / 3 / 4 in memory to avoid 3 DB round-trips. The
+  // vector results join this pool as a separate strategy=0 rung.
   const curatedPool = await fetchCuratedExamples(args.supabase, args.job, limit * 6)
+
+  // Vector hits become strategy=0 with similarity carried through as
+  // the rank score (so most-similar wins within strategy 0).
+  const vectorRanked: RankedExample[] = vectorMatches.map((row) => ({
+    ...row,
+    _strategy: 0 as const,
+    // 100 baseline + similarity bonus; ensures vector results sort
+    // above strategy-2 even when their substring overlap is weaker.
+    _score: 100 + (row._similarity ?? 0) * 30,
+  }))
 
   // Tag each curated row with the strongest strategy that applies.
   const tagged: RankedExample[] = curatedPool.map((row) => {
@@ -81,8 +114,18 @@ export async function runExampleRetrieval(args: {
       (row.source === "user_offer" ? 25 : row.source === "user_interview" ? 12 : 0),
   }))
 
-  // Merge and order: strategy ascending (1 before 4), then score desc.
-  const all = [...personalRanked, ...tagged].sort((a, b) => {
+  // Merge and order: strategy ascending (0 = vector first, then
+  // personal=1, then curated rungs 2-4), tie-break by score desc.
+  // Dedupe by id — a row that surfaced both via vector AND
+  // substring match collapses to its strongest strategy tag.
+  const seenIdToBest = new Map<string, RankedExample>()
+  for (const row of [...vectorRanked, ...personalRanked, ...tagged]) {
+    const prior = seenIdToBest.get(row.id)
+    if (!prior || row._strategy < prior._strategy) {
+      seenIdToBest.set(row.id, row)
+    }
+  }
+  const all = Array.from(seenIdToBest.values()).sort((a, b) => {
     if (a._strategy !== b._strategy) return a._strategy - b._strategy
     return b._score - a._score
   })
@@ -116,12 +159,92 @@ export async function runExampleRetrieval(args: {
   return finalList
 }
 
+/**
+ * Build a compact JD signature → embed it → call the match_examples
+ * RPC. Returns [] silently when:
+ *   • OPENAI_API_KEY is unset (no embedding can be made)
+ *   • match_examples RPC is missing (PGRST202 — pre-migration DB)
+ *   • the embedding column is missing or empty
+ *   • any other error — caller continues with strategies 1-4
+ *
+ * The signature is intentionally short (~500 tokens max) to keep the
+ * embedding call cheap and deterministic-ish: role, industry,
+ * seniority, must-haves, and the top responsibility lines.
+ */
+async function tryVectorRetrieval(
+  supabase: SupabaseClient,
+  job: JobAnalysis,
+  topK: number
+): Promise<Array<RetrievedExample & { _seniority?: string; _similarity: number }>> {
+  const signature = buildJdSignature(job)
+  if (!signature) return []
+  const embedding = await embedText(signature)
+  if (!embedding) return [] // no API key, or fetch failed
+
+  try {
+    const { data, error } = await supabase.rpc("match_examples", {
+      query_embedding: embedding,
+      match_count: topK,
+      min_quality: 90,
+    })
+    if (error) {
+      const code = (error as { code?: string }).code
+      // PGRST202 = function missing; PGRST205 = column missing.
+      // 42P01 = relation missing; 42883 = function signature mismatch.
+      // Any of these → fall through silently to the substring waterfall.
+      if (code && ["PGRST202", "PGRST205", "42P01", "42883"].includes(code)) {
+        return []
+      }
+      console.warn("[ExampleRetrieval] vector RPC failed:", error)
+      return []
+    }
+    if (!data) return []
+    return (data as Array<Record<string, unknown>>).map((row) => ({
+      id: String(row.id ?? ""),
+      industry: String(row.industry ?? ""),
+      role: String(row.role ?? ""),
+      excerpt: String(row.excerpt ?? ""),
+      whyItWorks: (row.why_it_works as string | null) ?? null,
+      qualityScore: Number(row.quality_score ?? 0),
+      source: "curated" as const,
+      _seniority: row.seniority as string | undefined,
+      _similarity: Number(row.similarity ?? 0),
+    }))
+  } catch (err) {
+    console.warn("[ExampleRetrieval] vector retrieval failed:", err)
+    return []
+  }
+}
+
+function buildJdSignature(job: JobAnalysis): string {
+  const bits: string[] = []
+  if (job.jobTitle) bits.push(`Role: ${job.jobTitle}`)
+  if (job.industry) bits.push(`Industry: ${job.industry}`)
+  if (job.seniorityRequired) bits.push(`Seniority: ${job.seniorityRequired}`)
+  if (job.mustHaveSkills?.length)
+    bits.push(`Must-have skills: ${job.mustHaveSkills.slice(0, 8).join(", ")}`)
+  if (job.keyResponsibilities?.length)
+    bits.push(
+      `Key responsibilities: ${job.keyResponsibilities.slice(0, 4).join("; ")}`
+    )
+  if (job.hiringManagerPriorities?.length)
+    bits.push(`Priorities: ${job.hiringManagerPriorities.slice(0, 4).join(" → ")}`)
+  return bits.join("\n").trim()
+}
+
 function stripInternal(row: RankedExample): RetrievedExample {
   // Drop the internal scoring keys before handing to the Writer.
-  const { _strategy: _s, _score: _sc, _seniority: _sen, ...rest } = row
+  const {
+    _strategy: _s,
+    _score: _sc,
+    _seniority: _sen,
+    _similarity: _sim,
+    ...rest
+  } = row
   void _s
   void _sc
   void _sen
+  void _sim
   return rest
 }
 

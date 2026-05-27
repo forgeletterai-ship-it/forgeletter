@@ -65,7 +65,7 @@ function serializeBlock(block: ExperienceBlock): string {
   if (block.size) meta.push(`Org size: ${block.size}`)
 
   const achievementLines = block.achievements
-    .map((a) => [a.col0, a.col1, a.col2].filter(Boolean).join(" | "))
+    .map((a) => [a.what, a.number, a.whyItMattered].filter(Boolean).join(" | "))
     .filter(Boolean)
     .map((line) => `  - ${line}`)
 

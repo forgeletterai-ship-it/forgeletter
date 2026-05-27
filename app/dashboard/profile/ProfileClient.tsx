@@ -7,9 +7,9 @@ type BlockType = "employer" | "internship" | "university"
 
 type Achievement = {
   id: string
-  col0: string
-  col1: string
-  col2: string
+  what: string
+  number: string
+  whyItMattered: string
 }
 
 type ProfileBlock = {
@@ -33,6 +33,7 @@ type ProfileDraft = {
   skills: string
   qualifications: string
   notes: string
+  portfolioLink: string
   blocks: ProfileBlock[]
 }
 
@@ -236,7 +237,7 @@ const JOURNEY_GUIDE = [
 
 let idCounter = 0
 const uid = () => `profile_${++idCounter}_${Date.now()}`
-const makeAchievement = (): Achievement => ({ id: uid(), col0: "", col1: "", col2: "" })
+const makeAchievement = (): Achievement => ({ id: uid(), what: "", number: "", whyItMattered: "" })
 
 function makeBlock(type: BlockType): ProfileBlock {
   return {
@@ -266,6 +267,7 @@ function createDefaultDraft(initialProfile?: UserProfile): ProfileDraft {
       "HubSpot, Marketo, SQL, A/B testing, lifecycle marketing, paid social",
     qualifications: initialProfile?.qualifications ?? "",
     notes: initialProfile?.notes ?? "",
+    portfolioLink: initialProfile?.portfolio_link ?? "",
     // Saved structured blocks are loaded here so the user sees what
     // they previously entered instead of starting empty each visit.
     blocks: (initialProfile?.experience_blocks ?? []) as ProfileBlock[],
@@ -296,7 +298,7 @@ function serializeExperience(profile: ProfileDraft) {
       ].filter(Boolean)
       const achievements = block.achievements
         .map((achievement) =>
-          [achievement.col0, achievement.col1, achievement.col2]
+          [achievement.what, achievement.number, achievement.whyItMattered]
             .filter(Boolean)
             .join(" | ")
         )
@@ -340,6 +342,7 @@ function buildPayload(profile: ProfileDraft, initialProfile: UserProfile): UserP
     experience_blocks: profile.blocks,
     qualifications: profile.qualifications,
     notes: profile.notes,
+    portfolio_link: profile.portfolioLink ?? initialProfile.portfolio_link ?? "",
   }
 }
 
@@ -364,20 +367,22 @@ function AchievementRow({
         {index + 1}
       </div>
 
-      {achFields.map((label, fieldIndex) => (
-        <div key={label} className="ach-field">
-          <div className="ach-field-label">{label}</div>
-          <input
-            className="ach-input"
-            type="text"
-            value={achievement[`col${fieldIndex}` as keyof Achievement] || ""}
-            placeholder={achPlaceholders[fieldIndex]}
-            onChange={(event) =>
-              onUpdate(`col${fieldIndex}` as keyof Achievement, event.target.value)
-            }
-          />
-        </div>
-      ))}
+      {achFields.map((label, fieldIndex) => {
+        const fieldName: keyof Achievement =
+          fieldIndex === 0 ? "what" : fieldIndex === 1 ? "number" : "whyItMattered"
+        return (
+          <div key={label} className="ach-field">
+            <div className="ach-field-label">{label}</div>
+            <input
+              className="ach-input"
+              type="text"
+              value={(achievement[fieldName] as string) || ""}
+              placeholder={achPlaceholders[fieldIndex]}
+              onChange={(event) => onUpdate(fieldName, event.target.value)}
+            />
+          </div>
+        )
+      })}
 
       <button
         className="ach-remove"

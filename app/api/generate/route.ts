@@ -337,6 +337,7 @@ export async function POST(req: NextRequest) {
             strengths: savedProfile.strengths,
             notes: savedProfile.notes,
             keyAchievements: savedProfile.key_achievements,
+            portfolioLink: savedProfile.portfolio_link,
             experienceBlocks: blocks,
           },
           selectedExperienceIds: effectiveSelectedIds,

@@ -19,12 +19,13 @@ function cleanAchievement(input: unknown): ExperienceAchievement | null {
   const a = input as Record<string, unknown>
   const id = typeof a.id === "string" ? a.id : ""
   if (!id) return null
-  return {
-    id,
-    col0: String(a.col0 ?? "").trim(),
-    col1: String(a.col1 ?? "").trim(),
-    col2: String(a.col2 ?? "").trim(),
-  }
+  // Accept BOTH the new (what / number / whyItMattered) and legacy
+  // (col0 / col1 / col2) field names on the wire — useful while
+  // clients migrate. We always WRITE the new names.
+  const what = String(a.what ?? a.col0 ?? "").trim()
+  const number = String(a.number ?? a.col1 ?? "").trim()
+  const whyItMattered = String(a.whyItMattered ?? a.col2 ?? "").trim()
+  return { id, what, number, whyItMattered }
 }
 
 function cleanBlock(input: unknown): ExperienceBlock | null {
@@ -72,6 +73,7 @@ function cleanProfile(input: Partial<UserProfile>): UserProfile {
     experience_blocks,
     qualifications: String(input.qualifications || "").trim(),
     notes: String(input.notes || "").trim(),
+    portfolio_link: String(input.portfolio_link || "").trim(),
   }
 }
 
@@ -130,10 +132,11 @@ export async function PUT(req: NextRequest) {
     newPayloadBits.experience_blocks = profile.experience_blocks
     newPayloadBits.qualifications = profile.qualifications
     newPayloadBits.notes = profile.notes
+    newPayloadBits.portfolio_link = profile.portfolio_link
   }
 
   const fullCols =
-    "professional_headline,target_roles,industries,key_achievements,strengths,experience_blocks,qualifications,notes"
+    "professional_headline,target_roles,industries,key_achievements,strengths,experience_blocks,qualifications,notes,portfolio_link"
   const legacyCols =
     "professional_headline,target_roles,industries,key_achievements,strengths"
 
@@ -195,6 +198,7 @@ export async function PUT(req: NextRequest) {
       experience_blocks: profile.experience_blocks,
       qualifications: profile.qualifications,
       notes: profile.notes,
+      portfolio_link: profile.portfolio_link,
     }
 
     return NextResponse.json({ profile: merged, capabilities })

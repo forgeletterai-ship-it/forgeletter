@@ -703,7 +703,7 @@ function collectResumeTextForVerifier(profile: PipelineProfile): string {
       .join(" · ")
     if (head) bits.push(head)
     for (const a of block.achievements) {
-      bits.push([a.col0, a.col1, a.col2].filter(Boolean).join(" — "))
+      bits.push([a.what, a.number, a.whyItMattered].filter(Boolean).join(" — "))
     }
   }
   return bits.join("\n")
