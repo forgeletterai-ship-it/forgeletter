@@ -27,8 +27,10 @@ const plans = [
       "Basic history",
     ],
     agents: [
-      "Resume Analyst",
+      "Profile Analyst",
       "Job Analyst",
+      "Match Analyst",
+      "Example Retrieval",
       "Writer",
       "Final Editor",
       "Hallucination Check",
@@ -52,9 +54,10 @@ const plans = [
       "1 tone rewrite included",
     ],
     agents: [
-      "Resume Analyst",
+      "Profile Analyst",
       "Job Analyst",
       "Match Analyst",
+      "Example Retrieval",
       "Writer",
       "ATS Agent",
       "Final Editor",
@@ -81,7 +84,7 @@ const plans = [
     ],
     agents: [
       "Input Cleaner",
-      "Resume Analyst",
+      "Profile Analyst",
       "Job Analyst",
       "Match Analyst",
       "Example Retrieval",

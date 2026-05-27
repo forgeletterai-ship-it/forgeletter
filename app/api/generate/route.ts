@@ -1,11 +1,12 @@
 import { NextRequest } from "next/server"
 import { generateCoverLetter } from "@/lib/agents"
-import type { Tier, Tone } from "@/lib/agents"
+import type { PipelineInput, Tier, Tone } from "@/lib/agents"
 import {
   dataErrorMessage,
   getCurrentAppUser,
   getCurrentPeriodLetterCount,
   getSupabaseSchemaCapabilities,
+  getUserProfile,
   resetSchemaCapabilitiesCache,
 } from "@/lib/app-data"
 import {
@@ -287,17 +288,43 @@ export async function POST(req: NextRequest) {
       send({ type: "init", generationId, tier, tone })
 
       try {
-        const result = await generateCoverLetter(
-          {
-            resumeText,
-            jobDescription,
-            jobTitle,
-            companyName,
-            tone,
-            tier,
-            userId: user.id,
-            generationId,
+        // Build the structured PipelineInput per the blueprint.
+        // We always fetch the user's saved profile so the
+        // ProfileAnalyst sees every selected experience block (the
+        // dashboard sends the user's selectedExperienceIds in the
+        // body — empty array means "use all saved entries"). When
+        // the user has no saved profile yet we fall back to a
+        // qualifications-only profile built from the raw resume
+        // text so the pipeline can still run end-to-end.
+        const { profile: savedProfile } = await getUserProfile(user.id)
+        const blocks = savedProfile.experience_blocks ?? []
+        const effectiveSelectedIds =
+          selectedExperienceIds.length > 0
+            ? selectedExperienceIds
+            : blocks.map((b) => b.id)
+
+        const pipelineInput: PipelineInput = {
+          profile: {
+            professionalHeadline: savedProfile.professional_headline,
+            qualifications: savedProfile.qualifications || resumeText,
+            strengths: savedProfile.strengths,
+            notes: savedProfile.notes,
+            keyAchievements: savedProfile.key_achievements,
+            experienceBlocks: blocks,
           },
+          selectedExperienceIds: effectiveSelectedIds,
+          alwaysIncludeQualifications: true,
+          jobDescription,
+          targetRole: jobTitle,
+          companyName,
+          tone,
+          tier,
+          userId: user.id,
+          generationId,
+        }
+
+        const result = await generateCoverLetter(
+          pipelineInput,
           supabaseAdmin,
           async (event) => {
             send({ type: "progress", ...event })
