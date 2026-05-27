@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "test:agents": "tsx scripts/test-agents.ts"
+    "test:agents": "tsx scripts/test-agents.ts",
+    "harness": "tsx scripts/harness.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.98.0",

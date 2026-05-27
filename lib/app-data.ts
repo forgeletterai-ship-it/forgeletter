@@ -207,6 +207,7 @@ export {
 } from "@/lib/experience-types"
 
 import type { ExperienceAchievement, ExperienceBlock } from "@/lib/experience-types"
+import { normalizeAchievement } from "@/lib/experience-types"
 
 export type UserProfile = {
   professional_headline: string
@@ -217,6 +218,7 @@ export type UserProfile = {
   experience_blocks: ExperienceBlock[]
   qualifications: string
   notes: string
+  portfolio_link: string
 }
 
 export type ApplicationBrief = {
@@ -251,6 +253,7 @@ export const defaultProfile: UserProfile = {
   experience_blocks: [],
   qualifications: "",
   notes: "",
+  portfolio_link: "",
 }
 
 /** Coerces JSONB from Supabase into a typed ExperienceBlock array. */
@@ -269,18 +272,7 @@ function normalizeExperienceBlocks(raw: unknown): ExperienceBlock[] {
       if (!id) return null
       const achievementsRaw = Array.isArray(e.achievements) ? e.achievements : []
       const achievements: ExperienceAchievement[] = achievementsRaw
-        .map((a): ExperienceAchievement | null => {
-          if (!a || typeof a !== "object") return null
-          const ach = a as Record<string, unknown>
-          const aid = typeof ach.id === "string" ? ach.id : ""
-          if (!aid) return null
-          return {
-            id: aid,
-            col0: String(ach.col0 ?? ""),
-            col1: String(ach.col1 ?? ""),
-            col2: String(ach.col2 ?? ""),
-          }
-        })
+        .map((a) => normalizeAchievement(a))
         .filter((a): a is ExperienceAchievement => a !== null)
       return {
         id,
@@ -455,7 +447,7 @@ async function selectUserProfileRow(
 export async function getUserProfile(userId: string) {
   const capabilities = await getSupabaseSchemaCapabilities()
   const fullCols =
-    "professional_headline,target_roles,industries,key_achievements,strengths,experience_blocks,qualifications,notes"
+    "professional_headline,target_roles,industries,key_achievements,strengths,experience_blocks,qualifications,notes,portfolio_link"
   const legacyCols =
     "professional_headline,target_roles,industries,key_achievements,strengths"
 
@@ -493,6 +485,7 @@ export async function getUserProfile(userId: string) {
       ),
       qualifications: String((raw as { qualifications?: unknown }).qualifications ?? ""),
       notes: String((raw as { notes?: unknown }).notes ?? ""),
+      portfolio_link: String((raw as { portfolio_link?: unknown }).portfolio_link ?? ""),
     } as UserProfile
 
     return { profile: merged }

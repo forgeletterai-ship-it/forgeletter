@@ -41,7 +41,7 @@ const sampleBlocks: ExperienceBlock[] = [
     company: "Helix Systems",
     title: "Senior Engineer",
     achievements: [
-      { id: "a1", col0: "Cut p99 latency", col1: "380ms -> 42ms", col2: "Customer satisfaction +18%" },
+      { id: "a1", what: "Cut p99 latency", number: "380ms -> 42ms", whyItMattered: "Customer satisfaction +18%" },
     ],
   }),
   block({
@@ -50,7 +50,7 @@ const sampleBlocks: ExperienceBlock[] = [
     company: "Plinth Labs",
     title: "Software Engineer",
     achievements: [
-      { id: "a2", col0: "Built billing service", col1: "EUR40M ARR", col2: "Passed SOC2 type II" },
+      { id: "a2", what: "Built billing service", number: "EUR40M ARR", whyItMattered: "Passed SOC2 type II" },
     ],
   }),
   block({

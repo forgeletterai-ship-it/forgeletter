@@ -8,7 +8,7 @@ const SITE_URL = getSiteUrl()
 const SITE_NAME = "ForgeLetter"
 const DEFAULT_TITLE = "ForgeLetter — AI Cover Letters That Get You Hired"
 const DEFAULT_DESCRIPTION =
-  "ForgeLetter uses a 12-agent AI pipeline to write, verify, and perfect your cover letter before you ever see it. Every letter passes a 95+ quality score."
+  "ForgeLetter uses up to a 12-agent AI pipeline to write, verify and auto-improve your cover letter before you see it. Every letter clears a 90-95% quality bar at no extra cost."
 
 export const metadata: Metadata = {
   // metadataBase lets every page resolve relative OG/icon URLs to

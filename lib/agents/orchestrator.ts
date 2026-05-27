@@ -1,15 +1,15 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
-import { runATSAgent } from "./agents/ats"
+import type { ExperienceBlock } from "@/lib/experience-types"
+import { runATSAgentTiered } from "./agents/ats"
 import { runExampleRetrieval } from "./agents/example-retrieval"
 import { runFinalEditor } from "./agents/final-editor"
 import { runHMCritic } from "./agents/hm-critic"
-import { runHallucinationDetector } from "./agents/hallucination-detector"
-import { runInputCleaner } from "./agents/input-cleaner"
+import { autoCleanHallucinations, runHallucinationDetector } from "./agents/hallucination-detector"
+import { runInputCleaner, scanProfileForInjection } from "./agents/input-cleaner"
 import { runJobAnalyst } from "./agents/job-analyst"
 import { runMatchAnalyst } from "./agents/match-analyst"
+import { runProfileAnalyst } from "./agents/profile-analyst"
 import { runQualityGate } from "./agents/quality-gate"
-import type { CallMeta } from "./agents/resume-analyst"
-import { runResumeAnalyst } from "./agents/resume-analyst"
 import { runRewriteAgent } from "./agents/rewrite"
 import { runWriterAgent } from "./agents/writer"
 import { getTierConfig } from "./tiers"
@@ -20,55 +20,147 @@ import type {
   HMCritique,
   HallucinationCheck,
   JobAnalysis,
+  LegacyPipelineInput,
   MatchAnalysis,
+  MatchBlueprint,
   PipelineInput,
+  PipelineProfile,
   PipelineResult,
+  ProfileAnalysis,
   ProgressCallback,
   QualityVerdict,
-  ResumeAnalysis,
   RetrievedExample,
+  Tier,
   Tone,
 } from "./types"
 
+/**
+ * Orchestrator — implements the Definitive Engine Blueprint
+ * Section 4 workflow.
+ *
+ * Stages (in order):
+ *   1. Pre-flight: deterministic input cleaning + Ultra-only LLM
+ *      injection scan.
+ *   2. ProfileAnalyst + JobAnalyst (parallel).
+ *   3. ExampleRetrieval (gold-base waterfall, every paid tier).
+ *   4. MatchAnalyst (every paid tier, gold-blueprint extractor).
+ *   5. Writer (300-380 words, blueprint-driven).
+ *   6. ATS (deterministic Starter / Haiku Pro+Ultra).
+ *   7. HMCritic (Ultra only, BARS framework).
+ *   8. HallucinationCheck pre-edit (every tier, win-mapping).
+ *   9. FinalEditor (every tier, 300-380 band guardian).
+ *  10. HallucinationCheck post-edit (Ultra only — the "×2 on Ultra"
+ *      rule).
+ *  11. QualityGate (every tier, manipulation-proof).
+ *  12. If pass=true AND hallucination.risk !== "high" → DELIVER.
+ *      Else → RewriteAgent loop (caps 1 / 2 / 2). Ship best-not-last
+ *      (highest-scoring draft across all cycles).
+ *
+ * Failure modes:
+ *   - Writer crash is fatal (no draft → no letter).
+ *   - All other agents fall back into typed defaults and the
+ *     pipeline continues.
+ *   - If the rewrite budget is exhausted and the score is still
+ *     below threshold, we still return the best draft and mark
+ *     status='failed'.
+ */
+
 const PROGRESS_WEIGHTS: Record<AgentName | "Complete", number> = {
-  InputCleaner: 5,
-  ResumeAnalyst: 10,
-  JobAnalyst: 10,
+  InputCleaner: 4,
+  ProfileAnalyst: 8,
+  ResumeAnalyst: 8, // legacy alias — never emitted by the new flow
+  JobAnalyst: 8,
   MatchAnalyst: 8,
   ExampleRetrieval: 3,
-  Writer: 25,
+  Writer: 22,
   ATSAgent: 4,
   HMCritic: 10,
-  FinalEditor: 10,
-  HallucinationDetector: 8,
+  FinalEditor: 8,
+  HallucinationCheck: 6,
+  HallucinationDetector: 6, // legacy alias
   QualityGate: 5,
-  RewriteAgent: 0, // counted into Writer weight on rewrite
+  RewriteAgent: 4, // small slice — most of the visible rewrite time goes to Writer
   Complete: 2,
 }
 
+// ─────────────────────────────────────────────────────────────────
+// Public entry points
+// ─────────────────────────────────────────────────────────────────
+
 /**
- * The orchestrator. Runs the pipeline appropriate to the tier, emits
- * progress events to `onProgress`, and writes every agent's output to
- * `agent_outputs` if a supabase client is provided.
- *
- * Failure modes:
- * - Writer agent failure is fatal (we can't recover without a draft).
- * - Any other agent failure triggers the fallback shape and continues.
- * - If Quality Gate fails and rewrite budget is exhausted, we still
- *   return the best draft we produced and mark status='failed'.
+ * Run the pipeline on a structured PipelineInput (blueprint shape).
+ * This is the primary entry point — /api/generate switches to this
+ * once the dashboard sends structured profile + selectedIds.
  */
 export async function generateCoverLetter(
+  input: PipelineInput | LegacyPipelineInput,
+  supabase: SupabaseClient | null,
+  onProgress?: ProgressCallback
+): Promise<PipelineResult> {
+  // Adapt legacy shape silently — synthesize a qualifications-only
+  // profile so the blueprint pipeline still runs end-to-end.
+  const structured: PipelineInput = isPipelineInput(input)
+    ? input
+    : adaptLegacyInput(input)
+  return runBlueprintPipeline(structured, supabase, onProgress)
+}
+
+function isPipelineInput(
+  input: PipelineInput | LegacyPipelineInput
+): input is PipelineInput {
+  return "profile" in input && "selectedExperienceIds" in input
+}
+
+function adaptLegacyInput(legacy: LegacyPipelineInput): PipelineInput {
+  const synthBlock: ExperienceBlock = {
+    id: "legacy:resume",
+    type: "employer",
+    company: legacy.companyName ?? "Past role",
+    title: legacy.jobTitle ?? "Candidate",
+    employmentType: "",
+    sector: "",
+    size: "",
+    role: legacy.jobTitle ?? "",
+    duration: "",
+    name: "",
+    degree: "",
+    achievements: [],
+  }
+  return {
+    profile: {
+      qualifications: legacy.resumeText,
+      strengths: "",
+      notes: "",
+      keyAchievements: legacy.resumeText,
+      experienceBlocks: [synthBlock],
+    },
+    selectedExperienceIds: [],
+    alwaysIncludeQualifications: true,
+    jobDescription: legacy.jobDescription,
+    targetRole: legacy.jobTitle,
+    companyName: legacy.companyName,
+    tone: legacy.tone,
+    tier: legacy.tier,
+    userId: legacy.userId,
+    generationId: legacy.generationId,
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Blueprint pipeline
+// ─────────────────────────────────────────────────────────────────
+
+async function runBlueprintPipeline(
   input: PipelineInput,
   supabase: SupabaseClient | null,
   onProgress?: ProgressCallback
 ): Promise<PipelineResult> {
   const start = Date.now()
-  const config = getTierConfig(input.tier)
+  const tier: Tier = input.tier
+  const config = getTierConfig(tier)
   const tone: Tone = input.tone ?? "professional"
   const agentsRun: AgentName[] = []
   const runLogs: AgentRunLog[] = []
-  let totalTokensInput = 0
-  let totalTokensOutput = 0
   let progress = 0
 
   const emit = async (
@@ -92,82 +184,80 @@ export async function generateCoverLetter(
     }
   }
 
-  const recordRun = (log: AgentRunLog) => {
+  const recordLog = (log: AgentRunLog) => {
     runLogs.push(log)
-    totalTokensInput += log.tokensInput
-    totalTokensOutput += log.tokensOutput
-  }
-
-  const logAgent = (
-    name: AgentName,
-    cycle: number,
-    output: unknown,
-    meta: CallMeta,
-    fallback: boolean
-  ) => {
-    recordRun({
-      agent: name,
-      cycle,
-      outputJson: output,
-      modelUsed: meta.modelUsed,
-      durationMs: meta.durationMs,
-      tokensInput: meta.tokensInput,
-      tokensOutput: meta.tokensOutput,
-      fallbackTriggered: fallback,
-    })
-    if (!agentsRun.includes(name)) agentsRun.push(name)
+    if (!agentsRun.includes(log.agent)) agentsRun.push(log.agent)
   }
 
   try {
-    // 1. Input Cleaner (deterministic — no progress weight loss to call out)
+    // ── 1. Pre-flight: deterministic input clean ────────────
     await emit("InputCleaner", "running")
-    const cleaned = runInputCleaner({
-      resumeText: input.resumeText,
+    const cleanedDeterministic = runInputCleaner({
+      resumeText: collectResumeTextForVerifier(input.profile),
       jobDescription: input.jobDescription,
-      jobTitle: input.jobTitle,
+      jobTitle: input.targetRole,
       companyName: input.companyName,
     })
-    logAgent(
-      "InputCleaner",
-      0,
-      { warnings: cleaned.warnings, resumeChars: cleaned.resumeText.length, jdChars: cleaned.jobDescription.length },
-      { modelUsed: "deterministic", tokensInput: 0, tokensOutput: 0, durationMs: 0 },
-      false
-    )
+    recordLog({
+      agent: "InputCleaner",
+      cycle: 0,
+      outputJson: {
+        warnings: cleanedDeterministic.warnings,
+        resumeChars: cleanedDeterministic.resumeText.length,
+        jdChars: cleanedDeterministic.jobDescription.length,
+      },
+      modelUsed: "deterministic",
+      durationMs: 0,
+      tokensInput: 0,
+      tokensOutput: 0,
+      fallbackTriggered: false,
+    })
+
+    // Ultra-only: LLM injection scan over JD + profile notes.
+    let sanitizedJobDescription = cleanedDeterministic.jobDescription
+    if (tier === "ultra") {
+      const scan = await scanProfileForInjection({
+        profile: synthProfileForScan(input.profile),
+        jobDescription: sanitizedJobDescription,
+        cycleNumber: 0,
+      })
+      if (!scan.log.fallbackTriggered) {
+        sanitizedJobDescription =
+          scan.data.sanitizedJobDescription || sanitizedJobDescription
+      }
+      recordLog(scan.log)
+    }
     await emit("InputCleaner", "done", PROGRESS_WEIGHTS.InputCleaner)
 
-    // 2 & 3. Resume + Job analysts (parallel)
-    await emit("ResumeAnalyst", "running")
+    // ── 2. ProfileAnalyst + JobAnalyst in parallel ──────────
+    await emit("ProfileAnalyst", "running")
     await emit("JobAnalyst", "running")
-    const [resumeRes, jobRes] = await Promise.all([
-      runResumeAnalyst(cleaned.resumeText),
-      runJobAnalyst({
-        jobDescription: cleaned.jobDescription,
-        jobTitle: cleaned.jobTitle,
-        companyName: cleaned.companyName,
-      }),
-    ])
-    logAgent("ResumeAnalyst", 0, resumeRes.data, resumeRes.meta, resumeRes.fallback)
-    logAgent("JobAnalyst", 0, jobRes.data, jobRes.meta, jobRes.fallback)
-    await emit("ResumeAnalyst", "done", PROGRESS_WEIGHTS.ResumeAnalyst)
+
+    const profilePromise = runProfileAnalyst({
+      profile: input.profile,
+      selectedExperienceIds: input.selectedExperienceIds,
+      alwaysIncludeQualifications: input.alwaysIncludeQualifications,
+      cycleNumber: 0,
+    })
+    const jobPromise = runJobAnalyst({
+      jobDescription: sanitizedJobDescription,
+      jobTitle: input.targetRole,
+      companyName: input.companyName,
+      cycleNumber: 0,
+    })
+
+    const [profileRes, jobRes] = await Promise.all([profilePromise, jobPromise])
+    recordLog(profileRes.log)
+    recordLog(jobRes.log)
+    await emit("ProfileAnalyst", "done", PROGRESS_WEIGHTS.ProfileAnalyst)
     await emit("JobAnalyst", "done", PROGRESS_WEIGHTS.JobAnalyst)
 
-    const resume: ResumeAnalysis = resumeRes.data
+    const profile: ProfileAnalysis = profileRes.data
     const job: JobAnalysis = jobRes.data
 
-    // 4. Match Analyst (pro+ultra only)
-    let match: MatchAnalysis | null = null
-    if (shouldRun(config, "MatchAnalyst")) {
-      await emit("MatchAnalyst", "running")
-      const matchRes = await runMatchAnalyst({ resume, job })
-      match = matchRes.data
-      logAgent("MatchAnalyst", 0, matchRes.data, matchRes.meta, matchRes.fallback)
-      await emit("MatchAnalyst", "done", PROGRESS_WEIGHTS.MatchAnalyst)
-    }
-
-    // 5. Example Retrieval (ultra only, gracefully empty in v1)
+    // ── 3. Example retrieval (every paid tier) ──────────────
     let examples: RetrievedExample[] = []
-    if (shouldRun(config, "ExampleRetrieval")) {
+    if (config.enableExampleRetrieval) {
       await emit("ExampleRetrieval", "running")
       examples = await runExampleRetrieval({
         supabase,
@@ -175,152 +265,244 @@ export async function generateCoverLetter(
         userId: input.userId,
         limit: 3,
       })
-      logAgent(
-        "ExampleRetrieval",
-        0,
-        {
+      recordLog({
+        agent: "ExampleRetrieval",
+        cycle: 0,
+        outputJson: {
           examplesUsed: examples.map((e) => e.id),
           userOffersIncluded: examples.filter((e) => e.source === "user_offer").length,
           userInterviewsIncluded: examples.filter((e) => e.source === "user_interview").length,
           curatedIncluded: examples.filter((e) => e.source === "curated").length,
         },
-        { modelUsed: "supabase", tokensInput: 0, tokensOutput: 0, durationMs: 0 },
-        false
+        modelUsed: "supabase",
+        durationMs: 0,
+        tokensInput: 0,
+        tokensOutput: 0,
+        fallbackTriggered: false,
+      })
+      await emit(
+        "ExampleRetrieval",
+        "done",
+        PROGRESS_WEIGHTS.ExampleRetrieval,
+        examplesMessage(examples)
       )
-      const offersUsed = examples.filter((e) => e.source === "user_offer").length
-      const interviewsUsed = examples.filter((e) => e.source === "user_interview").length
-      const personalUsed = offersUsed + interviewsUsed
-      let examplesMessage: string | undefined
-      if (personalUsed > 0) {
-        const parts: string[] = []
-        if (offersUsed > 0) {
-          parts.push(`${offersUsed} offer-winning`)
-        }
-        if (interviewsUsed > 0) {
-          parts.push(`${interviewsUsed} interview-winning`)
-        }
-        const noun = personalUsed === 1 ? "letter" : "letters"
-        examplesMessage = `Conditioning on ${parts.join(" + ")} of your ${noun}`
-      } else if (examples.length > 0) {
-        examplesMessage = `Drawing on ${examples.length} curated ${
-          examples.length === 1 ? "example" : "examples"
-        }`
-      }
-      await emit("ExampleRetrieval", "done", PROGRESS_WEIGHTS.ExampleRetrieval, examplesMessage)
     }
 
-    // 6. Writer — the load-bearing call. Failure here is fatal.
+    // ── 4. MatchAnalyst (every paid tier) ───────────────────
+    let match: MatchAnalysis | null = null
+    let blueprint: MatchBlueprint | null = null
+    if (shouldRun(config, "MatchAnalyst")) {
+      await emit("MatchAnalyst", "running")
+      const matchRes = await runMatchAnalyst({
+        profile,
+        job,
+        examples,
+        cycleNumber: 0,
+      })
+      match = matchRes.data
+      blueprint = matchRes.blueprint
+      recordLog(matchRes.log)
+      await emit("MatchAnalyst", "done", PROGRESS_WEIGHTS.MatchAnalyst)
+    }
+
+    // ── 5. Writer ────────────────────────────────────────────
     await emit("Writer", "running")
     let writerRes
     try {
-      writerRes = await runWriterAgent({ resume, job, match, examples, tone })
+      writerRes = await runWriterAgent({
+        profile,
+        job,
+        match,
+        blueprint,
+        examples,
+        tone,
+        cycleNumber: 0,
+      })
     } catch (err) {
       await emit("Writer", "failed", 0, err instanceof Error ? err.message : String(err))
       return failedResult({
         input,
         agentsRun,
-        runLogs,
-        totalTokensInput,
-        totalTokensOutput,
         start,
         reason: err instanceof Error ? err.message : "Writer agent failed",
       })
     }
-    logAgent("Writer", 0, writerRes.data, writerRes.meta, writerRes.fallback)
+    recordLog(writerRes.log)
     await emit("Writer", "done", PROGRESS_WEIGHTS.Writer)
 
+    // ── Post-write loop (ATS → HMCritic → FinalEditor →
+    //    Hallucination → QualityGate → maybe rewrite) ────────
     let currentLetter = writerRes.data.letter
     let bestLetter = currentLetter
     let bestScore = 0
     let bestATS: ATSOutput | null = null
     let bestHallucination: HallucinationCheck | null = null
 
-    // The post-write loop: ATS → HM Critic → FinalEditor →
-    // HallucinationDetector → QualityGate, with up to N rewrite cycles.
-    for (let cycle = 0; cycle <= config.maxRewriteCycles; cycle++) {
-      // 7. ATS scoring (pro+ultra) — deterministic, cheap, always re-run
-      let atsResult: ATSOutput | null = null
-      if (shouldRun(config, "ATSAgent")) {
-        atsResult = runATSAgent({ letter: currentLetter, job })
-        logAgent(
-          "ATSAgent",
-          cycle,
-          atsResult,
-          { modelUsed: "deterministic", tokensInput: 0, tokensOutput: 0, durationMs: 0 },
-          false
-        )
-        if (cycle === 0) await emit("ATSAgent", "done", PROGRESS_WEIGHTS.ATSAgent)
-      }
+    for (let cycle = 0; cycle <= config.maxRewriteCycles; cycle += 1) {
+      // ── 6. ATS — tier-aware ───────────────────────────────
+      const atsRes = await runATSAgentTiered({
+        letter: currentLetter,
+        job,
+        useLLM: config.enableATS,
+        cycleNumber: cycle,
+      })
+      const atsResult = atsRes.data
+      recordLog(atsRes.log)
+      if (cycle === 0) await emit("ATSAgent", "done", PROGRESS_WEIGHTS.ATSAgent)
 
-      // 8. HM Critic (pro+ultra)
+      // ── 7. HMCritic (Ultra only) ──────────────────────────
       let critique: HMCritique | null = null
       if (shouldRun(config, "HMCritic")) {
-        await emit("HMCritic", "running")
+        if (cycle === 0) await emit("HMCritic", "running")
         const critRes = await runHMCritic({ letter: currentLetter, job })
         critique = critRes.data
-        logAgent("HMCritic", cycle, critRes.data, critRes.meta, critRes.fallback)
+        recordLog(toRunLog(critRes, "HMCritic", cycle))
         if (cycle === 0) await emit("HMCritic", "done", PROGRESS_WEIGHTS.HMCritic)
       }
 
-      // 9. Final Editor (all tiers)
-      if (shouldRun(config, "FinalEditor")) {
-        await emit("FinalEditor", "running")
-        const editRes = await runFinalEditor({ letter: currentLetter })
-        currentLetter = editRes.data.letter
-        logAgent("FinalEditor", cycle, editRes.data, editRes.meta, editRes.fallback)
-        if (cycle === 0) await emit("FinalEditor", "done", PROGRESS_WEIGHTS.FinalEditor)
-      }
+      // ── 8. HallucinationCheck pre-edit (every tier) ───────
+      const preEditHal = await runHallucinationDetector({
+        letter: currentLetter,
+        profile,
+        jobDescription: sanitizedJobDescription,
+        cycleNumber: cycle,
+      })
+      let hallucinationCheck: HallucinationCheck = preEditHal.data
+      recordLog(preEditHal.log)
+      if (cycle === 0)
+        await emit("HallucinationCheck", "done", PROGRESS_WEIGHTS.HallucinationCheck)
 
-      // 10. Hallucination Detector (pro+ultra)
-      let hallucinationCheck: HallucinationCheck | null = null
-      if (shouldRun(config, "HallucinationDetector")) {
-        await emit("HallucinationDetector", "running")
-        const halRes = await runHallucinationDetector({
+      // ── 9. FinalEditor (every tier) ───────────────────────
+      if (cycle === 0) await emit("FinalEditor", "running")
+      const editRes = await runFinalEditor({
+        letter: currentLetter,
+        tone,
+        cycleNumber: cycle,
+      })
+      currentLetter = editRes.data.letter
+      recordLog(editRes.log)
+      if (cycle === 0) await emit("FinalEditor", "done", PROGRESS_WEIGHTS.FinalEditor)
+
+      // ── 10. HallucinationCheck post-edit (Ultra only) ─────
+      if (tier === "ultra") {
+        const postEditHal = await runHallucinationDetector({
           letter: currentLetter,
-          resumeText: cleaned.resumeText,
-          jobDescription: cleaned.jobDescription,
+          profile,
+          jobDescription: sanitizedJobDescription,
+          cycleNumber: cycle + 0.5,
         })
-        hallucinationCheck = halRes.data
-        logAgent("HallucinationDetector", cycle, halRes.data, halRes.meta, halRes.fallback)
-        if (cycle === 0)
-          await emit("HallucinationDetector", "done", PROGRESS_WEIGHTS.HallucinationDetector)
+        // The post-edit check supersedes the pre-edit one — Final
+        // Editor may have removed offending sentences.
+        hallucinationCheck = postEditHal.data
+        recordLog(postEditHal.log)
       }
 
-      // 11. Quality Gate (pro+ultra)
-      let verdict: QualityVerdict | null = null
-      if (shouldRun(config, "QualityGate")) {
-        await emit("QualityGate", "running")
-        const gateRes = await runQualityGate({
+      // ── 10b. Hallucination auto-cleaner (every tier) ──────
+      // If the verifier flagged fabricated or unmapped claims, try
+      // to strip them deterministically — with a hard 3-sentence
+      // floor. The cleaner refuses to drop if doing so would leave
+      // <3 body sentences. If something was scrubbed, we re-verify
+      // before continuing so the orchestrator's downstream
+      // decisions reflect the cleaned text.
+      if (
+        hallucinationCheck.fabricatedFacts.length > 0 ||
+        (hallucinationCheck.unmappedClaims?.length ?? 0) > 0
+      ) {
+        const cleaned = autoCleanHallucinations({
           letter: currentLetter,
-          threshold: config.qualityThreshold,
-          critique,
-          hallucinationCheck,
+          check: hallucinationCheck,
         })
-        verdict = gateRes.data
-        logAgent("QualityGate", cycle, gateRes.data, gateRes.meta, gateRes.fallback)
-        if (cycle === 0) await emit("QualityGate", "done", PROGRESS_WEIGHTS.QualityGate)
+        recordLog({
+          agent: "HallucinationCheck",
+          cycle: cycle + 0.75,
+          outputJson: {
+            cleanerRan: true,
+            removed: cleaned.removed,
+            skipped: cleaned.skipped,
+            reason: cleaned.reason,
+          },
+          modelUsed: "deterministic",
+          durationMs: 0,
+          tokensInput: 0,
+          tokensOutput: 0,
+          fallbackTriggered: false,
+        })
+        if (cleaned.removed.length > 0) {
+          currentLetter = cleaned.letter
+          // Re-verify the cleaned letter so downstream gate sees the
+          // accurate post-clean risk.
+          const reVerify = await runHallucinationDetector({
+            letter: currentLetter,
+            profile,
+            jobDescription: sanitizedJobDescription,
+            cycleNumber: cycle + 0.85,
+          })
+          hallucinationCheck = reVerify.data
+          recordLog(reVerify.log)
+        }
       }
 
-      // Track best draft across cycles in case we exhaust the budget.
-      const currentScore = verdict?.score ?? estimateScoreWithoutGate(currentLetter)
-      if (currentScore > bestScore) {
-        bestScore = currentScore
+      // ── 11. QualityGate (every tier) ──────────────────────
+      if (cycle === 0) await emit("QualityGate", "running")
+      const gateRes = await runQualityGate({
+        letter: currentLetter,
+        threshold: config.qualityThreshold,
+        critique,
+        hallucinationCheck,
+        cycleNumber: cycle,
+      })
+      const verdict: QualityVerdict = gateRes.data
+      recordLog(gateRes.log)
+      if (cycle === 0) await emit("QualityGate", "done", PROGRESS_WEIGHTS.QualityGate)
+
+      // ── 11b. Coverage check (every tier) ──────────────────
+      // Verify every SELECTED experience block is reflected in the
+      // letter. If not, the letter is incomplete — flip the verdict
+      // and trigger a rewrite. We never silently ship a letter that
+      // drops one of the user's chosen experiences.
+      const coverage = computeExperienceCoverage(currentLetter, profile, input.selectedExperienceIds)
+      if (coverage.missing.length > 0 && verdict.pass) {
+        verdict.pass = false
+        verdict.recommendRewrite = true
+        verdict.reasoning = `${verdict.reasoning} (Coverage gap: ${coverage.missing.length} selected experience(s) missing from the letter — ${coverage.missing.slice(0, 3).join("; ")}.)`
+      }
+      recordLog({
+        agent: "QualityGate",
+        cycle: cycle + 0.5,
+        outputJson: {
+          coverage: {
+            selectedCount: coverage.selectedCount,
+            referencedCount: coverage.referenced.length,
+            missing: coverage.missing,
+          },
+        },
+        modelUsed: "deterministic",
+        durationMs: 0,
+        tokensInput: 0,
+        tokensOutput: 0,
+        fallbackTriggered: false,
+      })
+
+      // Ship best-not-last: track the highest-scoring draft across
+      // every cycle. Penalise missing-coverage drafts so a fully-
+      // covered lower-score draft beats a higher-score draft that
+      // dropped an experience.
+      const effectiveScore = coverage.missing.length > 0
+        ? Math.max(0, verdict.score - coverage.missing.length * 8)
+        : verdict.score
+      if (effectiveScore > bestScore) {
+        bestScore = effectiveScore
         bestLetter = currentLetter
         bestATS = atsResult
         bestHallucination = hallucinationCheck
       }
 
-      // For starter/free tier there's no gate — first pass is the result.
-      if (!verdict) {
-        bestLetter = currentLetter
-        bestScore = currentScore
-        bestATS = atsResult
-        bestHallucination = hallucinationCheck
-        break
-      }
-
-      // Gate passed — done.
-      if (verdict.pass) {
+      // ── 12. Gate decision ─────────────────────────────────
+      const deliverable =
+        verdict.pass &&
+        hallucinationCheck.risk !== "high" &&
+        coverage.missing.length === 0
+      if (deliverable) {
         bestLetter = currentLetter
         bestScore = verdict.score
         bestATS = atsResult
@@ -328,41 +510,55 @@ export async function generateCoverLetter(
         break
       }
 
-      // Gate failed but no budget for another cycle, or gate said don't bother.
+      // Out of rewrite budget OR gate says not salvageable.
       if (cycle >= config.maxRewriteCycles || !verdict.recommendRewrite) {
         break
       }
 
-      // 12. Rewrite — re-runs the writer with explicit feedback.
+      // ── Rewrite ────────────────────────────────────────────
       await emit("RewriteAgent", "running", 0, `Rewrite cycle ${cycle + 1}`)
-      let rewriteRes
       try {
-        rewriteRes = await runRewriteAgent({
-          resume,
+        const rewriteRes = await runRewriteAgent({
+          profile,
           job,
           match,
+          blueprint,
           examples,
           tone,
           previousLetter: currentLetter,
           verdict,
           critique,
+          cycleNumber: cycle + 1,
         })
+        currentLetter = rewriteRes.data.letter
+        recordLog(rewriteRes.log)
+        await emit("RewriteAgent", "done", PROGRESS_WEIGHTS.RewriteAgent)
       } catch (err) {
-        // Couldn't rewrite — keep best draft.
         console.warn("[orchestrator] rewrite failed:", err)
+        await emit("RewriteAgent", "failed", 0, err instanceof Error ? err.message : String(err))
         break
       }
-      currentLetter = rewriteRes.data.letter
-      logAgent("RewriteAgent", cycle + 1, rewriteRes.data, rewriteRes.meta, rewriteRes.fallback)
     }
 
     const totalDuration = Date.now() - start
     const passed = bestScore >= config.qualityThreshold
     const rewriteCycles = runLogs.filter((l) => l.agent === "RewriteAgent").length
 
-    await emit("Complete", "done", PROGRESS_WEIGHTS.Complete, passed ? "Letter ready" : "Best-effort delivered")
+    // Final coverage snapshot for the delivered letter.
+    const finalCoverage = computeExperienceCoverage(
+      bestLetter,
+      profile,
+      input.selectedExperienceIds
+    )
+    const finalWordCount = countDeliveredWords(bestLetter)
 
-    // Persist agent_outputs if we have a Supabase client.
+    await emit(
+      "Complete",
+      "done",
+      PROGRESS_WEIGHTS.Complete,
+      passed ? "Letter ready" : "Best-effort delivered"
+    )
+
     if (supabase) {
       await persistAgentOutputs(supabase, input.generationId, runLogs).catch((err) =>
         console.warn("[orchestrator] failed to persist agent_outputs:", err)
@@ -381,22 +577,27 @@ export async function generateCoverLetter(
       rewriteCycles,
       agentsRun,
       status: passed ? "passed" : "failed",
-      failureReason: passed ? undefined : `Score ${Math.round(bestScore)} below threshold ${config.qualityThreshold}`,
+      failureReason: passed
+        ? undefined
+        : `Score ${Math.round(bestScore)} below threshold ${config.qualityThreshold}`,
       totalDurationMs: totalDuration,
+      coverageMissing: finalCoverage.missing,
+      wordCount: finalWordCount,
     }
   } catch (err) {
     console.error("[orchestrator] unrecoverable error:", err)
     return failedResult({
       input,
       agentsRun,
-      runLogs,
-      totalTokensInput,
-      totalTokensOutput,
       start,
       reason: err instanceof Error ? err.message : "Pipeline failed",
     })
   }
 }
+
+// ─────────────────────────────────────────────────────────────────
+// Helpers
+// ─────────────────────────────────────────────────────────────────
 
 function shouldRun(
   config: { agents: ReadonlyArray<AgentName> },
@@ -406,26 +607,168 @@ function shouldRun(
 }
 
 /**
- * Rough heuristic when there's no Quality Gate (free/starter tiers).
- * Uses length + paragraph count + presence of numbers as proxies.
+ * Coverage check: does the final letter reference every SELECTED
+ * experience block? We treat an experience as "referenced" if any
+ * of these signals match in the letter (case-insensitive):
+ *   • The block's display label tokens (company / institution name).
+ *   • Any role token from the block (job title / role text).
+ *   • Any number from any win in the block.
+ *
+ * "Qualifications" pseudo-blocks are exempted (they fold in as
+ * background facts rather than being explicitly cited).
+ *
+ * Returns the list of missing display labels — used by the
+ * orchestrator to flip the verdict and trigger a targeted rewrite.
  */
-function estimateScoreWithoutGate(letter: string): number {
-  let score = 60
-  const wordCount = letter.split(/\s+/).length
-  if (wordCount >= 200 && wordCount <= 400) score += 15
-  const paragraphs = letter.split(/\n\n+/).filter((p) => p.trim().length > 0).length
-  if (paragraphs >= 3 && paragraphs <= 5) score += 10
-  if (/\b\d+(\.\d+)?(%|x|k|m|\+| years?| million)\b/i.test(letter)) score += 10
-  if (/\b(I am writing to|to whom it may concern|i hope this email)\b/i.test(letter)) score -= 20
-  return Math.max(0, Math.min(100, score))
+function countDeliveredWords(letter: string): number {
+  // Same algorithm as the Writer's body counter; lifted here so the
+  // orchestrator can surface it on PipelineResult.
+  const lines = letter.split(/\r?\n/)
+  const body: string[] = []
+  let inSignature = false
+  for (const line of lines) {
+    const t = line.trim()
+    const lower = t.toLowerCase()
+    if (!t) continue
+    if (lower.startsWith("dear ")) continue
+    if (
+      lower === "sincerely," || lower === "sincerely" ||
+      lower === "regards," || lower === "regards" ||
+      lower === "best," || lower === "best regards," || lower === "best regards"
+    ) {
+      inSignature = true
+      continue
+    }
+    if (inSignature) continue
+    body.push(t)
+  }
+  const words = body.join(" ").match(/[A-Za-z0-9][A-Za-z0-9'-]*/g)
+  return words ? words.length : 0
+}
+
+function computeExperienceCoverage(
+  letter: string,
+  profile: ProfileAnalysis,
+  selectedExperienceIds: string[]
+): { selectedCount: number; referenced: string[]; missing: string[] } {
+  const lower = letter.toLowerCase()
+  // Group wins by entryId so we know per-experience which signals apply.
+  const winsByEntry = new Map<string, typeof profile.wins>()
+  for (const w of profile.wins) {
+    if (w.entryType === "qualifications") continue
+    if (!winsByEntry.has(w.entryId)) winsByEntry.set(w.entryId, [])
+    winsByEntry.get(w.entryId)!.push(w)
+  }
+  // The selected set is the source of truth — but if the upstream
+  // adapted the legacy input shape (selectedExperienceIds = []), fall
+  // back to "every entryId with wins" so we still check coverage.
+  const selected =
+    selectedExperienceIds.length > 0
+      ? selectedExperienceIds.filter((id) => winsByEntry.has(id))
+      : Array.from(winsByEntry.keys())
+
+  const referenced: string[] = []
+  const missing: string[] = []
+  for (const entryId of selected) {
+    const wins = winsByEntry.get(entryId) ?? []
+    if (wins.length === 0) continue
+    const label = wins[0].entryLabel || ""
+    const labelTokens = label
+      .toLowerCase()
+      .split(/[^a-z0-9]+/)
+      .filter((t) => t.length >= 3)
+    const labelHit = labelTokens.some((t) => lower.includes(t))
+    const numberHit = wins.some(
+      (w) => w.number && lower.includes(w.number.toLowerCase())
+    )
+    if (labelHit || numberHit) referenced.push(label || entryId)
+    else missing.push(label || entryId)
+  }
+  return { selectedCount: selected.length, referenced, missing }
+}
+
+/**
+ * Build the free-form resume text view used only by the deterministic
+ * InputCleaner — for char-count warnings and LinkedIn-UI sniffing.
+ */
+function collectResumeTextForVerifier(profile: PipelineProfile): string {
+  const bits: string[] = []
+  if (profile.professionalHeadline) bits.push(profile.professionalHeadline)
+  if (profile.qualifications) bits.push(profile.qualifications)
+  if (profile.strengths) bits.push(profile.strengths)
+  if (profile.notes) bits.push(profile.notes)
+  for (const block of profile.experienceBlocks) {
+    const head = [block.company, block.title, block.role, block.duration]
+      .filter(Boolean)
+      .join(" · ")
+    if (head) bits.push(head)
+    for (const a of block.achievements) {
+      bits.push([a.what, a.number, a.whyItMattered].filter(Boolean).join(" — "))
+    }
+  }
+  return bits.join("\n")
+}
+
+/** Lightweight ProfileAnalysis for the injection scanner. */
+function synthProfileForScan(profile: PipelineProfile): ProfileAnalysis {
+  return {
+    candidateName: "Candidate",
+    seniority: "mid",
+    industries: [],
+    wins: [],
+    qualifications: profile.qualifications ?? "",
+    skills: (profile.strengths ?? "")
+      .split(/[,;\n]/)
+      .map((s) => s.trim())
+      .filter(Boolean),
+  }
+}
+
+function examplesMessage(examples: RetrievedExample[]): string | undefined {
+  const offers = examples.filter((e) => e.source === "user_offer").length
+  const interviews = examples.filter((e) => e.source === "user_interview").length
+  const personal = offers + interviews
+  if (personal > 0) {
+    const parts: string[] = []
+    if (offers > 0) parts.push(`${offers} offer-winning`)
+    if (interviews > 0) parts.push(`${interviews} interview-winning`)
+    const noun = personal === 1 ? "letter" : "letters"
+    return `Conditioning on ${parts.join(" + ")} of your ${noun}`
+  }
+  if (examples.length > 0) {
+    return `Drawing on ${examples.length} curated ${
+      examples.length === 1 ? "example" : "examples"
+    }`
+  }
+  return undefined
+}
+
+/**
+ * The HMCritic still returns the legacy { data, meta, fallback }
+ * shape because it was rebuilt in Phase B before the runAgent()
+ * migration completed. Convert to AgentRunLog here so the
+ * persistence layer is uniform.
+ */
+function toRunLog(
+  res: { data: unknown; meta: { modelUsed: string; tokensInput: number; tokensOutput: number; durationMs: number }; fallback: boolean },
+  agent: AgentName,
+  cycle: number
+): AgentRunLog {
+  return {
+    agent,
+    cycle,
+    outputJson: res.data,
+    modelUsed: res.meta.modelUsed,
+    durationMs: res.meta.durationMs,
+    tokensInput: res.meta.tokensInput,
+    tokensOutput: res.meta.tokensOutput,
+    fallbackTriggered: res.fallback,
+  }
 }
 
 function failedResult(args: {
   input: PipelineInput
   agentsRun: AgentName[]
-  runLogs: AgentRunLog[]
-  totalTokensInput: number
-  totalTokensOutput: number
   start: number
   reason: string
 }): PipelineResult {

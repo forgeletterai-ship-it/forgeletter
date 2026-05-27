@@ -94,7 +94,11 @@ export function getCurrentPlanPeriodStart(period: BillingPeriod, now = new Date(
 }
 
 export function annualAmountCents(monthlyCents: number) {
-  return Math.round(monthlyCents * 12 * 0.9)
+  // 25% discount on annual — matches Kickresume's aggressive yearly
+  // discount strategy. Premium monthly headline + steep annual
+  // discount drives lock-in and reduces churn. Margin holds because
+  // annual customers rarely max their letter allowance.
+  return Math.round(monthlyCents * 12 * 0.75)
 }
 
 export function getPlanUsageDetails(

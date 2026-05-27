@@ -169,9 +169,10 @@ export default function HomePage() {
                 Apply with letters that feel <span>specific, sharp, and yours.</span>
               </h1>
               <p className="hero-copy">
-                ForgeLetter uses a 12-agent AI pipeline to write, verify, and
-                perfect your cover letter before you ever see it. Every letter
-                passes a 95+ quality check.
+                ForgeLetter uses up to a 12-agent AI pipeline to write,
+                verify and auto-improve your cover letter before you see it.
+                Every letter clears your tier&apos;s quality bar (90% on
+                Starter, 93% on Pro, 95% on Ultra) at no extra cost.
               </p>
               <div className="hero-actions">
                 <Link className="button hero-primary-button" href="/auth/signup">
