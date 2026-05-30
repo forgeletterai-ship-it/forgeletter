@@ -43,7 +43,10 @@ const JobAnalysisSchema = z.object({
   keyResponsibilities: z.array(z.string()),
   companyValues: z.array(z.string()),
   atsKeywords: z.array(z.string()),
-  /** Up to 6 hiring-manager priorities in primacy order. */
+  /** EXACTLY the top 5 hiring-manager priorities in primacy order.
+   *  Cap is enforced both in the prompt and in code post-validation
+   *  so the HM Critic's Relevance dimension has a stable
+   *  denominator ("X of 5 priorities addressed"). */
   hiringManagerPriorities: z.array(z.string()),
   /** Culture signals — vocabulary tells, value statements. */
   cultureSignals: z.array(z.string()),
@@ -63,7 +66,7 @@ CRITICAL RULES — break any and the output is rejected:
 - "keyResponsibilities" (up to 6) — close-to-verbatim responsibility bullets.
 - "atsKeywords" (up to 15) — exact tool/skill nouns an ATS would scan for. Lowercase, single words or short phrases. Deduplicate.
 - "companyValues" — explicit value words (ownership, customer-obsessed, scrappy, integrity, etc.). Empty if none surface.
-- "hiringManagerPriorities" (up to 6) — what the hiring manager will actually FILTER FOR, ranked by primacy + frequency. Look at: which requirements appear first, which terms repeat, which sentences carry intent verbs ("you will own…", "you will drive…"). Phrase each as a short noun phrase ("data-driven decision making", "stakeholder communication", "ownership of revenue numbers").
+- "hiringManagerPriorities" — return EXACTLY the TOP 5, ranked by primacy + frequency. Look at: which requirements appear first, which terms repeat, which sentences carry intent verbs ("you will own…", "you will drive…"). Phrase each as a short noun phrase ("data-driven decision making", "stakeholder communication", "ownership of revenue numbers"). Return exactly 5 entries. If the JD genuinely only signals 3 or 4 priorities, repeat the most-emphasised one or pad with the next-most-emphasised — the downstream HM Critic uses "addressed N of 5" as the Relevance score, so a stable denominator matters.
 - "cultureSignals" — vocabulary tells beyond explicit values. Tone words ("scrappy", "fast-paced", "rigorous"), pronoun choices ("we move fast", "you'll lead"), and any clues about working style. Empty array if the JD is purely transactional.
 - "recommendedTone" — choose ONE of professional / confident / warm / concise based on the JD's own vocabulary:
     • professional — formal, corporate, conservative vocabulary (banks, law, healthcare)
@@ -130,10 +133,14 @@ export async function runJobAnalyst(args: {
   })
 
   // Honour caller-provided overrides (form headers) over inferred values.
+  // hiringManagerPriorities is hard-capped at 5 in code so the HM
+  // Critic's Relevance score has a stable denominator regardless of
+  // whether the model produced 4, 5, 6, or more.
   const data: JobAnalysis = {
     ...result.data,
     jobTitle: args.jobTitle?.trim() || result.data.jobTitle,
     companyName: args.companyName?.trim() || result.data.companyName,
+    hiringManagerPriorities: capPriorities(result.data.hiringManagerPriorities),
   }
 
   return {
@@ -147,4 +154,35 @@ export async function runJobAnalyst(args: {
     },
     fallback: result.log.fallbackTriggered,
   }
+}
+
+/**
+ * Stable-denominator guarantee for the HM Critic's Relevance dimension.
+ * Returns exactly 5 priorities — trims overflow, pads from the most
+ * emphasised entry when the model returned fewer, returns the canonical
+ * "no JD signal" sentinels when the array was empty.
+ */
+function capPriorities(raw: string[]): string[] {
+  const cleaned = raw
+    .map((p) => p.trim())
+    .filter((p) => p.length > 0)
+    .slice(0, 5)
+  if (cleaned.length === 5) return cleaned
+  if (cleaned.length === 0) {
+    return [
+      "role relevance",
+      "demonstrated competency",
+      "communication quality",
+      "evidence of impact",
+      "cultural alignment",
+    ]
+  }
+  // Pad by repeating the strongest entry first, then the next-strongest.
+  // This is the prompt's "if the JD only signals 3, pad with the most-
+  // emphasised one" rule, enforced in code so the denominator is always 5.
+  const padded = [...cleaned]
+  while (padded.length < 5) {
+    padded.push(cleaned[padded.length % cleaned.length])
+  }
+  return padded
 }

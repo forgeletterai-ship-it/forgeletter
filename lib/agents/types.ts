@@ -204,27 +204,79 @@ export interface ATSOutput {
 // New agents emit the BARS shape; old code continues to work.
 // ─────────────────────────────────────────────────────────────────
 
+/**
+ * HMCritique — output of the HM Critic agent, Evaluation Spec v1.
+ *
+ * Five weighted dimensions (relevance 25 · evidence 25 · clarity 20 ·
+ * competencies 15 · fit 15). Each carries an integer 1-5 score and
+ * the ONE signal that determined it (countable, ratio, or present/
+ * absent — never a vague rationale).
+ *
+ * A 6th overlay — confident register — is a pass/fail cap, not a
+ * weighted dimension. When triggered, weightedScore is capped at 80
+ * in code and `registerCapped` is set true.
+ *
+ * Section 5 of the spec defines this exact shape. Legacy fields
+ * (strengths, weaknesses, redFlags, improvementSuggestions) are
+ * preserved as OPTIONAL so existing consumers (QualityGate,
+ * RewriteAgent) keep working until they migrate to rewriteTargets.
+ */
 export interface HMCritique {
-  overallImpression: string
-  strengths: string[]
-  weaknesses: string[]
-  redFlags: string[]
-  rewriteRecommended: boolean
-  improvementSuggestions: string[]
-  /** BARS additions per blueprint — optional during migration. */
-  weightedScore?: number
-  wouldInterview?: boolean
-  dimensions?: {
-    jdRelevance: { score: number; weight: 25; rationale: string }
-    evidenceCredibility: { score: number; weight: 25; rationale: string }
-    clarity: { score: number; weight: 20; rationale: string }
-    competenciesValues: { score: number; weight: 15; rationale: string }
-    roleCultureFit: { score: number; weight: 15; rationale: string }
+  /** 0–100, re-derived in code from clamped dimension scores. */
+  weightedScore: number
+  /** True if a neediness phrase capped the score at 80. */
+  registerCapped: boolean
+  /** weightedScore ≥ 70, re-derived in code. */
+  wouldInterview: boolean
+
+  dimensions: {
+    relevance: { score: number; signal: string }
+    evidence: { score: number; signal: string }
+    clarity: { score: number; signal: string }
+    competencies: { score: number; signal: string }
+    fit: { score: number; signal: string }
   }
-  genericPhrases?: string[]
-  strongestSentence?: string
-  weakestSentence?: string
-  consistencyNote?: string
+
+  scorecard: {
+    /** Role-relevant principles demonstrated via situation-action-result. */
+    principlesShown: string[]
+    /** Traits asserted but not demonstrated. */
+    traitsClaimedOnly: string[]
+    /** Body paragraphs that map to no required competency. */
+    unmappedParagraphs: number
+    /** True if ≥1 proof paragraph has a recognizable S-A-R arc. */
+    behaviouralSpine: boolean
+    /** Advisory verdict — does this letter earn the structured interview? */
+    earnsInterview: boolean
+  }
+
+  genericPhrases: string[]
+  strongestSentence: string
+  weakestSentence: string
+  /** From the 3-rater reconciliation pass. */
+  consistencyNote: string
+  /** Highest-impact rewrite targets, ordered. */
+  rewriteTargets: string[]
+
+  // ─────────────────────────────────────────────────────────────
+  // LEGACY-COMPAT fields — populated from the new shape so old
+  // consumers (Quality Gate, Rewrite Agent) keep reading them
+  // until they migrate to rewriteTargets / dimensions.{...}.signal.
+  // All optional; new code should NOT read these.
+  // ─────────────────────────────────────────────────────────────
+  /** @deprecated Use consistencyNote. */
+  overallImpression?: string
+  /** @deprecated Use strongestSentence. */
+  strengths?: string[]
+  /** @deprecated Use weakestSentence + rewriteTargets. */
+  weaknesses?: string[]
+  /** @deprecated Use scorecard.traitsClaimedOnly / registerCapped. */
+  redFlags?: string[]
+  /** @deprecated Re-derived from weightedScore < tier threshold by Quality Gate. */
+  rewriteRecommended?: boolean
+  /** @deprecated Use rewriteTargets. */
+  improvementSuggestions?: string[]
+  /** @deprecated Always false in v1 (anchors removed the bias surface). */
   equityFlag?: boolean
 }
 
