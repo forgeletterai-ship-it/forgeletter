@@ -11,7 +11,8 @@
     "harness": "tsx scripts/harness.ts",
     "seed:gold": "tsx scripts/seed-gold-letters.ts",
     "seed:gold:embed": "tsx scripts/seed-gold-letters.ts --embed",
-    "hmcritic:repro": "tsx scripts/hmcritic-repro.ts"
+    "hmcritic:repro": "tsx scripts/hmcritic-repro.ts",
+    "stress:hallucination": "tsx scripts/stress-hallucination.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.98.0",
