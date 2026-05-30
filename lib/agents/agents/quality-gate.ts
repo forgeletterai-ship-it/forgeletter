@@ -33,7 +33,16 @@ const QualityVerdictSchema = z.object({
   pass: z.boolean(),
   score: z.number(),
   reasoning: z.string(),
-  bannedPhrasesFound: z.array(z.string()),
+  // Tolerant: the model sometimes omits this field entirely (or returns
+  // a bare string) when it finds no banned phrases. Coerce both shapes
+  // to an array so a cosmetic slip never forces a whole-agent fallback,
+  // which would default the verdict to a manual-review fail.
+  bannedPhrasesFound: z.preprocess((v) => {
+    if (Array.isArray(v)) return v
+    if (typeof v === "string") return v.trim() ? [v.trim()] : []
+    if (v == null) return []
+    return v
+  }, z.array(z.string())),
   recommendRewrite: z.boolean(),
   weakestElement: z.string(),
 })

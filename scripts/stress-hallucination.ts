@@ -48,7 +48,15 @@
  * persisted, example retrieval returns []).
  */
 
-import "dotenv/config"
+import { config as loadEnv } from "dotenv"
+// Load secrets from .env.local FIRST with override:true. Two reasons:
+//   • these standalone tsx scripts don't go through Next's loader, and
+//     plain `dotenv/config` only reads `.env` (a placeholder here) — the
+//     real keys live in `.env.local`.
+//   • the shell may export an EMPTY ANTHROPIC_API_KEY; without override,
+//     dotenv refuses to replace an already-set var, so the blank wins.
+loadEnv({ path: ".env.local", override: true })
+loadEnv({ path: ".env" })
 import { randomUUID } from "node:crypto"
 import { generateCoverLetter } from "../lib/agents"
 import type { PipelineInput, Tier } from "../lib/agents"
@@ -325,14 +333,17 @@ function parseArgs(argv: string[]): {
   repeat: number
   fixtureLimit: number
   printFail: boolean
+  only: string[]
 } {
   let tiers = ALL_TIERS
   let repeat = 1
   let fixtureLimit = FIXTURES.length
   let printFail = false
+  let only: string[] = []
   for (const raw of argv) {
     if (raw.startsWith("--repeat=")) repeat = Math.max(1, parseInt(raw.split("=")[1], 10) || 1)
     else if (raw.startsWith("--fixtures=")) fixtureLimit = Math.max(1, parseInt(raw.split("=")[1], 10) || FIXTURES.length)
+    else if (raw.startsWith("--only=")) only = raw.split("=")[1].split(",").map((s) => s.trim()).filter(Boolean)
     else if (raw === "--print-fail") printFail = true
     else if (!raw.startsWith("--")) {
       const requested = raw.split(",").map((s) => s.trim()).filter(Boolean) as Tier[]
@@ -340,7 +351,7 @@ function parseArgs(argv: string[]): {
       if (valid.length > 0) tiers = valid
     }
   }
-  return { tiers, repeat, fixtureLimit, printFail }
+  return { tiers, repeat, fixtureLimit, printFail, only }
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -358,6 +369,7 @@ interface LetterResult {
   recheckFallback: boolean
   fabricated: string[]
   unmapped: string[]
+  unverified: string[]
   hasLetter: boolean
   hardFail: boolean
   reasons: string[]
@@ -392,6 +404,7 @@ async function runLetter(
   let recheckFallback = false
   let fabricated: string[] = []
   let unmapped: string[] = []
+  let unverified: string[] = []
   if (hasLetter) {
     const recheck = await runHallucinationDetector({
       letter: result.finalLetter,
@@ -403,18 +416,22 @@ async function runLetter(
     recheckFallback = recheck.fallback
     fabricated = recheck.data.fabricatedFacts ?? []
     unmapped = recheck.data.unmappedClaims ?? []
+    unverified = recheck.data.unverifiedClaims ?? []
   }
 
   const pipelineRisk = result.hallucinationRisk ?? "none"
 
   // ── Hard-gate evaluation ──────────────────────────────────────
+  // BAR = strict "none". Anything other than "none" on either the
+  // pipeline-reported risk OR the independent re-check is a failure —
+  // "low" (unmapped soft language) is no longer tolerated.
   const reasons: string[] = []
   if (!hasLetter) reasons.push("no letter produced")
   if (recheckFallback) reasons.push("independent verifier fell back (could not certify)")
   if (fabricated.length > 0) reasons.push(`${fabricated.length} fabricated fact(s)`)
   if (unmapped.length > 0) reasons.push(`${unmapped.length} unmapped hard claim(s)`)
-  if (pipelineRisk === "medium" || pipelineRisk === "high") reasons.push(`pipeline risk=${pipelineRisk}`)
-  if (recheckRisk === "medium" || recheckRisk === "high") reasons.push(`recheck risk=${recheckRisk}`)
+  if (pipelineRisk !== "none") reasons.push(`pipeline risk=${pipelineRisk}`)
+  if (hasLetter && recheckRisk !== "none") reasons.push(`recheck risk=${recheckRisk}`)
   const hardFail = reasons.length > 0
 
   return {
@@ -428,6 +445,7 @@ async function runLetter(
     recheckFallback,
     fabricated,
     unmapped,
+    unverified,
     hasLetter,
     hardFail,
     reasons,
@@ -445,14 +463,22 @@ async function main() {
     process.exit(1)
   }
 
-  const { tiers, repeat, fixtureLimit, printFail } = parseArgs(process.argv.slice(2))
-  const fixtures = FIXTURES.slice(0, fixtureLimit)
+  const { tiers, repeat, fixtureLimit, printFail, only } = parseArgs(process.argv.slice(2))
+  const fixtures = (
+    only.length > 0
+      ? FIXTURES.filter((f) => only.includes(f.key))
+      : FIXTURES
+  ).slice(0, fixtureLimit)
+  if (fixtures.length === 0) {
+    console.error(`No fixtures matched --only=${only.join(",")}. Valid keys: ${FIXTURES.map((f) => f.key).join(", ")}`)
+    process.exit(1)
+  }
   const totalLetters = fixtures.length * tiers.length * repeat
 
   console.log("═".repeat(80))
   console.log("ZERO-HALLUCINATION STRESS TEST")
   console.log(`fixtures=${fixtures.length}  tiers=[${tiers.join(", ")}]  repeat=${repeat}  → ${totalLetters} letters`)
-  console.log("A hallucination = a fabricated fact OR an unmapped hard claim.")
+  console.log('BAR = strict "none": every claim maps to a win, zero unmapped soft language. low / medium / high all FAIL.')
   console.log("═".repeat(80))
 
   const results: LetterResult[] = []
@@ -489,13 +515,14 @@ async function main() {
             console.log(r.letter.split("\n").map((l) => `    ${l}`).join("\n"))
             if (r.fabricated.length) console.log(`    fabricated: ${r.fabricated.join(" | ")}`)
             if (r.unmapped.length) console.log(`    unmapped:   ${r.unmapped.join(" | ")}`)
+            if (r.unverified.length) console.log(`    unverified: ${r.unverified.join(" | ")}`)
             console.log("    ──────────────────────")
           }
         } catch (err) {
           const r: LetterResult = {
             fixture: fixture.key, tier, iteration: it, status: "crashed",
             finalScore: 0, pipelineRisk: "error", recheckRisk: "error",
-            recheckFallback: true, fabricated: [], unmapped: [], hasLetter: false,
+            recheckFallback: true, fabricated: [], unmapped: [], unverified: [], hasLetter: false,
             hardFail: true, reasons: [`threw: ${err instanceof Error ? err.message : String(err)}`],
             letter: "",
           }
@@ -509,17 +536,13 @@ async function main() {
   // ── Summary ─────────────────────────────────────────────────────
   const fails = results.filter((r) => r.hardFail)
   const strictNone = results.filter((r) => r.pipelineRisk === "none" && r.recheckRisk === "none")
-  const softLow = results.filter(
-    (r) => !r.hardFail && (r.pipelineRisk === "low" || r.recheckRisk === "low")
-  )
 
   console.log(`\n${"═".repeat(80)}`)
   console.log("SUMMARY")
   console.log("═".repeat(80))
   console.log(`letters tested            : ${results.length}`)
-  console.log(`hallucinations (hard gate): ${fails.length}`)
+  console.log(`failures (not "none")     : ${fails.length}`)
   console.log(`strictly "none" both ways : ${strictNone.length} / ${results.length}`)
-  console.log(`soft-language only (low)  : ${softLow.length}  (not hallucinations; reported for visibility)`)
 
   // Per-tier breakdown — answers "no matter the plan?" directly.
   console.log(`\nby tier:`)
@@ -537,12 +560,12 @@ async function main() {
     for (const f of fails) {
       console.log(`  ✗ ${f.fixture} / ${f.tier} #${f.iteration}: ${f.reasons.join("; ")}`)
     }
-    console.log(`\nRESULT: ✗ FAILED — ${fails.length} letter(s) contained hallucinations or could not be certified.`)
+    console.log(`\nRESULT: ✗ FAILED — ${fails.length} letter(s) were not strictly "none" (or could not be certified).`)
     process.exit(1)
   }
 
-  console.log(`\nRESULT: ✓ PASSED — 0 hallucinations across ${results.length} letters on ${tiers.join(" / ")}.`)
-  console.log("Every delivered letter is grounded in the candidate's own wins, on every plan.")
+  console.log(`\nRESULT: ✓ PASSED — all ${results.length} letters certified strictly "none" on ${tiers.join(" / ")}.`)
+  console.log("Every delivered letter is grounded in the candidate's own wins, with zero unmapped claims, on every plan.")
 }
 
 main().catch((err) => {

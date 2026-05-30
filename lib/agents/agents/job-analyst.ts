@@ -33,23 +33,43 @@ import type { CallMeta } from "./resume-analyst"
  * crashing.
  */
 
+/**
+ * Tolerant string-array field. The model occasionally returns a single
+ * comma/semicolon-delimited string (or omits the field) instead of a
+ * JSON array. Coerce both shapes so a cosmetic format slip never forces
+ * a whole-agent fallback — which would silently discard the JD analysis
+ * the rest of the pipeline (Writer, ATS, HM Critic) depends on.
+ */
+const flexibleStringArray = () =>
+  z.preprocess((v) => {
+    if (Array.isArray(v)) return v
+    if (typeof v === "string") {
+      return v
+        .split(/[,;\n]/)
+        .map((s) => s.trim())
+        .filter(Boolean)
+    }
+    if (v == null) return []
+    return v
+  }, z.array(z.string()))
+
 const JobAnalysisSchema = z.object({
   jobTitle: z.string(),
   companyName: z.string(),
   industry: z.string(),
   seniorityRequired: z.enum(["junior", "mid", "senior", "lead"]),
-  mustHaveSkills: z.array(z.string()),
-  niceToHaveSkills: z.array(z.string()),
-  keyResponsibilities: z.array(z.string()),
-  companyValues: z.array(z.string()),
-  atsKeywords: z.array(z.string()),
+  mustHaveSkills: flexibleStringArray(),
+  niceToHaveSkills: flexibleStringArray(),
+  keyResponsibilities: flexibleStringArray(),
+  companyValues: flexibleStringArray(),
+  atsKeywords: flexibleStringArray(),
   /** EXACTLY the top 5 hiring-manager priorities in primacy order.
    *  Cap is enforced both in the prompt and in code post-validation
    *  so the HM Critic's Relevance dimension has a stable
    *  denominator ("X of 5 priorities addressed"). */
-  hiringManagerPriorities: z.array(z.string()),
+  hiringManagerPriorities: flexibleStringArray(),
   /** Culture signals — vocabulary tells, value statements. */
-  cultureSignals: z.array(z.string()),
+  cultureSignals: flexibleStringArray(),
   /** Tone inferred from the JD's own vocabulary. */
   recommendedTone: z.enum(["professional", "confident", "warm", "concise"]),
 })

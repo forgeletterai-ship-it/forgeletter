@@ -11,7 +11,7 @@ import { runMatchAnalyst } from "./agents/match-analyst"
 import { runProfileAnalyst } from "./agents/profile-analyst"
 import { runQualityGate } from "./agents/quality-gate"
 import { runRewriteAgent } from "./agents/rewrite"
-import { runWriterAgent } from "./agents/writer"
+import { buildGroundedLetter, runWriterAgent } from "./agents/writer"
 import { getTierConfig } from "./tiers"
 import { scrubDashes } from "./utils"
 import type {
@@ -361,17 +361,20 @@ async function runBlueprintPipeline(
         if (cycle === 0) await emit("HMCritic", "done", PROGRESS_WEIGHTS.HMCritic)
       }
 
-      // ── 8. HallucinationCheck pre-edit (every tier) ───────
-      const preEditHal = await runHallucinationDetector({
-        letter: currentLetter,
-        profile,
-        jobDescription: sanitizedJobDescription,
-        cycleNumber: cycle,
-      })
-      let hallucinationCheck: HallucinationCheck = preEditHal.data
-      recordLog(preEditHal.log)
-      if (cycle === 0)
-        await emit("HallucinationCheck", "done", PROGRESS_WEIGHTS.HallucinationCheck)
+      // ── 8. HallucinationCheck pre-edit (Ultra only) ───────
+      // The "×2 on Ultra" rule: Ultra runs an extra pre-FinalEditor
+      // pass for telemetry. The AUTHORITATIVE check for every tier
+      // runs post-edit (step 10) against the ACTUAL delivered text, so
+      // the cleaner + gate never reason about stale pre-edit content.
+      if (tier === "ultra") {
+        const preEditHal = await runHallucinationDetector({
+          letter: currentLetter,
+          profile,
+          jobDescription: sanitizedJobDescription,
+          cycleNumber: cycle,
+        })
+        recordLog(preEditHal.log)
+      }
 
       // ── 9. FinalEditor (every tier) ───────────────────────
       if (cycle === 0) await emit("FinalEditor", "running")
@@ -384,19 +387,20 @@ async function runBlueprintPipeline(
       recordLog(editRes.log)
       if (cycle === 0) await emit("FinalEditor", "done", PROGRESS_WEIGHTS.FinalEditor)
 
-      // ── 10. HallucinationCheck post-edit (Ultra only) ─────
-      if (tier === "ultra") {
-        const postEditHal = await runHallucinationDetector({
-          letter: currentLetter,
-          profile,
-          jobDescription: sanitizedJobDescription,
-          cycleNumber: cycle + 0.5,
-        })
-        // The post-edit check supersedes the pre-edit one — Final
-        // Editor may have removed offending sentences.
-        hallucinationCheck = postEditHal.data
-        recordLog(postEditHal.log)
-      }
+      // ── 10. HallucinationCheck post-edit (every tier) ─────
+      // Authoritative check: runs on the post-FinalEditor text so the
+      // cleaner + gate reason about exactly what would ship. On Ultra
+      // this is the second of the "×2" checks.
+      const postEditHal = await runHallucinationDetector({
+        letter: currentLetter,
+        profile,
+        jobDescription: sanitizedJobDescription,
+        cycleNumber: cycle + 0.5,
+      })
+      let hallucinationCheck: HallucinationCheck = postEditHal.data
+      recordLog(postEditHal.log)
+      if (cycle === 0)
+        await emit("HallucinationCheck", "done", PROGRESS_WEIGHTS.HallucinationCheck)
 
       // ── 10b. Hallucination auto-cleaner (every tier) ──────
       // If the verifier flagged fabricated or unmapped claims, try
@@ -487,10 +491,23 @@ async function runBlueprintPipeline(
       // Ship best-not-last: track the highest-scoring draft across
       // every cycle. Penalise missing-coverage drafts so a fully-
       // covered lower-score draft beats a higher-score draft that
-      // dropped an experience.
-      const effectiveScore = coverage.missing.length > 0
-        ? Math.max(0, verdict.score - coverage.missing.length * 8)
-        : verdict.score
+      // dropped an experience. Also penalise ungrounded drafts so a
+      // clean lower-score draft always beats a dirty higher-score one:
+      // a fabricated claim (high) is effectively disqualified, and an
+      // unmapped hard claim (medium) is heavily penalised. "low" (soft
+      // language only) and "none" carry no penalty.
+      const riskPenalty =
+        hallucinationCheck.risk === "high"
+          ? 100
+          : hallucinationCheck.risk === "medium"
+            ? 40
+            : hallucinationCheck.risk === "low"
+              ? 10
+              : 0
+      const effectiveScore = Math.max(
+        0,
+        verdict.score - coverage.missing.length * 8 - riskPenalty
+      )
       if (effectiveScore > bestScore) {
         bestScore = effectiveScore
         bestLetter = currentLetter
@@ -499,9 +516,16 @@ async function runBlueprintPipeline(
       }
 
       // ── 12. Gate decision ─────────────────────────────────
+      // A letter is deliverable only if it is FULLY GROUNDED: risk must
+      // be exactly "none" — every concrete claim maps to a win AND
+      // there is no unmapped soft/aspirational language either. "low"
+      // (soft self-claims unmapped), "medium" (an unmapped hard claim),
+      // and "high" (a fabrication) all block delivery and trigger a
+      // rewrite. Facts come only from the candidate's profile; the JD
+      // wanting a skill is never licence to claim it.
       const deliverable =
         verdict.pass &&
-        hallucinationCheck.risk !== "high" &&
+        hallucinationCheck.risk === "none" &&
         coverage.missing.length === 0
       if (deliverable) {
         bestLetter = currentLetter
@@ -540,6 +564,102 @@ async function runBlueprintPipeline(
         break
       }
     }
+
+    // ── FINAL GROUNDING GATE (every tier, deterministic) ─────────
+    // The bar is strict "none": every concrete claim maps to a win and
+    // there is no unmapped soft language either. The in-loop gate
+    // enforces this too, but the loop can exit on exhausted rewrite
+    // budget carrying `bestLetter` at "low"/"medium"/"high". This gate
+    // is the hard guarantee. It NEVER reports a risk it did not
+    // re-measure on the actual delivered text — so the pipeline can
+    // never claim "none" while shipping a flagged claim.
+    //
+    // certifyGrounded: run the authoritative check on `letter`; if it
+    // is not "none", deterministically strip EVERY flagged sentence
+    // (fabricated, unmapped, AND soft/unverified) and re-check once.
+    // Returns the possibly-trimmed letter and its measured verdict.
+    const certifyGrounded = async (
+      letter: string,
+      cycleBase: number
+    ): Promise<{ letter: string; check: HallucinationCheck }> => {
+      const first = await runHallucinationDetector({
+        letter,
+        profile,
+        jobDescription: sanitizedJobDescription,
+        cycleNumber: cycleBase,
+      })
+      recordLog(first.log)
+      let check = first.data
+      let out = letter
+      if (check.risk !== "none") {
+        const cleaned = autoCleanHallucinations({
+          letter: out,
+          check,
+          stripUnverified: true,
+        })
+        recordLog({
+          agent: "HallucinationCheck",
+          cycle: cycleBase + 0.25,
+          outputJson: {
+            finalGate: true,
+            stripped: cleaned.removed,
+            skipped: cleaned.skipped,
+            reason: cleaned.reason,
+          },
+          modelUsed: "deterministic",
+          durationMs: 0,
+          tokensInput: 0,
+          tokensOutput: 0,
+          fallbackTriggered: false,
+        })
+        if (cleaned.removed.length > 0) {
+          out = cleaned.letter
+          const second = await runHallucinationDetector({
+            letter: out,
+            profile,
+            jobDescription: sanitizedJobDescription,
+            cycleNumber: cycleBase + 0.5,
+          })
+          recordLog(second.log)
+          check = second.data
+        }
+      }
+      return { letter: out, check }
+    }
+
+    // (1) Certify the best LLM draft on the ACTUAL delivered text.
+    const primary = await certifyGrounded(bestLetter, 99)
+    bestLetter = primary.letter
+    let finalGroundingCheck: HallucinationCheck = primary.check
+
+    // (2) If the LLM draft still cannot be certified "none", fall back
+    // to a letter built ONLY from the candidate's wins (grounded by
+    // construction) and certify THAT too. A plainer fully-grounded
+    // letter always beats a polished letter that implies experience
+    // the candidate does not have.
+    if (finalGroundingCheck.risk !== "none") {
+      const grounded = scrubDashes(buildGroundedLetter({ profile, job }))
+      const fallback = await certifyGrounded(grounded, 97)
+      bestLetter = fallback.letter
+      finalGroundingCheck = fallback.check
+      recordLog({
+        agent: "HallucinationCheck",
+        cycle: 98.5,
+        outputJson: {
+          finalGate: true,
+          groundedFallbackUsed: true,
+          resultingRisk: finalGroundingCheck.risk,
+          reason:
+            "Best draft could not be certified strictly grounded; replaced with a letter built only from the candidate's own wins and re-verified.",
+        },
+        modelUsed: "deterministic",
+        durationMs: 0,
+        tokensInput: 0,
+        tokensOutput: 0,
+        fallbackTriggered: false,
+      })
+    }
+    bestHallucination = finalGroundingCheck
 
     const totalDuration = Date.now() - start
     const passed = bestScore >= config.qualityThreshold

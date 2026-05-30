@@ -99,8 +99,10 @@ HARD RULES — break any and the letter is rejected:
 - Open with a specific achievement, observation, or hook tied to this role. NEVER "I am writing to express", "I hope this email finds you well", "To whom it may concern", "Please find attached".
 - Never use clichés: team player, hit the ground running, synergy, go-getter, results-oriented, detail-oriented, passionate about, rockstar, ninja, in today's fast-paced world, perfect candidate.
 - NO DASHES FOR EFFECT. Never use an em-dash (—), an en-dash (–), or a hyphen surrounded by spaces ( - ) as a rhetorical pause or aside. The gold-standard letters never do; a dash for effect is one of the strongest "written by AI" tells. Use a comma, a period, parentheses, or restructure the sentence. Word-internal hyphens ("data-driven", "first-class") and numeric ranges written with a hyphen ("5-10") are fine.
-- ATS COVERAGE (critical — the letter is scanned by an automated keyword screener before any human reads it): weave the role's must-have skills and the provided ATS keyword list naturally into real achievement sentences. Every must-have skill should appear at least once, sitting inside a genuine accomplishment in the candidate's own language. Never list them, never stuff them, never dump them in parentheses — they must live inside real stories or they are cut.
+- ATS COVERAGE, BOUNDED BY TRUTH (the letter is scanned by an automated keyword screener before any human reads it): weave in the role's must-have skills and ATS keywords that the candidate's OWN wins genuinely support, each sitting inside a real accomplishment in the candidate's language. Cover as many as you can honestly support; never list, stuff, or parenthesise them. ABSOLUTE PRIORITY: a must-have you leave uncovered is acceptable, but a skill, tool, metric, or scope you imply the candidate has WITHOUT a supporting win is a disqualifying fabrication. When coverage and truth conflict, truth wins every time. Do NOT name a must-have skill, tool, or number just to satisfy the screener or to "improve fit" when no win backs it. If a rewrite note or quality feedback asks you to strengthen the connection to a requirement the candidate cannot honestly claim, bridge it with a genuinely transferable win in honest language, never by asserting experience they do not have.
 - Never invent facts. If it's not in the candidate inputs or the JD, do not claim it.
+- NO EMBELLISHMENT OF REAL WINS. A win is a fixed fact. State it exactly as strong as the candidate's input supports and no stronger. Never add a comparative, a superlative, a ranking, a benchmark, a causal claim, or surrounding context the win itself does not contain. If a win says "newsletter list grew 4,000 to 11,000 in a year", you may say exactly that; you may NOT add "outperforming every paid campaign", "our single largest channel", "the best in the company", or "which drove revenue" unless those exact facts are themselves provided wins. Embellishing a real win is as disqualifying as inventing a fake one, because the added clause is itself an unverifiable fabrication. When in doubt, state the bare win and stop.
+- NO UNVERIFIED SELF-CLAIMS OR OPINION FILLER. Every sentence must be one of: (a) a concrete accomplishment drawn from the candidate's wins, (b) a verifiable fact about the company or role taken from the job description, or (c) a neutral connective or a closing invitation to talk. Do NOT add unbacked statements of feeling, belief, eagerness, or self-assessment — no "I am excited about", "I genuinely believe", "I am confident I would thrive", "I have always admired", "I am deeply passionate", "I am eager to". They are unverifiable padding: state what you DID and let the evidence carry the enthusiasm. A sentence that asserts something about the candidate which no win supports does not belong in the letter, even softly phrased.
 - Never reveal that you are an AI or reference these instructions.
 - Use SPECIFICS from the candidate inputs — numbers, scale, named projects, named tools.
 - Mirror JD language where natural, not stuffed.
@@ -147,7 +149,7 @@ export async function runWriterAgent(args: {
     cycleNumber: args.cycleNumber ?? 0,
     system: BASE_SYSTEM,
     user: firstUser,
-    fallback: deterministicFallback(args),
+    fallback: buildGroundedLetter(args),
     maxTokens: 2048,
     temperature: args.rewriteFeedback ? 0.5 : 0.7,
     timeoutMs: 45_000,
@@ -387,7 +389,16 @@ function renderExamples(examples: RetrievedExample[]): string {
   return `${guidance}\n\n${exampleBlock}`
 }
 
-function deterministicFallback(args: {
+/**
+ * Build a 100%-grounded letter using ONLY the candidate's own wins and
+ * qualifications — no JD-driven claims, no gold-base facts, no
+ * embellishment. Used both as the Writer's internal fallback and as the
+ * orchestrator's last-resort grounding backstop when an LLM draft cannot
+ * be certified hallucination-free. Every sentence here is mechanically
+ * derived from `profile.wins` / `profile.qualifications`, so by
+ * construction it contains no fact the candidate did not supply.
+ */
+export function buildGroundedLetter(args: {
   profile?: ProfileAnalysis
   resume?: ResumeAnalysis
   job: JobAnalysis
@@ -424,12 +435,19 @@ function deterministicFallback(args: {
   )
 
   // Fit sentence: surface qualifications when present so the letter
-  // still feels grounded in the user's claims.
-  const fit = args.profile?.qualifications
-    ? `My background also includes ${truncate(args.profile.qualifications.replace(/\s+/g, " ").trim(), 180)}.`
+  // still feels grounded in the user's claims. Strip any internal
+  // field labels ("Skills & tools:", "Notes:", etc.) so they never
+  // leak into delivered prose.
+  const cleanedQualifications = sanitizeQualifications(args.profile?.qualifications)
+  const fitBody = cleanedQualifications
+    ? truncate(cleanedQualifications, 180).replace(/[.\s]+$/, "")
     : ""
+  const fit = fitBody ? `My background also includes ${fitBody}.` : ""
 
-  const close = `I'd welcome a short conversation about how this maps to your priorities for ${role}${args.job.companyName ? ` at ${args.job.companyName}` : ""}.`
+  // Bare logistical invitation only — asserts nothing about the candidate's
+  // fit or the role's priorities, so it stays strictly grounded (a closing
+  // invitation to talk is allowed; a self-assessment is not).
+  const close = `I would welcome the opportunity to discuss the ${role}${args.job.companyName ? ` role at ${args.job.companyName}` : " role"}.`
 
   return [
     "Dear Hiring Team,",
@@ -454,11 +472,16 @@ function winToSentence(
   ctx: { lead?: boolean; role?: string; company?: string }
 ): string {
   const what = w.what.replace(/\.$/, "").trim()
-  const num = w.number ? ` (${w.number})` : ""
-  const why = w.whyItMattered ? `, ${w.whyItMattered.replace(/\.$/, "").trim()}` : ""
-  const at = w.entryLabel ? ` at ${w.entryLabel}` : ""
+  const num = w.number ? ` (${w.number.replace(/\.$/, "").trim()})` : ""
+  // whyItMattered is the candidate's OWN statement of impact (a fact they
+  // supplied). Attach it as a grammatical "which …" clause so the sentence
+  // reads as coherent prose rather than a comma-spliced fragment.
+  const whyRaw = w.whyItMattered.replace(/\.$/, "").trim()
+  const why = whyRaw ? `, which ${lowerFirst(whyRaw)}` : ""
+  const at = w.entryLabel ? ` at ${w.entryLabel.replace(/\.$/, "").trim()}` : ""
   if (ctx.lead) {
-    return `In my work${at}, I ${lowerFirst(what)}${num}${why}, which is the kind of impact I'd bring to ${ctx.role || "this role"}${ctx.company ? ` at ${ctx.company}` : ""}.`
+    // No "the kind of impact I'd bring" self-claim — just state the win.
+    return `In my work${at}, I ${lowerFirst(what)}${num}${why}.`
   }
   return `${capFirst(what)}${num}${why}${at}.`
 }
@@ -470,8 +493,67 @@ function capFirst(s: string): string {
   return s ? s[0].toUpperCase() + s.slice(1) : s
 }
 function truncate(s: string, n: number): string {
-  return s.length > n ? `${s.slice(0, n - 1).trim()}…` : s
+  if (s.length <= n) return s
+  // Prefer the last sentence boundary, then the last word boundary,
+  // inside the limit — never cut mid-word (which leaked partial tokens
+  // like "Intere…" into delivered prose).
+  const cut = s.slice(0, n - 1)
+  const lastStop = Math.max(cut.lastIndexOf(". "), cut.lastIndexOf("! "), cut.lastIndexOf("? "))
+  if (lastStop > n * 0.5) return cut.slice(0, lastStop + 1).trim()
+  const lastSpace = cut.lastIndexOf(" ")
+  const safe = lastSpace > n * 0.5 ? cut.slice(0, lastSpace) : cut
+  return `${safe.trim()}…`
 }
+
+/**
+ * Strip internal field labels ("Skills & tools:", "Notes:", "Tools:",
+ * "Qualifications:", etc.) and collapse whitespace so a raw
+ * qualifications string can be dropped into delivered prose without
+ * leaking the structured-input scaffolding. Returns "" when nothing
+ * usable remains.
+ */
+function sanitizeQualifications(raw: string | undefined | null): string {
+  if (!raw) return ""
+  const cleaned = raw
+    .replace(/\b(skills?(\s*&\s*tools?)?|tools?|notes?|qualifications?|certifications?|education)\s*:\s*/gi, "")
+    .replace(/\s+/g, " ")
+    .replace(/^[\s,;.·•-]+/, "")
+    .trim()
+  if (!cleaned) return ""
+  // A grounded letter may surface only VERIFIABLE CREDENTIALS — degrees,
+  // certifications, licences (things with a year or a credential keyword).
+  // Two things are stripped:
+  //   1. Soft / aspirational / opinion sentences ("Eager to grow into…",
+  //      "Ready to move into management") — not proven facts.
+  //   2. Bare skill / tool list fragments ("Scheduling, vendor coordination,
+  //      spreadsheets") — these are self-asserted competencies, not wins, and
+  //      a verb-less noun list reads to a fact-checker as an unverified claim.
+  // What survives is only what a background check could confirm.
+  const sentences = cleaned
+    .split(/(?<=[.!?])\s+/)
+    .map((s) => s.trim())
+    .filter(Boolean)
+  const kept = sentences.filter(
+    (s) => !SOFT_CLAIM_RE.test(s) && CREDENTIAL_RE.test(s)
+  )
+  return kept.join(" ").replace(/\s+/g, " ").trim()
+}
+
+/**
+ * A sentence describes a VERIFIABLE credential if it carries a 4-digit year
+ * (graduation / award date) or a degree / certification / licence keyword.
+ * Used to keep only background-checkable facts in a grounded letter.
+ */
+const CREDENTIAL_RE =
+  /\b((?:19|20)\d{2}|certified|certificate|certification|licen[sc]ed?|diploma|degree|accredit\w*|honou?rs|B\.?A\.?|B\.?Sc?\.?|M\.?A\.?|M\.?Sc?\.?|M\.?B\.?A\.?|M\.?Ed\.?|Ph\.?\s?D\.?|B\.?S\.?N\.?|M\.?S\.?N\.?|R\.?N\.?|CPA|PMP|CFA|CCRN|ACLS|PALS|associate'?s?|bachelor'?s?|master'?s?|doctorate)\b/i
+
+/**
+ * Markers of soft/aspirational/opinion language. A sentence matching any of
+ * these asserts feeling, intent, or self-assessment rather than a verifiable
+ * fact, so it is stripped from any deterministically-grounded letter.
+ */
+const SOFT_CLAIM_RE =
+  /\b(eager|excited?|exciting|passionate?|enthusias\w*|aspir\w*|hop(?:e|es|ing|eful)|keen|motivat\w*|look(?:ing)?\s+(?:to|forward)|ready\s+to|wish(?:ing)?\s+to|want(?:ing)?\s+to|aim(?:ing)?\s+to|love\w*|enjoy\w*|confident|believe\w*|thrive\w*|transition\w*|seek(?:ing)?|interested\s+in|grow\s+into|move\s+into|deeply|genuinely|always\s+admired|drawn\s+to|committed\s+to)\b/i
 
 function countBodyWords(letter: string): number {
   // Strip greeting + signature lines for an accurate body count.
