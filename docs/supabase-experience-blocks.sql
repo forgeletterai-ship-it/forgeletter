@@ -18,6 +18,12 @@ alter table public.user_profiles
 alter table public.user_profiles
   add column if not exists qualifications text not null default '';
 
+-- Named tools & software (products: dbt, Looker, SQL, …), persisted
+-- separately from `strengths` (skills/competencies) so the ATS surface
+-- and the hallucination verifier treat tools as explicit grounded facts.
+alter table public.user_profiles
+  add column if not exists tools text not null default '';
+
 alter table public.user_profiles
   add column if not exists notes text not null default '';
 

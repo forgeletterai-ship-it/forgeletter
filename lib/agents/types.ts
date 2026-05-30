@@ -15,8 +15,13 @@ export interface PipelineProfile {
   professionalHeadline?: string
   /** Free-form qualifications + certifications block (always included). */
   qualifications?: string
-  /** Free-form skills/tools (always included). */
+  /** Free-form skills / competencies (methods, not products). Always included. */
   strengths?: string
+  /** Free-form named tools & software (products: dbt, Looker, SQL, …).
+   *  Persisted separately from `strengths` so the ATS surface and the
+   *  hallucination verifier both treat named tools as explicit grounded
+   *  facts. Always included. */
+  tools?: string
   /** Free-form additional notes (always included). */
   notes?: string
   /** Free-form legacy achievements fallback (used only if blocks empty). */

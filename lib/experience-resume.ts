@@ -12,6 +12,7 @@ import {
 export interface ResumeAssemblyProfile {
   professional_headline?: string
   strengths?: string
+  tools?: string
   qualifications?: string
   notes?: string
   key_achievements?: string
@@ -95,7 +96,8 @@ export function serializeProfileForResume(args: {
   // always on — surface the user's saved qualifications + skills here.
   const qualBits: string[] = []
   if (profile.qualifications) qualBits.push(profile.qualifications)
-  if (profile.strengths) qualBits.push(`Skills & tools: ${profile.strengths}`)
+  if (profile.strengths) qualBits.push(`Skills: ${profile.strengths}`)
+  if (profile.tools) qualBits.push(`Tools & software: ${profile.tools}`)
   if (profile.notes) qualBits.push(`Additional notes: ${profile.notes}`)
   if (qualBits.length > 0) {
     parts.push("Qualifications & achievements:")

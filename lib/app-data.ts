@@ -215,6 +215,7 @@ export type UserProfile = {
   industries: string
   key_achievements: string
   strengths: string
+  tools: string
   experience_blocks: ExperienceBlock[]
   qualifications: string
   notes: string
@@ -250,6 +251,7 @@ export const defaultProfile: UserProfile = {
   industries: "",
   key_achievements: "",
   strengths: "",
+  tools: "",
   experience_blocks: [],
   qualifications: "",
   notes: "",
@@ -447,7 +449,7 @@ async function selectUserProfileRow(
 export async function getUserProfile(userId: string) {
   const capabilities = await getSupabaseSchemaCapabilities()
   const fullCols =
-    "professional_headline,target_roles,industries,key_achievements,strengths,experience_blocks,qualifications,notes,portfolio_link"
+    "professional_headline,target_roles,industries,key_achievements,strengths,tools,experience_blocks,qualifications,notes,portfolio_link"
   const legacyCols =
     "professional_headline,target_roles,industries,key_achievements,strengths"
 
@@ -483,6 +485,7 @@ export async function getUserProfile(userId: string) {
       experience_blocks: normalizeExperienceBlocks(
         (raw as { experience_blocks?: unknown }).experience_blocks
       ),
+      tools: String((raw as { tools?: unknown }).tools ?? ""),
       qualifications: String((raw as { qualifications?: unknown }).qualifications ?? ""),
       notes: String((raw as { notes?: unknown }).notes ?? ""),
       portfolio_link: String((raw as { portfolio_link?: unknown }).portfolio_link ?? ""),

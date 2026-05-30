@@ -63,7 +63,8 @@ const sampleBlocks: ExperienceBlock[] = [
 
 const sampleProfile: ResumeAssemblyProfile = {
   professional_headline: "Senior engineer in payments",
-  strengths: "Go, Postgres, Kafka",
+  strengths: "Distributed systems, API design",
+  tools: "Go, Postgres, Kafka",
   qualifications: "SOC2 lead, ISTQB certified",
   experience_blocks: sampleBlocks,
 }
@@ -106,7 +107,8 @@ describe("buildResumeTextFromProfile", () => {
     expect(text).toMatch(/Senior engineer in payments/) // headline
     expect(text).toMatch(/Qualifications & achievements/) // section heading
     expect(text).toMatch(/SOC2 lead, ISTQB certified/) // qualifications
-    expect(text).toMatch(/Skills & tools: Go, Postgres, Kafka/) // strengths
+    expect(text).toMatch(/Skills: Distributed systems, API design/) // strengths
+    expect(text).toMatch(/Tools & software: Go, Postgres, Kafka/) // tools
 
     // No experience sections when nothing selected
     expect(text).not.toMatch(/Helix Systems/)
