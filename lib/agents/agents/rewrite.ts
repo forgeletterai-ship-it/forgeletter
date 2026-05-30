@@ -80,15 +80,27 @@ export async function runRewriteAgent(args: {
   }
 
   if (args.critique) {
-    if (args.critique.weaknesses.length > 0) {
-      parts.push(`Weaknesses to fix: ${args.critique.weaknesses.join("; ")}`)
-    }
-    if (args.critique.redFlags.length > 0) {
-      parts.push(`Red flags to remove: ${args.critique.redFlags.join("; ")}`)
-    }
-    if (args.critique.improvementSuggestions.length > 0) {
+    // Prefer the new section-5 rewriteTargets when present (Eval Spec v1);
+    // fall back to legacy weaknesses / redFlags / improvementSuggestions
+    // for any consumer still on the old shape.
+    if (args.critique.rewriteTargets && args.critique.rewriteTargets.length > 0) {
+      parts.push(
+        `Highest-impact rewrite targets (in priority order): ${args.critique.rewriteTargets.join("; ")}`
+      )
+    } else if (args.critique.improvementSuggestions && args.critique.improvementSuggestions.length > 0) {
       parts.push(
         `Specific changes from hiring-manager critique: ${args.critique.improvementSuggestions.join("; ")}`
+      )
+    }
+    if (args.critique.weaknesses && args.critique.weaknesses.length > 0) {
+      parts.push(`Weaknesses to fix: ${args.critique.weaknesses.join("; ")}`)
+    }
+    if (args.critique.redFlags && args.critique.redFlags.length > 0) {
+      parts.push(`Red flags to remove: ${args.critique.redFlags.join("; ")}`)
+    }
+    if (args.critique.registerCapped) {
+      parts.push(
+        `REGISTER CAP triggered — the previous draft contained a neediness phrase. Rewrite the close in peer register; do not use "honoured to be considered", "hope to hear", or similar.`
       )
     }
     if (args.critique.weakestSentence) {

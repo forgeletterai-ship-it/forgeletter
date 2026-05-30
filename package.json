@@ -8,7 +8,9 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "test:agents": "tsx scripts/test-agents.ts",
-    "harness": "tsx scripts/harness.ts"
+    "harness": "tsx scripts/harness.ts",
+    "seed:gold": "tsx scripts/seed-gold-letters.ts",
+    "seed:gold:embed": "tsx scripts/seed-gold-letters.ts --embed"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.98.0",
