@@ -822,6 +822,7 @@ function collectResumeTextForVerifier(profile: PipelineProfile): string {
   if (profile.professionalHeadline) bits.push(profile.professionalHeadline)
   if (profile.qualifications) bits.push(profile.qualifications)
   if (profile.strengths) bits.push(profile.strengths)
+  if (profile.tools) bits.push(profile.tools)
   if (profile.notes) bits.push(profile.notes)
   for (const block of profile.experienceBlocks) {
     const head = [block.company, block.title, block.role, block.duration]
@@ -843,7 +844,8 @@ function synthProfileForScan(profile: PipelineProfile): ProfileAnalysis {
     industries: [],
     wins: [],
     qualifications: profile.qualifications ?? "",
-    skills: (profile.strengths ?? "")
+    skills: [profile.strengths ?? "", profile.tools ?? ""]
+      .join(", ")
       .split(/[,;\n]/)
       .map((s) => s.trim())
       .filter(Boolean),

@@ -31,6 +31,7 @@ type ProfileDraft = {
   headline: string
   seniority: string
   skills: string
+  tools: string
   qualifications: string
   notes: string
   portfolioLink: string
@@ -264,7 +265,10 @@ function createDefaultDraft(initialProfile?: UserProfile): ProfileDraft {
     seniority: "mid",
     skills:
       initialProfile?.strengths ||
-      "HubSpot, Marketo, SQL, A/B testing, lifecycle marketing, paid social",
+      "A/B testing, lifecycle marketing, paid social, stakeholder management",
+    tools:
+      initialProfile?.tools ||
+      "HubSpot, Marketo, SQL, Google Analytics",
     qualifications: initialProfile?.qualifications ?? "",
     notes: initialProfile?.notes ?? "",
     portfolioLink: initialProfile?.portfolio_link ?? "",
@@ -339,6 +343,7 @@ function buildPayload(profile: ProfileDraft, initialProfile: UserProfile): UserP
     // of truth is now experience_blocks below.
     key_achievements: serializeExperience(profile),
     strengths: profile.skills,
+    tools: profile.tools,
     experience_blocks: profile.blocks,
     qualifications: profile.qualifications,
     notes: profile.notes,
@@ -1168,18 +1173,39 @@ export function ProfileClient({
             <div className="pp-divider" />
 
             <div className="pp-bottom-grid">
-              <div className="pp-field">
-                <label className="pp-label" htmlFor="profile-skills">
-                  Skills & tools
-                </label>
-                <textarea
-                  className="pp-input pp-textarea"
-                  id="profile-skills"
-                  rows={2}
-                  value={profile.skills}
-                  onChange={(event) => setField("skills", event.target.value)}
-                  placeholder="e.g. HubSpot, Marketo, SQL"
-                />
+              <div>
+                <div className="pp-field">
+                  <label className="pp-label" htmlFor="profile-skills">
+                    Skills{" "}
+                    <span className="pp-label-hint">
+                      - competencies & methods, not products
+                    </span>
+                  </label>
+                  <textarea
+                    className="pp-input pp-textarea"
+                    id="profile-skills"
+                    rows={2}
+                    value={profile.skills}
+                    onChange={(event) => setField("skills", event.target.value)}
+                    placeholder="e.g. A/B testing, lifecycle marketing, stakeholder management"
+                  />
+                </div>
+                <div className="pp-field">
+                  <label className="pp-label" htmlFor="profile-tools">
+                    Tools & software{" "}
+                    <span className="pp-label-hint">
+                      - named products recruiters and ATS screen for
+                    </span>
+                  </label>
+                  <textarea
+                    className="pp-input pp-textarea"
+                    id="profile-tools"
+                    rows={2}
+                    value={profile.tools}
+                    onChange={(event) => setField("tools", event.target.value)}
+                    placeholder="e.g. HubSpot, Marketo, SQL, Looker, dbt"
+                  />
+                </div>
               </div>
               <div>
                 <div className="pp-field pp-qualified-field">

@@ -137,7 +137,11 @@ export async function runProfileAnalyst(
     })
   }
 
-  const skills = dedupeSkills(args.profile.strengths || "")
+  const skills = dedupeSkills(
+    [args.profile.strengths || "", args.profile.tools || ""]
+      .filter(Boolean)
+      .join(", ")
+  )
 
   // ── Step 2 — Haiku call for inferred fields only ─────────────
   const userPrompt = buildUserPrompt(
@@ -215,7 +219,8 @@ function buildUserPrompt(
 function collectQualificationsText(profile: PipelineProfile): string {
   const bits: string[] = []
   if (profile.qualifications) bits.push(profile.qualifications.trim())
-  if (profile.strengths) bits.push(`Skills & tools: ${profile.strengths.trim()}`)
+  if (profile.strengths) bits.push(`Skills: ${profile.strengths.trim()}`)
+  if (profile.tools) bits.push(`Tools & software: ${profile.tools.trim()}`)
   if (profile.notes) bits.push(`Notes: ${profile.notes.trim()}`)
   if (profile.portfolioLink) bits.push(`Portfolio: ${profile.portfolioLink.trim()}`)
   if (profile.keyAchievements && bits.length === 0)

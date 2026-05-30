@@ -754,6 +754,14 @@ export function DashboardClient({
 
   const atsDisplay = latestLetter?.atsScore ?? null
   const keywordsMatchedCount = latestLetter?.atsCoveredKeywords?.length ?? null
+  // When a letter scores low on ATS it is almost always because the
+  // posting screens for keywords/tools the candidate genuinely doesn't
+  // have — and the engine refuses to fabricate them. Surface *why*
+  // instead of leaving a bare scary number to be misread as a bug.
+  const atsMissingKeywords = latestLetter?.atsMissingKeywords ?? []
+  const topMissingKeywords = atsMissingKeywords.slice(0, 5)
+  const showAtsExplainer =
+    atsDisplay != null && atsDisplay < 60 && topMissingKeywords.length > 0
 
   return (
     <div className="cover-workspace" aria-label="Cover letter workspace">
@@ -904,6 +912,32 @@ export function DashboardClient({
             </small>
           </div>
         </div>
+        {showAtsExplainer ? (
+          <div className="cover-ats-explainer" role="note">
+            <span className="cover-ats-explainer__icon" aria-hidden="true">
+              <Icon name="shield" />
+            </span>
+            <div className="cover-ats-explainer__copy">
+              <strong>Why this ATS score is low</strong>
+              <p>
+                This posting screens heavily for{" "}
+                {topMissingKeywords.map((kw, i) => (
+                  <span key={kw} className="cover-ats-explainer__kw">
+                    {kw}
+                    {i < topMissingKeywords.length - 1 ? ", " : ""}
+                  </span>
+                ))}{" "}
+                — terms that aren&apos;t in your profile. ForgeLetter won&apos;t
+                invent them: every line stays grounded in your real wins, so a
+                low keyword overlap here is honest, not a bug. To lift the
+                score, add genuine experience with these to your{" "}
+                <Link href="/dashboard/profile">Skills &amp; Tools</Link>, or
+                treat it as a signal that this role may be a stretch from your
+                current background.
+              </p>
+            </div>
+          </div>
+        ) : null}
       </section>
 
       <section className="cover-panel cover-draft-panel">
@@ -1239,6 +1273,7 @@ export function DashboardClient({
           onViewLetter={() => setPhase("idle")}
           score={latestLetter?.finalScore}
           atsScore={latestLetter?.atsScore ?? null}
+          atsMissingKeywords={topMissingKeywords}
         />
       ) : null}
 
@@ -1286,6 +1321,7 @@ function GenerationModal({
   onViewLetter,
   score,
   atsScore,
+  atsMissingKeywords,
 }: {
   phase: "running" | "done" | "error"
   percent: number
@@ -1295,6 +1331,7 @@ function GenerationModal({
   onViewLetter: () => void
   score: number | undefined
   atsScore: number | null
+  atsMissingKeywords: string[]
 }) {
   const elapsed = useElapsedSeconds(phase === "running")
   const completedCount = agentRows.filter((r) => r.status === "done").length
@@ -1400,6 +1437,14 @@ function GenerationModal({
                 </>
               ) : null}
             </p>
+            {atsScore != null && atsScore < 60 && atsMissingKeywords.length > 0 ? (
+              <p className="generation-modal__ats-note">
+                ATS is low because this role screens for{" "}
+                <strong>{atsMissingKeywords.join(", ")}</strong> — terms not in
+                your profile. The letter stays grounded in your real wins rather
+                than inventing them. Add these to your profile to lift the score.
+              </p>
+            ) : null}
             <button
               type="button"
               className="cover-save-button generation-modal__cta"

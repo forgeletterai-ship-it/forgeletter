@@ -70,6 +70,7 @@ function cleanProfile(input: Partial<UserProfile>): UserProfile {
     industries: String(input.industries || "").trim(),
     key_achievements: String(input.key_achievements || "").trim(),
     strengths: String(input.strengths || "").trim(),
+    tools: String(input.tools || "").trim(),
     experience_blocks,
     qualifications: String(input.qualifications || "").trim(),
     notes: String(input.notes || "").trim(),
@@ -133,10 +134,11 @@ export async function PUT(req: NextRequest) {
     newPayloadBits.qualifications = profile.qualifications
     newPayloadBits.notes = profile.notes
     newPayloadBits.portfolio_link = profile.portfolio_link
+    newPayloadBits.tools = profile.tools
   }
 
   const fullCols =
-    "professional_headline,target_roles,industries,key_achievements,strengths,experience_blocks,qualifications,notes,portfolio_link"
+    "professional_headline,target_roles,industries,key_achievements,strengths,tools,experience_blocks,qualifications,notes,portfolio_link"
   const legacyCols =
     "professional_headline,target_roles,industries,key_achievements,strengths"
 
@@ -199,6 +201,7 @@ export async function PUT(req: NextRequest) {
       qualifications: profile.qualifications,
       notes: profile.notes,
       portfolio_link: profile.portfolio_link,
+      tools: profile.tools,
     }
 
     return NextResponse.json({ profile: merged, capabilities })

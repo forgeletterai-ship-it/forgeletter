@@ -335,6 +335,7 @@ export async function POST(req: NextRequest) {
             professionalHeadline: savedProfile.professional_headline,
             qualifications: savedProfile.qualifications || resumeText,
             strengths: savedProfile.strengths,
+            tools: savedProfile.tools,
             notes: savedProfile.notes,
             keyAchievements: savedProfile.key_achievements,
             portfolioLink: savedProfile.portfolio_link,
