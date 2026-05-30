@@ -361,6 +361,26 @@ export function DashboardClient({
     }).trim().length
   }, [profile, selectedExperienceIds])
 
+  // Experience grounding gate. Every letter must be grounded in at
+  // least one of the candidate's real experiences, so the Generate
+  // button is locked until that's satisfied:
+  //   • noExperienceAdded   — the profile has zero experience blocks.
+  //   • noExperienceSelected — blocks exist but none are ticked.
+  // (selectedExperienceIds holds ONLY real block ids — the always-on
+  //  "Qualifications & achievements" row is never counted here.)
+  //
+  // The gate is suspended when experience persistence is unavailable
+  // (DB migration pending): in that mode blocks can't be loaded or
+  // selected at all, and generation intentionally falls back to the
+  // user's qualifications/skills, so we must not lock them out.
+  const experienceGateActive = experiencePersistenceAvailable
+  const noExperienceAdded =
+    experienceGateActive && profile.experience_blocks.length === 0
+  const noExperienceSelected =
+    experienceGateActive &&
+    profile.experience_blocks.length > 0 &&
+    selectedExperienceIds.length === 0
+
   // Fetches the authoritative letter count from the server. Called
   // after a generation completes and when the tab regains focus, so
   // the meter recovers from anything that drifted client-side.
@@ -504,6 +524,20 @@ export function DashboardClient({
       profile,
       selectedExperienceIds,
     }).trim()
+
+    // Experience grounding gate (defense in depth — the button is
+    // already disabled in these states, but never start a generation
+    // that isn't grounded in at least one real experience).
+    if (noExperienceAdded) {
+      setError(
+        "Add at least one experience on your profile before generating — every letter is grounded in your real experience."
+      )
+      return
+    }
+    if (noExperienceSelected) {
+      setError("Select at least one experience to include before generating.")
+      return
+    }
 
     // Client-side validation matching the API contract.
     if (jobDescription.trim().length < 200) {
@@ -983,19 +1017,38 @@ export function DashboardClient({
             profileExperienceHref="/dashboard/profile"
             persistenceAvailable={experiencePersistenceAvailable}
           />
-          <span
-            className={`cover-textarea-counter${
-              resumePreviewLength < MIN_RESUME_CHARS
-                ? " cover-textarea-counter--insufficient"
-                : " cover-textarea-counter--ok"
-            }`}
-            aria-live="polite"
-            style={{ marginTop: 8, display: "block" }}
-          >
-            {resumePreviewLength < MIN_RESUME_CHARS
-              ? `Selected experience: ${resumePreviewLength} / ${MIN_RESUME_CHARS} chars minimum — select more entries or expand your profile.`
-              : `Selected experience: ${resumePreviewLength} characters — ready.`}
-          </span>
+          {noExperienceAdded ? (
+            <span
+              className="cover-textarea-counter cover-textarea-counter--insufficient"
+              aria-live="polite"
+              style={{ marginTop: 8, display: "block" }}
+            >
+              Add at least one experience on your profile, then select it
+              here — every letter is grounded in your real experience.
+            </span>
+          ) : noExperienceSelected ? (
+            <span
+              className="cover-textarea-counter cover-textarea-counter--insufficient"
+              aria-live="polite"
+              style={{ marginTop: 8, display: "block" }}
+            >
+              Select at least one experience to include before generating.
+            </span>
+          ) : (
+            <span
+              className={`cover-textarea-counter${
+                resumePreviewLength < MIN_RESUME_CHARS
+                  ? " cover-textarea-counter--insufficient"
+                  : " cover-textarea-counter--ok"
+              }`}
+              aria-live="polite"
+              style={{ marginTop: 8, display: "block" }}
+            >
+              {resumePreviewLength < MIN_RESUME_CHARS
+                ? `Selected experience: ${resumePreviewLength} / ${MIN_RESUME_CHARS} chars minimum — select more entries or expand your profile.`
+                : `Selected experience: ${resumePreviewLength} characters — ready.`}
+            </span>
+          )}
         </div>
 
         {(() => {
@@ -1016,7 +1069,12 @@ export function DashboardClient({
               </Link>
             )
           }
-          const disabled = phase === "running" || jdShort || resumeShort
+          const disabled =
+            phase === "running" ||
+            noExperienceAdded ||
+            noExperienceSelected ||
+            jdShort ||
+            resumeShort
           return (
             <button
               className="cover-save-button"
@@ -1024,11 +1082,15 @@ export function DashboardClient({
               onClick={saveBriefAndGenerate}
               disabled={disabled}
               title={
-                jdShort
-                  ? `Job description needs ${MIN_JD_CHARS - jobDescription.trim().length} more characters`
-                  : resumeShort
-                    ? `Add more selected experience (need ${MIN_RESUME_CHARS - resumePreviewLength} more chars)`
-                    : undefined
+                noExperienceAdded
+                  ? "Add at least one experience on your profile to generate a letter"
+                  : noExperienceSelected
+                    ? "Select at least one experience to include"
+                    : jdShort
+                      ? `Job description needs ${MIN_JD_CHARS - jobDescription.trim().length} more characters`
+                      : resumeShort
+                        ? `Add more selected experience (need ${MIN_RESUME_CHARS - resumePreviewLength} more chars)`
+                        : undefined
               }
             >
               <Icon name="sparkle" />

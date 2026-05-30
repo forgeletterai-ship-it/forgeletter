@@ -106,3 +106,52 @@ export function safeSlice(text: string, max: number): string {
   if (text.length <= max) return text
   return text.slice(0, max) + "\n... [truncated]"
 }
+
+/**
+ * Strip "dashes for effect" from generated prose.
+ *
+ * The 50 gold-standard letters never use an em-dash or en-dash as a
+ * rhetorical device — the source document is explicit: "None uses a
+ * dash for effect." A stray em-dash (—) is one of the strongest tells
+ * that a letter was machine-written, so customers read it as "this was
+ * written by AI". This deterministic scrubber is the last line of
+ * defence behind the Writer / Final Editor prompt instructions.
+ *
+ * It converts em-dashes (—), en-dashes (–), horizontal bars, figure
+ * dashes, double-hyphen runs, and spaced single hyphens used as dashes
+ * into commas — or into a plain hyphen for numeric ranges — then tidies
+ * the punctuation collisions that creates.
+ *
+ * Left untouched: word-internal hyphens ("data-driven", "first-class")
+ * and numeric ranges already written with a hyphen ("5-10"), since
+ * neither reads as an AI tell.
+ */
+export function scrubDashes(text: string): string {
+  let out = text
+
+  // 1. Numeric ranges expressed with en/em dashes → hyphen.
+  //    "2019 – 2023" / "10—20%" → "2019-2023" / "10-20%"
+  out = out.replace(/(\d)\s*[—–―‒]\s*(\d)/g, "$1-$2")
+
+  // 2. Em / en / horizontal-bar / figure / multi-em dashes used as a
+  //    clause separator → comma.
+  out = out.replace(/\s*[—–―‒⸺⸻]\s*/g, ", ")
+
+  // 3. Double (or longer) hyphen runs used as an em-dash → comma.
+  out = out.replace(/\s*-{2,}\s*/g, ", ")
+
+  // 4. A single hyphen padded by spaces used as a dash for effect.
+  //    Requires a non-digit before and after so date/number ranges
+  //    written with a spaced hyphen ("2019 - 2023") survive untouched.
+  out = out.replace(/([^\d\s])\s+-\s+(?=\D)/g, "$1, ")
+
+  // 5. Tidy the punctuation collisions the substitutions can create.
+  out = out
+    .replace(/ {2,}/g, " ")
+    .replace(/\s+,/g, ",")
+    .replace(/,\s*,/g, ", ")
+    .replace(/,\s*([.!?;:])/g, "$1")
+    .replace(/([.!?;:])\s*,\s*/g, "$1 ")
+
+  return out
+}

@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { MODELS, runAgent } from "../run-agent"
-import { detectBannedPhrases } from "../utils"
+import { detectBannedPhrases, scrubDashes } from "../utils"
 import type { AgentRunLog, FinalEdit, Tone } from "../types"
 import type { CallMeta } from "./resume-analyst"
 
@@ -40,8 +40,9 @@ YOUR JOB:
 3. Fix awkward phrasing or grammar without changing tone.
 4. Ensure the opening is a concrete hook (achievement, observation, or specific connection) — not boilerplate.
 5. Ensure the close proposes a concrete next step — not "I look forward to hearing from you".
-6. ENFORCE THE LENGTH BAND given to you in the user message. Trim or expand using existing material only.
-7. Preserve structure, paragraph count, tone, and voice within ±10%.
+6. Remove every dash used for effect: em-dashes (—), en-dashes (–), and any hyphen surrounded by spaces ( - ). Replace with a comma, a period, parentheses, or restructure the sentence. The gold standard never uses a dash for effect — it reads as AI-written. Keep word-internal hyphens ("data-driven") and numeric ranges ("5-10").
+7. ENFORCE THE LENGTH BAND given to you in the user message. Trim or expand using existing material only.
+8. Preserve structure, paragraph count, tone, and voice within ±10%.
 
 OUTPUT:
 - "letter": the edited letter, ready to send. Start with "Dear …" and end with sign-off.
@@ -138,6 +139,13 @@ export async function runFinalEditor(args: {
   }
 
   const wordCount = revertReason ? originalWordCount : editedWordCount
+
+  // Final deterministic dash scrub — the copy editor may reintroduce an
+  // em/en-dash even when the Writer's output was clean. This is the last
+  // pass before the letter is shipped, so guarantee it here too. Dash
+  // substitution swaps "—" for ", " and never adds/removes words, so the
+  // word count computed above stays valid.
+  finalLetter = scrubDashes(finalLetter)
 
   const data: FinalEdit = {
     letter: finalLetter,

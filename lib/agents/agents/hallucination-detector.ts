@@ -157,9 +157,21 @@ export async function runHallucinationDetector(args: {
 export function autoCleanHallucinations(args: {
   letter: string
   check: HallucinationCheck
+  /**
+   * When true, also strip soft/unverified statements (the legacy
+   * `unverifiedClaims` — interests, opinions, self-assessment) in
+   * addition to fabricated + unmapped claims. Used by the final
+   * grounding gate when the bar is strict "none" (no soft language
+   * either), not just "no hard fabrication".
+   */
+  stripUnverified?: boolean
 }): { letter: string; removed: string[]; skipped: string[]; reason?: string } {
   const offending = new Set<string>(
-    [...args.check.fabricatedFacts, ...(args.check.unmappedClaims ?? [])]
+    [
+      ...args.check.fabricatedFacts,
+      ...(args.check.unmappedClaims ?? []),
+      ...(args.stripUnverified ? args.check.unverifiedClaims ?? [] : []),
+    ]
       .map((s) => s.trim())
       .filter(Boolean)
   )
@@ -246,12 +258,47 @@ function splitLetter(letter: string): {
   const greeting = lines.slice(0, greetingEnd + 1).join("\n").trim()
   const signoff = lines.slice(signoffStart).join("\n").trim()
   const bodyText = lines.slice(greetingEnd + 1, signoffStart).join(" ").trim()
+  // Protect abbreviation periods (Co., Inc., Ph.D., e.g.) so the sentence
+  // splitter does not sever a claim mid-abbreviation — which would orphan a
+  // grounded win into a fragment that the verifier then distrusts. The
+  // sentinel is a NUL char so restoring it back to "." is always lossless.
+  const ABBR_PLACEHOLDER = " "
+  const protectedBody = protectAbbreviations(bodyText, ABBR_PLACEHOLDER)
   const sents: string[] = []
   const regex = /[^.!?]+[.!?]+(?=\s|$)/g
   let m: RegExpExecArray | null
-  while ((m = regex.exec(bodyText)) !== null) sents.push(m[0].trim())
+  while ((m = regex.exec(protectedBody)) !== null) {
+    sents.push(restoreAbbreviations(m[0], ABBR_PLACEHOLDER).trim())
+  }
   if (sents.length === 0 && bodyText) sents.push(bodyText)
   return { greeting, bodySentences: sents, signoff }
+}
+
+/** Common abbreviations whose internal/trailing periods are NOT sentence ends. */
+const KNOWN_ABBREVIATIONS = [
+  "Co", "Inc", "Ltd", "Corp", "LLC", "LLP", "PLC",
+  "Dr", "Mr", "Mrs", "Ms", "Prof", "Sr", "Jr", "St",
+  "Dept", "Univ", "Assoc", "Bros", "No", "vs", "etc",
+  "Ph.D", "M.D", "B.A", "B.S", "M.A", "M.S", "M.B.A",
+  "e.g", "i.e", "U.S", "U.K", "a.m", "p.m",
+]
+
+function protectAbbreviations(text: string, placeholder: string): string {
+  let out = text
+  for (const abbr of KNOWN_ABBREVIATIONS) {
+    const escaped = abbr.replace(/\./g, "\\.")
+    // Match the abbreviation followed by a period; replace EVERY period in
+    // the matched token (including internal ones like Ph.D.) so none are
+    // treated as a sentence boundary.
+    out = out.replace(new RegExp(`\\b${escaped}\\.`, "g"), (match) =>
+      match.replace(/\./g, placeholder)
+    )
+  }
+  return out
+}
+
+function restoreAbbreviations(text: string, placeholder: string): string {
+  return text.split(placeholder).join(".")
 }
 
 function renderWinsForVerifier(p: ProfileAnalysis): string {
@@ -260,10 +307,13 @@ function renderWinsForVerifier(p: ProfileAnalysis): string {
   if (p.skills.length) lines.push(`Skills (verifiable): ${p.skills.join(", ")}`)
   if (p.qualifications) lines.push(`Qualifications (verifiable): ${p.qualifications}`)
   lines.push("")
-  lines.push(`Wins (SOURCE OF TRUTH — every concrete claim must map to one of these):`)
+  lines.push(
+    `Wins (SOURCE OF TRUTH — every concrete claim must map to one of these). The "impact:" clause is the candidate's OWN statement of why the win mattered; it is candidate-supplied truth, so a claim that restates a win's impact IS grounded and maps to that winId:`
+  )
   for (const w of p.wins) {
     const num = w.number ? ` [${w.number}]` : ""
-    lines.push(`  · winId=${w.id} ${w.what}${num}  ⟵ ${w.entryLabel}`)
+    const why = w.whyItMattered ? ` — impact: ${w.whyItMattered}` : ""
+    lines.push(`  · winId=${w.id} ${w.what}${num}${why}  ⟵ ${w.entryLabel}`)
   }
   return lines.join("\n")
 }
