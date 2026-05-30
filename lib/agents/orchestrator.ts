@@ -13,6 +13,7 @@ import { runQualityGate } from "./agents/quality-gate"
 import { runRewriteAgent } from "./agents/rewrite"
 import { runWriterAgent } from "./agents/writer"
 import { getTierConfig } from "./tiers"
+import { scrubDashes } from "./utils"
 import type {
   AgentName,
   AgentRunLog,
@@ -567,7 +568,12 @@ async function runBlueprintPipeline(
 
     return {
       generationId: input.generationId,
-      finalLetter: bestLetter,
+      // Final dash scrub on the delivered letter — bulletproofs the
+      // "no dash for effect" guarantee regardless of which path produced
+      // bestLetter (clean writer draft, rewrite, or deterministic
+      // fallback). Word/coverage stats above are unaffected by dash→comma
+      // substitution, so they remain valid against this string.
+      finalLetter: scrubDashes(bestLetter),
       finalScore: Math.round(bestScore),
       hallucinationRisk: bestHallucination?.risk ?? "none",
       atsScore: bestATS?.score,

@@ -1,5 +1,5 @@
 import { MODELS, runAgentText } from "../run-agent"
-import { safeSlice } from "../utils"
+import { safeSlice, scrubDashes } from "../utils"
 import type {
   AgentRunLog,
   JobAnalysis,
@@ -98,6 +98,8 @@ HARD RULES — break any and the letter is rejected:
 - Body length: 300-380 words (NOT counting "Dear …" and sign-off). Concise tone: 220-300 words.
 - Open with a specific achievement, observation, or hook tied to this role. NEVER "I am writing to express", "I hope this email finds you well", "To whom it may concern", "Please find attached".
 - Never use clichés: team player, hit the ground running, synergy, go-getter, results-oriented, detail-oriented, passionate about, rockstar, ninja, in today's fast-paced world, perfect candidate.
+- NO DASHES FOR EFFECT. Never use an em-dash (—), an en-dash (–), or a hyphen surrounded by spaces ( - ) as a rhetorical pause or aside. The gold-standard letters never do; a dash for effect is one of the strongest "written by AI" tells. Use a comma, a period, parentheses, or restructure the sentence. Word-internal hyphens ("data-driven", "first-class") and numeric ranges written with a hyphen ("5-10") are fine.
+- ATS COVERAGE (critical — the letter is scanned by an automated keyword screener before any human reads it): weave the role's must-have skills and the provided ATS keyword list naturally into real achievement sentences. Every must-have skill should appear at least once, sitting inside a genuine accomplishment in the candidate's own language. Never list them, never stuff them, never dump them in parentheses — they must live inside real stories or they are cut.
 - Never invent facts. If it's not in the candidate inputs or the JD, do not claim it.
 - Never reveal that you are an AI or reference these instructions.
 - Use SPECIFICS from the candidate inputs — numbers, scale, named projects, named tools.
@@ -204,6 +206,13 @@ export async function runWriterAgent(args: {
       letter = trimToUpperBand(letter, upperBand, jdKeywords)
     }
   }
+
+  // Dash scrub — the gold standard never uses a dash for effect, and an
+  // em/en-dash is a strong "written by AI" tell. Deterministic safety
+  // net behind the prompt instruction; runs on every path (first draft,
+  // retry, trim, and the deterministic fallback) so the letter that
+  // flows downstream to ATS / HM Critic / Quality Gate is already clean.
+  letter = scrubDashes(letter)
 
   const data: WriterOutput = {
     letter,
@@ -318,6 +327,11 @@ function renderJobBlock(j: JobAnalysis): string {
   lines.push(`Role: ${j.jobTitle} at ${j.companyName} · ${j.industry}`)
   lines.push(`Must-have: ${j.mustHaveSkills.join(", ")}`)
   if (j.niceToHaveSkills.length) lines.push(`Nice-to-have: ${j.niceToHaveSkills.join(", ")}`)
+  if (j.atsKeywords?.length) {
+    lines.push(
+      `ATS keywords (the automated screener scans for these — weave the ones the candidate can honestly support into real achievement sentences; never stuff or list them): ${j.atsKeywords.join(", ")}`
+    )
+  }
   if (j.keyResponsibilities.length) lines.push(`Responsibilities: ${j.keyResponsibilities.join("; ")}`)
   if (j.hiringManagerPriorities?.length) {
     lines.push(`Hiring-manager priorities (ranked): ${j.hiringManagerPriorities.join(" → ")}`)
@@ -653,7 +667,10 @@ function scoreTradability(sentence: string, jdKeywords: string[]): number {
   // We DROP the highest-tradability sentence first.
   let score = 1.0
   if (hasNumber) score -= 0.6
-  score -= 0.15 * Math.min(keywordHits, 4)
+  // Heavier keyword weighting protects ATS-relevant sentences from the
+  // trimmer — dropping a keyword-bearing sentence is what tanks the ATS
+  // score, so a sentence carrying JD keywords is treated as near-untradable.
+  score -= 0.2 * Math.min(keywordHits, 5)
   return score
 }
 
