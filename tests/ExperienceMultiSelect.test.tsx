@@ -68,7 +68,7 @@ describe("ExperienceMultiSelect", () => {
     expect(within(listbox).getByText("Academic")).toBeInTheDocument()
 
     // Pinned forced-on row
-    expect(within(listbox).getByText("Qualifications & achievements")).toBeInTheDocument()
+    expect(within(listbox).getByText("Qualifications, skills & tools")).toBeInTheDocument()
     expect(within(listbox).getByText("Always")).toBeInTheDocument()
   })
 
@@ -84,7 +84,7 @@ describe("ExperienceMultiSelect", () => {
 
     await userEvent.click(screen.getByRole("button"))
 
-    const qualRow = screen.getByText("Qualifications & achievements").closest('[role="option"]')!
+    const qualRow = screen.getByText("Qualifications, skills & tools").closest('[role="option"]')!
     expect(qualRow).toHaveAttribute("aria-checked", "true")
     expect(qualRow).toHaveAttribute("aria-disabled", "true")
 
@@ -187,7 +187,7 @@ describe("ExperienceMultiSelect", () => {
     expect(link).toHaveAttribute("href", "/dashboard/profile")
 
     // Qualifications row should still be present and forced-on
-    expect(screen.getByText("Qualifications & achievements")).toBeInTheDocument()
+    expect(screen.getByText("Qualifications, skills & tools")).toBeInTheDocument()
   })
 
   it("closes on Escape", async () => {
