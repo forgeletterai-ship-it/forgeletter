@@ -73,7 +73,7 @@ export function ExperienceMultiSelect({
     }))
     blockRows.push({
       id: QUALIFICATIONS_ROW_ID,
-      label: "Qualifications & achievements",
+      label: "Qualifications, skills & tools",
       kind: "Always",
       forcedOn: true,
     })
@@ -277,7 +277,7 @@ export function ExperienceMultiSelect({
                     />
                   </svg>
                 </span>
-                <span className="exp-ms-row-label">Qualifications &amp; achievements</span>
+                <span className="exp-ms-row-label">Qualifications, skills &amp; tools</span>
                 <span className="exp-ms-row-kind exp-ms-row-kind--forced">Always</span>
               </div>
             </div>

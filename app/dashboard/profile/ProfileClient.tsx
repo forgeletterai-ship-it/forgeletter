@@ -741,6 +741,21 @@ export function ProfileClient({
   const careerSnapshotComplete =
     profile.headline.trim().length > 0 && profile.seniority.trim().length > 0
 
+  // Save-gate: the core text fields that must be filled before the
+  // profile can be saved. Experiences (blocks) and notes stay optional
+  // so a user can save their snapshot now and add work history later.
+  const requiredFields: { label: string; filled: boolean }[] = [
+    { label: "Professional headline", filled: profile.headline.trim().length > 0 },
+    { label: "Seniority level", filled: profile.seniority.trim().length > 0 },
+    { label: "Skills", filled: profile.skills.trim().length > 0 },
+    { label: "Tools & software", filled: profile.tools.trim().length > 0 },
+    { label: "Qualifications", filled: profile.qualifications.trim().length > 0 },
+  ]
+  const missingRequiredFields = requiredFields
+    .filter((field) => !field.filled)
+    .map((field) => field.label)
+  const profileComplete = missingRequiredFields.length === 0
+
   const setField = useCallback(
     <Field extends keyof ProfileDraft>(field: Field, value: ProfileDraft[Field]) =>
       setProfile((current) => ({ ...current, [field]: value })),
@@ -833,6 +848,18 @@ export function ProfileClient({
   )
 
   async function handleSave() {
+    // Guard: don't allow saving until the core fields are filled. This
+    // backs up the disabled buttons in case a save is triggered some
+    // other way (keyboard, programmatic).
+    if (!profileComplete) {
+      setMessage("")
+      setError(
+        `Fill in ${missingRequiredFields.join(", ")} before saving your profile.`
+      )
+      if (!experienceUnlocked) setExperienceUnlocked(true)
+      return
+    }
+
     setSaving(true)
     setMessage("")
     setError("")
@@ -892,7 +919,12 @@ export function ProfileClient({
             className={`pp-btn-primary${message ? " pp-btn-saved" : ""}`}
             type="button"
             onClick={handleSave}
-            disabled={saving}
+            disabled={saving || !profileComplete}
+            title={
+              !profileComplete
+                ? `Fill in ${missingRequiredFields.join(", ")} to save`
+                : undefined
+            }
           >
             {saving ? "Saving..." : message ? "Saved" : "Save profile"}
           </button>
@@ -1244,13 +1276,20 @@ export function ProfileClient({
 
             <div className="pp-save-row">
               <span className="pp-save-note">
-                Changes are saved to your account and applied to all future letters.
+                {profileComplete
+                  ? "Changes are saved to your account and applied to all future letters."
+                  : `Add ${missingRequiredFields.join(", ")} to save your profile.`}
               </span>
               <button
                 className={`pp-save-btn${message ? " pp-save-btn--saved" : ""}`}
                 type="button"
                 onClick={handleSave}
-                disabled={saving}
+                disabled={saving || !profileComplete}
+                title={
+                  !profileComplete
+                    ? `Fill in ${missingRequiredFields.join(", ")} to save`
+                    : undefined
+                }
               >
                 {saving
                   ? "Saving..."
