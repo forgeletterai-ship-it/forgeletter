@@ -15,7 +15,7 @@
     "stress:hallucination": "tsx scripts/stress-hallucination.ts"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.98.0",
+    "@anthropic-ai/sdk": "^0.102.0",
     "@fontsource-variable/cormorant-garamond": "^5.2.6",
     "@fontsource-variable/dancing-script": "^5.2.8",
     "@react-pdf/renderer": "^4.5.1",
