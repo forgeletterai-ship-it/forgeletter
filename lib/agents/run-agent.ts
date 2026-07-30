@@ -245,7 +245,19 @@ export async function runAgent<S extends ZodTypeAny>(
             model: opts.model,
             max_tokens: opts.maxTokens,
             temperature,
-            system: opts.system,
+            // Prompt caching: agent system prompts are static across
+            // cycles, retries, and users (Writer ~2.3K tokens, HMCritic
+            // ~3.5K), so the ephemeral cache marker cuts their input
+            // cost ~90% on every warm call. Prompts below the model's
+            // minimum cacheable length are simply not cached — no
+            // downside.
+            system: [
+              {
+                type: "text" as const,
+                text: opts.system,
+                cache_control: { type: "ephemeral" as const },
+              },
+            ],
             tools: [
               {
                 name: opts.schemaName,
@@ -389,7 +401,14 @@ export async function runAgentText(
             model: opts.model,
             max_tokens: opts.maxTokens,
             temperature,
-            system: opts.system,
+            // Same caching rationale as the structured variant above.
+            system: [
+              {
+                type: "text" as const,
+                text: opts.system,
+                cache_control: { type: "ephemeral" as const },
+              },
+            ],
             messages: [{ role: "user", content: opts.user }],
           },
           { signal: abort.signal }

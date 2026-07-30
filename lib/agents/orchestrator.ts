@@ -66,6 +66,10 @@ import type {
  *     status='failed'.
  */
 
+/** Stop the rewrite loop with runway left for the final grounding gate
+ *  — Vercel's maxDuration for /api/generate is 300s. */
+const PIPELINE_TIME_BUDGET_MS = 210_000
+
 const PROGRESS_WEIGHTS: Record<AgentName | "Complete", number> = {
   InputCleaner: 4,
   ProfileAnalyst: 8,
@@ -540,6 +544,20 @@ async function runBlueprintPipeline(
         break
       }
 
+      // Global time budget. Vercel kills the function at maxDuration
+      // (300s); per-agent timeouts × retries × cycles can arithmetically
+      // exceed that, and a killed function delivers NOTHING — the row
+      // sits "running" until the 10-minute sweep. Stop iterating with
+      // enough runway left for the final grounding gate (which is
+      // never skipped) so the customer gets the best draft so far
+      // instead of a crash.
+      if (Date.now() - start > PIPELINE_TIME_BUDGET_MS) {
+        console.warn(
+          `[orchestrator] time budget reached after cycle ${cycle} — delivering best draft`
+        )
+        break
+      }
+
       // ── Rewrite ────────────────────────────────────────────
       await emit("RewriteAgent", "running", 0, `Rewrite cycle ${cycle + 1}`)
       try {
@@ -716,7 +734,6 @@ async function runBlueprintPipeline(
     bestHallucination = finalGroundingCheck
 
     const totalDuration = Date.now() - start
-    const passed = bestScore >= config.qualityThreshold
     const rewriteCycles = runLogs.filter((l) => l.agent === "RewriteAgent").length
 
     // Final coverage snapshot for the delivered letter.
@@ -726,6 +743,21 @@ async function runBlueprintPipeline(
       input.selectedExperienceIds
     )
     const finalWordCount = countDeliveredWords(bestLetter)
+
+    // Word-band floor: the grounding cleaner and final gate strip
+    // sentences AFTER the last quality measurement, so a letter can
+    // arrive here far under the 300-word band with a passing score
+    // attached to a longer draft that no longer exists. A visibly
+    // short letter must never ship labeled "passed" — deliver it as
+    // best-effort with an honest reason. (280 rather than 300 leaves
+    // slack for legitimate small trims.)
+    const underBand = finalWordCount < 280
+    const passed = bestScore >= config.qualityThreshold && !underBand
+    const failureReason = passed
+      ? undefined
+      : underBand
+        ? `Letter is ${finalWordCount} words after grounding enforcement removed unverifiable claims (band is 300–380). The draft is fully grounded — consider adding more wins to your profile and regenerating.`
+        : `Score ${Math.round(bestScore)} below threshold ${config.qualityThreshold}`
 
     await emit(
       "Complete",
@@ -757,9 +789,7 @@ async function runBlueprintPipeline(
       rewriteCycles,
       agentsRun,
       status: passed ? "passed" : "failed",
-      failureReason: passed
-        ? undefined
-        : `Score ${Math.round(bestScore)} below threshold ${config.qualityThreshold}`,
+      failureReason,
       totalDurationMs: totalDuration,
       coverageMissing: finalCoverage.missing,
       wordCount: finalWordCount,
@@ -826,6 +856,20 @@ function countDeliveredWords(letter: string): number {
   return words ? words.length : 0
 }
 
+/** Generic words that must not count as evidence a specific employer
+ *  or university is referenced in the letter. */
+const COVERAGE_STOPWORDS = new Set([
+  "the", "and", "for", "of", "at", "in", "on", "to", "as", "by",
+  "inc", "llc", "ltd", "gmbh", "corp", "co", "plc", "ag", "bv",
+  "group", "company", "university", "college", "school", "institute",
+  "senior", "junior", "lead", "manager", "engineer", "intern",
+])
+
+function wordBoundaryIncludes(haystack: string, token: string): boolean {
+  const escaped = token.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+  return new RegExp(`(^|[^a-z0-9])${escaped}([^a-z0-9]|$)`).test(haystack)
+}
+
 function computeExperienceCoverage(
   letter: string,
   profile: ProfileAnalysis,
@@ -853,11 +897,25 @@ function computeExperienceCoverage(
     const wins = winsByEntry.get(entryId) ?? []
     if (wins.length === 0) continue
     const label = wins[0].entryLabel || ""
+    // Token rules fixed for two failure modes:
+    //  - Short employer names ("EY", "3M"): the old >=3-char filter
+    //    dropped every token, so the block could NEVER be marked
+    //    referenced — the coverage verdict flipped each cycle, burned
+    //    the whole rewrite budget, and guaranteed status:"failed".
+    //    Tokens of length 2 now count, matched on word boundaries.
+    //  - Stopword credit ("the", "and" as 3-char tokens): plain
+    //    substring matching let filler words pass genuinely missing
+    //    blocks. Generic tokens are excluded.
     const labelTokens = label
       .toLowerCase()
       .split(/[^a-z0-9]+/)
-      .filter((t) => t.length >= 3)
-    const labelHit = labelTokens.some((t) => lower.includes(t))
+      .filter((t) => t.length >= 2 && !COVERAGE_STOPWORDS.has(t))
+    const labelHit =
+      labelTokens.length === 0
+        ? // A label with no usable tokens can't be verified — treat as
+          // covered rather than permanently failing the generation.
+          true
+        : labelTokens.some((t) => wordBoundaryIncludes(lower, t))
     const numberHit = wins.some(
       (w) => w.number && lower.includes(w.number.toLowerCase())
     )

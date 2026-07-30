@@ -19,6 +19,7 @@ export const BANNED_PHRASES = [
   "hit the ground running",
   "think outside the box",
   "synergy",
+  "synergies",
   "go-getter",
   "results-oriented",
   "detail-oriented",
@@ -30,10 +31,28 @@ export const BANNED_PHRASES = [
   "in today's fast-paced world",
   "perfect candidate",
   "i am confident that",
+  "i look forward to hearing from you",
   "tldr",
   "as an ai",
   "as a language model",
 ] as const
+
+/**
+ * Single source of truth for the Writer's in-draft banned list: the
+ * body phrases plus opening stems checked ANYWHERE in the draft (the
+ * gate's BANNED_OPENINGS anchor only to the first 220 chars). Three
+ * files previously kept drifted copies of this list — notably
+ * "i look forward to hearing from you" passed the gate while the
+ * writer avoided it.
+ */
+export const ALL_BANNED_PHRASES: ReadonlyArray<string> = [
+  ...BANNED_PHRASES,
+  "i am writing to express",
+  "i am writing to apply",
+  "i hope this email finds you well",
+  "to whom it may concern",
+  "please find attached",
+]
 
 export interface BannedPhraseMatch {
   phrase: string
