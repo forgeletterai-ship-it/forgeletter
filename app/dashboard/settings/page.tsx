@@ -1,11 +1,9 @@
-import { defaultSettings, getCurrentAppUser, getUserSettings } from "@/lib/app-data"
+import { getUserSettings, requireAppUser } from "@/lib/app-data"
 import { SettingsClient } from "./SettingsClient"
 
 export default async function SettingsPage() {
-  const { user } = await getCurrentAppUser()
-  const { settings, setupError } = user
-    ? await getUserSettings(user.id)
-    : { settings: defaultSettings, setupError: "Authentication required" }
+  const user = await requireAppUser()
+  const { settings, setupError } = await getUserSettings(user.id)
 
   return <SettingsClient initialSettings={settings} setupError={setupError} />
 }

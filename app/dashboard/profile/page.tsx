@@ -1,29 +1,19 @@
 import {
-  defaultProfile,
-  getCurrentAppUser,
   getSupabaseSchemaCapabilities,
   getUserProfile,
+  requireAppUser,
 } from "@/lib/app-data"
 import { ProfileClient } from "./ProfileClient"
 
 export const dynamic = "force-dynamic"
 
 export default async function ProfilePage() {
-  const { user } = await getCurrentAppUser()
+  const user = await requireAppUser()
 
-  const [{ profile, setupError }, capabilities] = user
-    ? await Promise.all([
-        getUserProfile(user.id),
-        getSupabaseSchemaCapabilities(),
-      ])
-    : [
-        { profile: defaultProfile, setupError: "Authentication required" },
-        {
-          userProfileExperienceBlocks: true,
-          applicationBriefsSelectedExperienceIds: true,
-          generatedLettersSelectedExperienceIds: true,
-        },
-      ]
+  const [{ profile, setupError }, capabilities] = await Promise.all([
+    getUserProfile(user.id),
+    getSupabaseSchemaCapabilities(),
+  ])
 
   return (
     <ProfileClient

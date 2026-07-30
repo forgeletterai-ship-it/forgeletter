@@ -15839,6 +15839,62 @@ button.tone-chip:hover {
   text-decoration: underline;
 }
 
+/* Dashboard segment error boundary (app/dashboard/error.tsx) */
+.dashboard-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  padding: 40px 24px;
+}
+
+.dashboard-error__card {
+  max-width: 460px;
+  text-align: center;
+}
+
+.dashboard-error__title {
+  margin: 0 0 12px;
+  font-size: 22px;
+  font-weight: 650;
+  color: #102737;
+}
+
+.dashboard-error__copy {
+  margin: 0 0 24px;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: rgba(16, 39, 55, 0.72);
+}
+
+.dashboard-error__actions {
+  display: inline-flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.dashboard-error__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: 1px solid rgba(16, 39, 55, 0.18);
+  background: #fff;
+  color: #102737;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.dashboard-error__btn--primary {
+  border-color: transparent;
+  background: var(--cover-teal, #075b62);
+  color: #fff;
+}
+
 .generation-modal__cta {
   width: 100%;
   margin-top: 4px;

@@ -1,11 +1,9 @@
-import { getApplicationBriefs, getCurrentAppUser } from "@/lib/app-data"
+import { getApplicationBriefs, requireAppUser } from "@/lib/app-data"
 import { HistoryClient } from "./HistoryClient"
 
 export default async function HistoryPage() {
-  const { user } = await getCurrentAppUser()
-  const { briefs, setupError } = user
-    ? await getApplicationBriefs(user.id)
-    : { briefs: [], setupError: "Authentication required" }
+  const user = await requireAppUser()
+  const { briefs, setupError } = await getApplicationBriefs(user.id)
 
   return (
     <>

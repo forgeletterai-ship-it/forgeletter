@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 import {
   getBillingPeriod,
@@ -429,6 +430,35 @@ export async function getCurrentAppUser(): Promise<{
   } catch (error) {
     return { user: null, error: dataErrorMessage(error, "users") }
   }
+}
+
+/**
+ * Authoritative account gate for protected server components — the
+ * "data access layer" check. Returns a guaranteed-non-null AppUser or
+ * short-circuits, so pages never branch on a logged-out state or render
+ * stub data behind a banner.
+ *
+ * Two distinct outcomes, no longer conflated:
+ *  - No session (the auth boundary) → redirect to /auth/login. In
+ *    practice the dashboard layout already redirects first, so this is
+ *    a belt-and-braces guard.
+ *  - Valid session but the account row can't be loaded (Supabase fault,
+ *    or a rowless session that slipped through) → throw, so the nearest
+ *    error boundary (app/dashboard/error.tsx) shows an honest error
+ *    instead of a fake, uneditable profile.
+ *
+ * API route handlers must keep using getCurrentAppUser() directly — they
+ * return a 401 JSON body, not an HTTP redirect.
+ */
+export async function requireAppUser(): Promise<AppUser> {
+  const { user, error } = await getCurrentAppUser()
+  if (user) return user
+  if (error === "Authentication required") {
+    redirect("/auth/login")
+  }
+  throw new Error(
+    error || "We couldn't load your account. Please try again."
+  )
 }
 
 async function selectUserProfileRow(
