@@ -1,18 +1,7 @@
 import Link from "next/link"
 import { PublicFooter, PublicNav } from "@/components/PublicChrome"
 
-type BillingSuccessPageProps = {
-  searchParams?: Promise<{
-    type?: string
-  }>
-}
-
-export default async function BillingSuccessPage({
-  searchParams,
-}: BillingSuccessPageProps) {
-  const params = await searchParams
-  const isOneTimePurchase = params?.type === "one-time"
-
+export default function BillingSuccessPage() {
   return (
     <div className="page-shell">
       <PublicNav />
@@ -21,13 +10,10 @@ export default async function BillingSuccessPage({
           <div className="container">
             <span className="section-kicker">Billing</span>
             <span className="status-pill active">Payment confirmed</span>
-            <h1>
-              {isOneTimePurchase ? "Payment complete." : "Subscription active."}
-            </h1>
+            <h1>Subscription active.</h1>
             <p>
-              {isOneTimePurchase
-                ? "Your purchase has been confirmed by Stripe. You can return to the workspace and continue preparing your next application."
-                : "Your ForgeLetter plan is now ready. Stripe manages the payment securely, and your workspace will update automatically."}
+              Your ForgeLetter plan is now ready. Stripe manages the payment
+              securely, and your workspace will update automatically.
             </p>
             <div className="billing-result-actions">
               <Link className="button" href="/dashboard">

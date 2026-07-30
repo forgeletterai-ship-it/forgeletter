@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
 
   // Idempotency check. Stripe retries failed deliveries for up to 3
   // days; without this guard every retry would re-run the side
-  // effects (double-credit one-time purchases, repeated plan flips).
+  // effects (repeated plan flips, duplicate period-start writes).
   const alreadyProcessed = await recordEventProcessed(event.id, event.type)
   if (alreadyProcessed) {
     return NextResponse.json({ received: true, duplicate: true })
@@ -336,8 +336,11 @@ async function handleSubscriptionScheduleReleased(
 
 async function handlePaymentFailed(invoice: Stripe.Invoice) {
   // Renewal payment failed (expired card, insufficient funds, etc.).
-  // Flag the user so the UI can prompt them to update their card and
-  // a downgrade job can pick them up after the grace period expires.
+  // Flag the user so the UI can prompt them to update their card.
+  // There is no grace period: the subscription.updated handler
+  // downgrades access as soon as Stripe reports a non-active status,
+  // and restores it when a retried payment succeeds (which also
+  // clears this flag via handlePaymentSucceeded).
   const lookup = lookupFromInvoice(invoice)
   if (!lookup.userId && !lookup.email) return
   await updateUsersRow(lookup, { past_due_since: new Date().toISOString() })

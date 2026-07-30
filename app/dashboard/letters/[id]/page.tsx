@@ -22,6 +22,7 @@ export default async function LetterDetailPage({ params }: PageProps) {
     .select("*")
     .eq("id", id)
     .eq("user_id", user.id)
+    .neq("generation_status", "deleted")
     .maybeSingle()
 
   if (error || !data) {

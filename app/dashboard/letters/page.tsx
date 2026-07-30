@@ -136,6 +136,7 @@ export default async function LettersPage({
     .select("id", { count: "exact", head: true })
     .eq("user_id", user.id)
     .not("final_cover_letter", "is", null)
+    .neq("generation_status", "deleted")
 
   const countQueries = await Promise.all([
     // Total
@@ -147,6 +148,7 @@ export default async function LettersPage({
         .select("id", { count: "exact", head: true })
         .eq("user_id", user.id)
         .not("final_cover_letter", "is", null)
+        .neq("generation_status", "deleted")
         .eq("application_status", s)
     ),
   ])
@@ -179,6 +181,7 @@ export default async function LettersPage({
     )
     .eq("user_id", user.id)
     .not("final_cover_letter", "is", null)
+    .neq("generation_status", "deleted")
   if (statusFilter) {
     listQuery = listQuery.eq("application_status", statusFilter)
   }

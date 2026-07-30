@@ -18,7 +18,7 @@ export default function RefundPolicyPage() {
         },
         {
           title: "2. EU and UK 14-day right of withdrawal",
-          body: "If you are a consumer resident in the European Union or the United Kingdom you normally have 14 days from the date of purchase to withdraw from a distance contract for a digital subscription, without giving a reason. To exercise this right, contact us using the details in section 9 within the 14-day window. We will reimburse the price paid, using the same payment method, within 14 days of receiving your withdrawal notice.",
+          body: "If you are a consumer resident in the European Union or the United Kingdom you normally have 14 days from the date of purchase to withdraw from a distance contract for a digital subscription, without giving a reason. To exercise this right, contact us using the details in section 10 within the 14-day window. We will reimburse the price paid, using the same payment method, within 14 days of receiving your withdrawal notice.",
         },
         {
           title: "3. Waiver for immediately-delivered digital content",
@@ -38,7 +38,7 @@ export default function RefundPolicyPage() {
         },
         {
           title: "7. Failed payments and dunning",
-          body: "If a renewal payment fails, Stripe will retry the charge for up to seven days. During this period your account remains active and saved drafts stay accessible. After seven days of unresolved non-payment the subscription is cancelled automatically and new-letter generation is paused — your existing letters and outcome history remain available, and you can resubscribe at any time to resume generation.",
+          body: "If a renewal payment fails, paid features are paused immediately until payment succeeds. Stripe automatically retries the charge over the following days; you can also update your card at any time from the billing page to trigger a successful retry, which restores access right away. Your existing letters, saved drafts and outcome history remain visible throughout — only new-letter generation and other paid features are paused. If the payment is not resolved, the subscription is cancelled and you can resubscribe at any time.",
         },
         {
           title: "8. Chargebacks",

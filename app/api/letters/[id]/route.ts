@@ -12,14 +12,16 @@ interface RouteParams {
 async function authorizeLetter(letterId: string, userId: string) {
   const { data, error } = await supabaseAdmin
     .from("generated_letters")
-    .select("id,user_id")
+    .select("id,user_id,generation_status")
     .eq("id", letterId)
     .maybeSingle()
 
   if (error) {
     return { ok: false as const, status: 500, message: dataErrorMessage(error, "generated_letters") }
   }
-  if (!data) {
+  // Soft-deleted rows are invisible to the API — same response as a
+  // row that never existed.
+  if (!data || data.generation_status === "deleted") {
     return { ok: false as const, status: 404, message: "Letter not found" }
   }
   if (data.user_id !== userId) {
@@ -38,6 +40,7 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
     .select("*")
     .eq("id", id)
     .eq("user_id", user.id)
+    .neq("generation_status", "deleted")
     .maybeSingle()
 
   if (fetchError) {
@@ -154,9 +157,19 @@ export async function DELETE(_req: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ error: authz.message }, { status: authz.status })
   }
 
+  // Soft delete. A hard delete would refund the user's quota slot —
+  // both quota counters (try_start_letter RPC and the legacy display
+  // counter) count rows with final_cover_letter NOT NULL, so
+  // generate → copy text → delete → repeat would make any plan
+  // unlimited. Flipping the status hides the letter from every list
+  // and API read while the row keeps counting against the period's
+  // allowance. Crash-failed rows (no output) never counted, so
+  // deleting one correctly stays refunded. The GDPR delete-data flow
+  // still hard-deletes everything — that's account-level erasure,
+  // gated behind its own confirmation, not a per-letter action.
   const { error: deleteError } = await supabaseAdmin
     .from("generated_letters")
-    .delete()
+    .update({ generation_status: "deleted" })
     .eq("id", id)
     .eq("user_id", user.id)
 

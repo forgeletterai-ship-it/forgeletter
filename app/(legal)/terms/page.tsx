@@ -70,11 +70,7 @@ export default function TermsPage() {
           body: "An annual plan is paid in advance for twelve months and renews automatically each year on the anniversary date until cancelled. Annual plans are non-refundable beyond the EU/UK 14-day withdrawal window described in section 12, except where a sustained service failure makes retention of the fee inequitable. We will send a renewal reminder at least 30 days before the renewal date.",
         },
         {
-          title: "10c. One-off purchases",
-          body: "Where ForgeLetter offers one-off credit packs or single-letter purchases, these are consumed on use, do not renew, and are non-refundable once the corresponding feature has been used. Unused credits expire 12 months after purchase unless a longer period is shown at checkout.",
-        },
-        {
-          title: "10d. Changes in fees",
+          title: "10c. Changes in fees",
           body: "We may change the price of a subscription plan with at least 30 days' notice by email and on the pricing page. Price changes take effect at the start of your next billing period; if you do not accept the change, you may cancel before the renewal date. Continued payment after the effective date constitutes acceptance.",
         },
         {

@@ -46,8 +46,9 @@ export function AccountStateBanner({ pastDueSince, disputedAt }: AccountState) {
           <strong>Your latest renewal payment was declined</strong>
           <p>
             We tried to charge your card on file and Stripe returned a decline.
-            Your subscription is in a grace period — please update your card
-            within the next few days to avoid losing access to your workspace.
+            Paid features are paused until the payment goes through — update
+            your card and Stripe will retry automatically, restoring access
+            right away.
           </p>
         </div>
         <Link
