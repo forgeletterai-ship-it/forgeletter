@@ -38,6 +38,7 @@ export function scoreATSDeterministic(args: {
   missingKeywords: string[]
 } {
   const keywords = dedupeLower(args.job.atsKeywords).filter((k) => k.length >= 2)
+  const mustHaves = dedupeLower(args.job.mustHaveSkills)
   const letterLower = args.letter.toLowerCase()
 
   const covered: string[] = []
@@ -48,18 +49,41 @@ export function scoreATSDeterministic(args: {
     else missing.push(kw)
   }
 
-  const mustHaveSet = new Set(dedupeLower(args.job.mustHaveSkills))
-  const mustHaveTotal = keywords.filter((k) => mustHaveSet.has(k)).length || 1
-  const mustHaveCovered = covered.filter((k) => mustHaveSet.has(k)).length
+  // Must-haves are near-verbatim JD requirement phrases ("5+ years
+  // product management experience") while atsKeywords are exact
+  // lowercase nouns ("sql"). A previous implementation intersected
+  // the two vocabularies — which are almost always disjoint — so the
+  // 70%-weight bucket was 0/1 and the score capped at ~30 ("At
+  // Risk") on excellent letters. Must-haves are therefore matched
+  // against the letter on their own terms: content-token coverage of
+  // the phrase (word-boundary matches on its meaningful words).
+  const mustHaveMissing: string[] = []
+  let mustHaveCovered = 0
+  for (const phrase of mustHaves) {
+    if (phraseCovered(letterLower, phrase)) mustHaveCovered += 1
+    else mustHaveMissing.push(phrase)
+  }
 
-  const longTailTotal = keywords.length - mustHaveTotal || 1
-  const longTailCovered = covered.length - mustHaveCovered
+  const keywordRatio = keywords.length > 0 ? covered.length / keywords.length : null
+  const mustHaveRatio = mustHaves.length > 0 ? mustHaveCovered / mustHaves.length : null
 
-  const mustHaveRatio = mustHaveCovered / mustHaveTotal
-  const longTailRatio = longTailCovered / Math.max(1, longTailTotal)
-
-  // 70% weight on must-haves, 30% on long-tail.
-  const rawScore = mustHaveRatio * 70 + longTailRatio * 30
+  // 70% weight on must-haves, 30% on the keyword long tail. When one
+  // of the two lists is empty the other carries the full weight — an
+  // empty list is a Job Analyst extraction artefact, not evidence
+  // about the letter.
+  let rawScore: number
+  if (mustHaveRatio != null && keywordRatio != null) {
+    rawScore = mustHaveRatio * 70 + keywordRatio * 30
+  } else if (mustHaveRatio != null) {
+    rawScore = mustHaveRatio * 100
+  } else if (keywordRatio != null) {
+    rawScore = keywordRatio * 100
+  } else {
+    // The JD yielded neither keywords nor requirements — there is
+    // nothing to score against. Neutral "Good" instead of a false
+    // zero that would scare the customer.
+    rawScore = 70
+  }
   const score = clamp(Math.round(rawScore), 0, 100)
 
   let verdict: ATSOutput["verdict"]
@@ -68,8 +92,58 @@ export function scoreATSDeterministic(args: {
   else if (score >= 40) verdict = "Needs Work"
   else verdict = "At Risk"
 
-  return { score, verdict, coveredKeywords: covered, missingKeywords: missing }
+  // Uncovered must-have phrases lead the missing list — they are the
+  // highest-impact gaps for the dashboard explainer and the rewrite
+  // recommendations.
+  const missingCombined = dedupeLower([...mustHaveMissing, ...missing])
+
+  return {
+    score,
+    verdict,
+    coveredKeywords: covered,
+    missingKeywords: missingCombined,
+  }
 }
+
+/**
+ * A must-have requirement phrase counts as covered when the letter
+ * contains it verbatim, or when at least 60% of its content tokens
+ * (stopwords and bare numbers stripped) appear as whole words. This
+ * lets "led product management for eight years" satisfy "5+ years
+ * product management experience" without rewarding coincidental
+ * stopword overlap.
+ */
+function phraseCovered(letterLower: string, phrase: string): boolean {
+  if (letterLower.includes(phrase)) return true
+
+  const tokens = phrase
+    .split(/[^a-z0-9+#.]+/)
+    .filter(
+      (t) =>
+        t.length >= 2 &&
+        /[a-z]/.test(t) &&
+        !PHRASE_STOPWORDS.has(t)
+    )
+
+  if (tokens.length === 0) return matchesKeyword(letterLower, phrase)
+
+  const hits = tokens.filter((t) => matchesKeyword(letterLower, t)).length
+  return hits / tokens.length >= 0.6
+}
+
+/** Words that carry requirement framing, not skill content. */
+const PHRASE_STOPWORDS = new Set([
+  "a", "an", "and", "or", "the", "of", "in", "on", "to", "for", "with",
+  "at", "as", "is", "are", "be", "plus", "using", "use", "used",
+  "ability", "able", "strong", "solid", "proven", "demonstrated",
+  "excellent", "good", "great", "experience", "experiences", "years",
+  "year", "yrs", "skills", "skill", "knowledge", "working", "work",
+  "background", "familiarity", "familiar", "proficiency", "proficient",
+  "expertise", "expert", "track", "record", "minimum", "required",
+  "preferred", "related", "relevant", "equivalent", "similar", "field",
+  "degree", "bachelor", "bachelors", "master", "masters", "phd",
+  "hands", "understanding",
+])
 
 // ─────────────────────────────────────────────────────────────────
 // Public API
