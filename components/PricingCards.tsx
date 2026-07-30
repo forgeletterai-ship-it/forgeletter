@@ -215,11 +215,9 @@ export function PricingCards({
           const currentBasePlan = getBasePlan(currentPlan)
           const currentPeriod = getBillingPeriod(currentPlan)
           const isCurrentPlan = currentBasePlan === plan.key && currentPeriod === period
-          const features = plan.features.map((feature) =>
-            feature.includes("letters per month")
-              ? `${lettersForPeriod} letters per ${periodNoun}`
-              : feature
-          )
+          // (No feature-string rewriting — the letters/period line is
+          // rendered from lettersForPeriod directly below.)
+          const features = plan.features
           const actionClass = `pricing-arch-button${
             isHighlighted ? " pricing-arch-button--gold" : ""
           }${isCurrentPlan ? " pricing-arch-button--current" : ""}`

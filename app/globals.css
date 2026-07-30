@@ -15860,6 +15860,58 @@ button.tone-chip:hover {
   gap: 8px;
 }
 
+/* Dashboard segment pending UI (app/dashboard/loading.tsx) */
+.dashboard-loading {
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.dashboard-loading__bar,
+.dashboard-loading__block {
+  border-radius: 14px;
+  background: linear-gradient(
+    100deg,
+    rgba(16, 82, 80, 0.06) 40%,
+    rgba(16, 82, 80, 0.12) 50%,
+    rgba(16, 82, 80, 0.06) 60%
+  );
+  background-size: 200% 100%;
+  animation: dashboard-loading-shimmer 1.4s ease-in-out infinite;
+}
+
+.dashboard-loading__bar {
+  height: 46px;
+  max-width: 420px;
+}
+
+.dashboard-loading__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 18px;
+}
+
+.dashboard-loading__block {
+  height: 180px;
+}
+
+.dashboard-loading__block--tall {
+  height: 260px;
+}
+
+@keyframes dashboard-loading-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-loading__bar,
+  .dashboard-loading__block {
+    animation: none;
+  }
+}
+
 .billing-renewal-note {
   margin: 0 0 16px;
   padding: 10px 14px;

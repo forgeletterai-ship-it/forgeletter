@@ -254,11 +254,13 @@ export function TemplatePickerModal({
                 </div>
               )}
             </div>
+            {/* No `capture` attribute: it forced the selfie camera on
+                mobile, blocking users from picking an existing headshot
+                from their gallery — the far more common intent. */}
             <input
               ref={fileRef}
               type="file"
               accept="image/png,image/jpeg,image/webp"
-              capture="user"
               style={{ display: "none" }}
               onChange={(e) => {
                 const file = e.target.files?.[0]

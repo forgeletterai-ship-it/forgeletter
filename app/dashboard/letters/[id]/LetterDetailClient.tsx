@@ -546,6 +546,15 @@ export function LetterDetailClient({
 
       {showDeleteConfirm && (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="delete-letter-title"
+          onKeyDown={(e) => {
+            if (e.key === "Escape" && !deleting) setShowDeleteConfirm(false)
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !deleting) setShowDeleteConfirm(false)
+          }}
           style={{
             position: "fixed",
             inset: 0,
@@ -557,14 +566,21 @@ export function LetterDetailClient({
           }}
         >
           <div className="dashboard-card" style={{ maxWidth: 420, width: "100%" }}>
-            <h3 style={{ marginTop: 0 }}>Delete this letter?</h3>
+            <h3 id="delete-letter-title" style={{ marginTop: 0 }}>Delete this letter?</h3>
             <p style={{ color: "var(--muted)" }}>
               The letter will be removed from your library and can&apos;t be
               restored. It still counts toward this month&apos;s allowance —
               deleting a letter doesn&apos;t return the slot.
             </p>
             <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 16 }}>
-              <button className="button-secondary" onClick={() => setShowDeleteConfirm(false)} disabled={deleting}>
+              <button
+                className="button-secondary"
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={deleting}
+                // Focus lands inside the dialog so Escape works
+                // immediately and the safe action is the default.
+                autoFocus
+              >
                 Cancel
               </button>
               <button

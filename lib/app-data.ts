@@ -555,6 +555,11 @@ export async function getApplicationBriefs(userId: string) {
       .select("*")
       .eq("user_id", userId)
       .order("updated_at", { ascending: false })
+      // A brief (with up to 5000-char JD + full resume text) is
+      // inserted on EVERY generation, and only the newest seeds the
+      // workspace form. Unbounded, a heavy user paid an ever-growing
+      // payload on every dashboard load.
+      .limit(25)
 
     if (error) {
       return {
