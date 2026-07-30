@@ -1,8 +1,20 @@
 import type { Metadata, Viewport } from "next"
+import { Plus_Jakarta_Sans } from "next/font/google"
 import { BackToTopButton } from "@/components/BackToTopButton"
 import { CookieConsentProvider } from "@/components/CookieConsent"
 import { getSiteUrl } from "@/lib/site-url"
 import "./globals.css"
+
+// Self-hosted via next/font: the font files are downloaded at BUILD
+// time and served from our own origin — no runtime request to Google
+// Fonts (which is both render-blocking and a documented GDPR problem
+// for EU visitors; German courts have ruled against direct embedding).
+const jakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  display: "swap",
+  variable: "--font-jakarta",
+})
 
 const SITE_URL = getSiteUrl()
 const SITE_NAME = "ForgeLetter"
@@ -49,10 +61,12 @@ export const metadata: Metadata = {
     locale: "en_US",
     images: [
       {
-        url: "/hero-image.png",
-        width: 1254,
-        height: 1254,
-        alt: "ForgeLetter — AI cover letter workspace illustration",
+        // The dynamic 1200×630 generator (edge-cached) — the previous
+        // square 1254×1254 hero cropped badly on LinkedIn/Twitter.
+        url: "/api/og?title=AI%20cover%20letters%20that%20get%20you%20hired&category=ForgeLetter",
+        width: 1200,
+        height: 630,
+        alt: "ForgeLetter — AI cover letters that get you hired",
       },
     ],
   },
@@ -60,7 +74,9 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: DEFAULT_TITLE,
     description: DEFAULT_DESCRIPTION,
-    images: ["/hero-image.png"],
+    images: [
+      "/api/og?title=AI%20cover%20letters%20that%20get%20you%20hired&category=ForgeLetter",
+    ],
   },
   icons: {
     icon: [
@@ -93,7 +109,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={jakarta.variable}>
       <body>
         {children}
         <BackToTopButton />

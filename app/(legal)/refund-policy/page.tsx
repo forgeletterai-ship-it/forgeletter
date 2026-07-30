@@ -14,7 +14,7 @@ export default function RefundPolicyPage() {
       sections={[
         {
           title: "1. Scope",
-          body: "This policy applies to monthly and annual subscriptions purchased directly from the ForgeLetter website. Purchases made through an app-store, reseller, or enterprise contract are governed by the refund rules of that provider or the relevant order form.",
+          body: "This policy applies to monthly and annual subscriptions purchased directly from forgeletter.com. Purchases made through an app-store, reseller, or enterprise contract are governed by the refund rules of that provider or the relevant order form.",
         },
         {
           title: "2. EU and UK 14-day right of withdrawal",

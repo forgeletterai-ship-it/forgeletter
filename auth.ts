@@ -7,7 +7,9 @@ import { compare, hashSync } from "bcryptjs"
 import { checkRateLimit, rateLimitKey } from "./lib/rate-limit"
 import { supabaseAdmin } from "./lib/supabase"
 
-const PRODUCTION_AUTH_URL = "https://forgeletter.vercel.app"
+// Canonical production origin — the custom domain, attached and
+// serving on Vercel. OAuth callbacks and auth cookies anchor here.
+const PRODUCTION_AUTH_URL = "https://forgeletter.com"
 
 function enforceProductionAuthUrl() {
   if (process.env.NODE_ENV !== "production") return
@@ -263,7 +265,8 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
       // fix the Google Cloud console instead of weakening checks:
       // APIs & Services → Credentials → OAuth client → Authorized
       // redirect URIs must contain EXACTLY
-      //   https://forgeletter.vercel.app/api/auth/callback/google
+      //   https://forgeletter.com/api/auth/callback/google
+      //   https://forgeletter.vercel.app/api/auth/callback/google (transition)
       //   http://localhost:3000/api/auth/callback/google (for dev)
     })
   )

@@ -249,7 +249,14 @@ function normalizeCallbackUrl(value?: string) {
 
   try {
     const url = new URL(value)
-    if (url.origin === "https://forgeletter.vercel.app") {
+    // Accept absolute callback URLs only for our own origins — the
+    // canonical domain plus the Vercel alias during the transition.
+    const OWN_ORIGINS = [
+      "https://forgeletter.com",
+      "https://www.forgeletter.com",
+      "https://forgeletter.vercel.app",
+    ]
+    if (OWN_ORIGINS.includes(url.origin)) {
       return `${url.pathname}${url.search}${url.hash}` || "/dashboard"
     }
   } catch {

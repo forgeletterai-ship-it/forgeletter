@@ -38,7 +38,7 @@ export default function ImprintPage() {
           body: "All enquiries — general, legal, privacy, abuse reports and billing — are handled through a single monitored address. Put the topic in the subject line so it reaches the right person quickly.",
           points: [
             "Email: forgeletterai@gmail.com",
-            "Contact form: forgeletter.vercel.app/contact",
+            "Contact form: https://forgeletter.com/contact",
             "Postal address: [Registered address], Republic of Bulgaria",
           ],
         },
