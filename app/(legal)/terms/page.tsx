@@ -55,7 +55,7 @@ export default function TermsPage() {
         },
         {
           title: "9. Third-party services",
-          body: "The service relies on third-party providers, including Vercel (hosting), Supabase (database), Stripe (payments), Anthropic (AI), and optional sign-in through Google or Facebook. Each provider has its own terms and privacy policies, which apply to your interaction with their services. We are not responsible for the acts, omissions, availability, or content of third-party services.",
+          body: "The service relies on third-party providers, including Vercel (hosting), Supabase (database), Stripe (payments), Anthropic (AI), OpenAI (text embeddings for example matching), Resend (transactional email), and optional sign-in through Google or Facebook. Each provider has its own terms and privacy policies, which apply to your interaction with their services. We are not responsible for the acts, omissions, availability, or content of third-party services.",
         },
         {
           title: "10. Subscription, fees and billing — general",

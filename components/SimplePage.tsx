@@ -20,8 +20,11 @@ export function SimplePage({
   title,
   intro,
   cards,
-  ctaLabel = "Open dashboard",
-  ctaHref = "/dashboard",
+  // Marketing pages are read overwhelmingly by logged-out visitors —
+  // default the CTA to signup, not a dashboard route that bounces
+  // them to the login form.
+  ctaLabel = "Start free",
+  ctaHref = "/auth/signup",
 }: SimplePageProps) {
   return (
     <div className="page-shell">
@@ -44,10 +47,10 @@ export function SimplePage({
         </section>
         <section className="cta-band">
           <div className="container">
-            <h2>Turn guidance into a saved brief.</h2>
+            <h2>Turn guidance into a real letter.</h2>
             <p>
-              Use the dashboard to turn notes, proof, and role requirements
-              into a reusable application workflow.
+              Create a free account, add your experience once, and let the
+              AI pipeline turn it into role-specific cover letters.
             </p>
             <Link className="button" href={ctaHref}>
               {ctaLabel}

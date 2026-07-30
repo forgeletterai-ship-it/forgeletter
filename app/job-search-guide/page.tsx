@@ -1,4 +1,14 @@
+import type { Metadata } from "next"
 import { SimplePage } from "@/components/SimplePage"
+
+export const metadata: Metadata = {
+  title: "Job search guide",
+  description:
+    "A simple system for a sharper job search: build a shortlist, tailor every application, track outcomes, and iterate on what works.",
+  alternates: {
+    canonical: "/job-search-guide",
+  },
+}
 
 export default function JobSearchGuidePage() {
   return (

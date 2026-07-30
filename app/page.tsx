@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import Image from "next/image"
 import Link from "next/link"
 import { AnimatedSeparator } from "@/components/AnimatedSeparator"
@@ -6,6 +7,14 @@ import { HowItWorksDemo } from "@/components/HowItWorksDemo"
 import { PricingCards } from "@/components/PricingCards"
 import { PublicFooter, PublicNav } from "@/components/PublicChrome"
 import { ResourceSlider } from "@/components/ResourceSlider"
+
+// Canonical lives here, NOT in the root layout — a root-level
+// canonical of "/" would cascade to every page without its own.
+export const metadata: Metadata = {
+  alternates: {
+    canonical: "/",
+  },
+}
 
 const engineFeatures = [
   {
@@ -57,7 +66,7 @@ const faqs = [
   },
   {
     q: "Is my data safe?",
-    a: "Yes. Your resume, letters, and personal information are stored securely and never shared with third parties. You can delete your account and all associated data at any time.",
+    a: "Yes. Your profile and letters are stored securely and are only processed by the infrastructure providers we need to run the service (hosting, database, payments, AI) — never sold or shared for advertising. Our Privacy Policy lists every provider, and you can request deletion of your data from the settings page.",
   },
 ]
 
@@ -499,8 +508,9 @@ export default function HomePage() {
           <div className="container">
             <h2>Stop sending generic letters. Start getting interviews.</h2>
             <p>
-              Join thousands of job seekers using ForgeLetter to write stronger,
-              faster, more specific cover letters.
+              ForgeLetter turns your real experience into stronger, faster,
+              more specific cover letters — one focused workflow from job
+              posting to send-ready letter.
             </p>
             <Link className="button" href="/auth/signup">
               Create your free account -&gt;

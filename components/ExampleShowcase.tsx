@@ -2,41 +2,43 @@
 
 import { useState } from "react"
 
+// Illustrative comparisons with fictional companies. Never attribute
+// invented letters or metrics to real employers.
 const examples = [
   {
     role: "Product Manager",
-    company: "Spotify Berlin",
+    company: "Music-streaming scale-up · Berlin",
     subtitle: "Compare how the same prompt is answered.",
     human:
       "I am applying because I believe I am a good fit. I am hardworking, motivated, and have many skills that match the role.",
     chatgpt:
-      "I am excited about Spotify because of its innovation in music streaming and user experience. My product strategy background would help drive growth.",
+      "I am excited about this company because of its innovation in music streaming and user experience. My product strategy background would help drive growth.",
     forge:
       "I am excited about this Product Manager role because it blends user discovery, commercial judgement, and cross-functional execution, areas where I have consistently delivered impact.\n\nIn my last role, I led a checkout improvement project that increased completion by 14% through data-backed experiments and close work with design and engineering.",
     insight: "Tailored to the role with measurable evidence and clear value.",
   },
   {
     role: "Marketing Manager",
-    company: "Booking.com",
+    company: "Travel booking platform · Amsterdam",
     subtitle: "Compare how the same brief changes with better context.",
     human:
       "I would like to apply for the Marketing Manager position. I am creative, organised, and good at working with teams.",
     chatgpt:
-      "I am excited about Booking.com because I enjoy building campaigns that connect with customers and support brand objectives.",
+      "I am excited about this company because I enjoy building campaigns that connect with customers and support brand objectives.",
     forge:
-      "I am drawn to this Marketing Manager role because Booking.com needs campaigns that are commercially sharp and genuinely useful for travellers.\n\nAcross recent lifecycle campaigns, I increased qualified engagement by 22% by pairing audience research with channel-specific messaging and weekly performance reviews.",
+      "I am drawn to this Marketing Manager role because the platform needs campaigns that are commercially sharp and genuinely useful for travellers.\n\nAcross recent lifecycle campaigns, I increased qualified engagement by 22% by pairing audience research with channel-specific messaging and weekly performance reviews.",
     insight: "Connects marketing outcomes to customer behaviour and proof.",
   },
   {
     role: "Software Engineer",
-    company: "ASML Eindhoven",
+    company: "Precision-engineering firm · Eindhoven",
     subtitle: "Compare a generic application with a role-specific narrative.",
     human:
       "I am interested in the Software Engineer job because I like technology and solving problems. I have coding experience and learn quickly.",
     chatgpt:
-      "I am excited to apply for ASML. My technical skills, teamwork, and passion for engineering make me a strong candidate.",
+      "I am excited to apply. My technical skills, teamwork, and passion for engineering make me a strong candidate.",
     forge:
-      "I am excited by this Software Engineer role because ASML sits at the intersection of precision engineering, resilient software, and high-stakes collaboration.\n\nIn my recent work, I improved a production data pipeline by reducing processing failures by 31% and adding clearer diagnostics for engineering teams.",
+      "I am excited by this Software Engineer role because the company sits at the intersection of precision engineering, resilient software, and high-stakes collaboration.\n\nIn my recent work, I improved a production data pipeline by reducing processing failures by 31% and adding clearer diagnostics for engineering teams.",
     insight: "Turns technical experience into credible operating evidence.",
   },
 ] as const
@@ -111,7 +113,7 @@ export function ExampleShowcase() {
           </span>
           <div>
             <strong>ForgeLetter works across every industry and seniority level.</strong>
-            <p>See all examples -&gt;</p>
+            <p>From first internship to C-suite.</p>
           </div>
         </div>
       </aside>
@@ -123,7 +125,7 @@ export function ExampleShowcase() {
           </span>
           <div>
             <h3>
-              {active.role} <span>at {active.company}</span>
+              {active.role} <span>· {active.company}</span>
             </h3>
             <p>{active.subtitle}</p>
           </div>
@@ -182,7 +184,8 @@ export function ExampleShowcase() {
           <span>
             <CheckIcon />
           </span>
-          All examples are generated in real-time using the same prompt.
+          Illustrative comparisons with fictional companies — your letters are
+          built from your own profile and the real job posting.
         </footer>
       </section>
     </div>

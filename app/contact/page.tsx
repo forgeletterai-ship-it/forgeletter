@@ -1,5 +1,15 @@
+import type { Metadata } from "next"
 import { PublicFooter, PublicNav } from "@/components/PublicChrome"
 import { ContactClient } from "./ContactClient"
+
+export const metadata: Metadata = {
+  title: "Contact support",
+  description:
+    "Get help with your ForgeLetter account, billing, data requests, partnerships, or product feedback.",
+  alternates: {
+    canonical: "/contact",
+  },
+}
 
 export default function ContactPage() {
   return (

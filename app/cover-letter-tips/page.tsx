@@ -1,11 +1,21 @@
+import type { Metadata } from "next"
 import { SimplePage } from "@/components/SimplePage"
+
+export const metadata: Metadata = {
+  title: "Cover letter tips",
+  description:
+    "Practical writing rules for cover letters that get read: open with relevance, prove with a metric, mirror the job language, close with confidence.",
+  alternates: {
+    canonical: "/cover-letter-tips",
+  },
+}
 
 export default function CoverLetterTipsPage() {
   return (
     <SimplePage
       kicker="Guide"
       title="Cover letter tips"
-      intro="Practical writing rules that match the polished product direction."
+      intro="Practical writing rules that separate letters that get read from letters that get skipped."
       cards={[
         {
           title: "Open with relevance",

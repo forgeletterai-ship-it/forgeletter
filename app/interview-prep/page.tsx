@@ -1,4 +1,14 @@
+import type { Metadata } from "next"
 import { SimplePage } from "@/components/SimplePage"
+
+export const metadata: Metadata = {
+  title: "Interview prep",
+  description:
+    "Turn the same evidence that powers your cover letters into stronger interview answers: predict questions, structure proof, rehearse delivery.",
+  alternates: {
+    canonical: "/interview-prep",
+  },
+}
 
 export default function InterviewPrepPage() {
   return (

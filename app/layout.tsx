@@ -32,9 +32,11 @@ export const metadata: Metadata = {
   authors: [{ name: "ForgeLetter" }],
   creator: SITE_NAME,
   publisher: SITE_NAME,
-  alternates: {
-    canonical: "/",
-  },
+  // NOTE: no `alternates.canonical` here. Next merges metadata
+  // per-field, so a root canonical of "/" would cascade to every page
+  // that doesn't override it — telling crawlers that /blog, /contact,
+  // and all legal pages are duplicates of the homepage. Each page
+  // declares its own canonical instead (homepage in app/page.tsx).
   // Social previews — LinkedIn, Slack, iMessage, Discord all pull
   // these tags. Without them you get a bare URL with no image or
   // description.
