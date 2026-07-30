@@ -71,6 +71,8 @@ export default async function LetterDetailPage({ params }: PageProps) {
         jobTitle: data.job_title,
         companyName: data.company_name,
         tier: data.tier,
+        tone: data.tone ?? "professional",
+        toneRewriteCount: data.tone_rewrite_count ?? 0,
         generationStatus: data.generation_status,
         failureReason: data.failure_reason,
         createdAt: data.created_at,

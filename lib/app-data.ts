@@ -612,16 +612,26 @@ export async function getCurrentPeriodLetterCount(
       Date.now() - RUNNING_LETTER_MAX_AGE_SECONDS * 1000
     ).toISOString()
 
-    // Two-query approach. One for completed letters (any row with
-    // output, passed OR quality-failed). One for currently in-flight
-    // running rows newer than the orphan cutoff.
-    const [completedResult, runningResult] = await Promise.all([
+    // Three-query approach, mirroring the try_start_letter RPC. One
+    // for completed letters (any row with output, passed OR
+    // quality-failed — soft-deleted rows keep their content, so they
+    // keep counting). One for tone-rewrite spend placeholders (content
+    // stays NULL — the rewrite lands on the original row). One for
+    // currently in-flight running rows newer than the orphan cutoff.
+    const [completedResult, spendResult, runningResult] = await Promise.all([
       supabaseAdmin
         .from("generated_letters")
         .select("id", { count: "exact", head: true })
         .eq("user_id", userId)
         .gte("created_at", periodStart)
         .not("final_cover_letter", "is", null),
+      supabaseAdmin
+        .from("generated_letters")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", userId)
+        .eq("generation_status", "tone_rewrite_spend")
+        .gte("created_at", periodStart)
+        .is("final_cover_letter", null),
       supabaseAdmin
         .from("generated_letters")
         .select("id", { count: "exact", head: true })
@@ -646,7 +656,10 @@ export async function getCurrentPeriodLetterCount(
     }
 
     return {
-      count: (completedResult.count || 0) + (runningResult.count || 0),
+      count:
+        (completedResult.count || 0) +
+        (spendResult.error ? 0 : spendResult.count || 0) +
+        (runningResult.count || 0),
     }
   } catch (error) {
     return {

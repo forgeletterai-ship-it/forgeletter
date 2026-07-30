@@ -28,6 +28,8 @@ interface Letter {
   jobTitle: string | null
   companyName: string | null
   tier: string
+  tone: string
+  toneRewriteCount: number
   generationStatus: string
   failureReason: string | null
   createdAt: string
@@ -35,6 +37,21 @@ interface Letter {
   submittedAt: string | null
   outcomeAt: string | null
   outcomeNotes: string
+}
+
+const TONE_OPTIONS = [
+  { key: "professional", label: "Professional" },
+  { key: "confident", label: "Confident" },
+  { key: "warm", label: "Warm" },
+  { key: "concise", label: "Concise" },
+] as const
+
+/** Free tone rewrites per letter — mirrors the API's per-tier caps. */
+const TONE_REWRITE_FREE_CAP: Record<string, number> = {
+  free: 0,
+  starter: 0,
+  pro: 1,
+  ultra: 3,
 }
 
 type BasePlan = "free" | "starter" | "pro" | "ultra"
@@ -72,6 +89,71 @@ export function LetterDetailClient({
   const [notes, setNotes] = useState(letter.outcomeNotes)
   const [trackStatus, setTrackStatus] = useState<"idle" | "saving" | "saved" | "error">("idle")
   const [notesStatus, setNotesStatus] = useState<"idle" | "saving" | "saved" | "error">("idle")
+
+  // Tone rewrite — the Pro/Ultra pricing feature. The endpoint returns
+  // 402 + needsLetterSlotConfirmation when the free per-letter
+  // allowance is exhausted; we then ask before re-POSTing with
+  // acknowledgeLetterSpend so a letter slot is never burned silently.
+  const [tone, setTone] = useState(letter.tone)
+  const [toneRewriteCount, setToneRewriteCount] = useState(letter.toneRewriteCount)
+  const [rewritingTone, setRewritingTone] = useState<string | null>(null)
+  const [toneConfirm, setToneConfirm] = useState<{ tone: string; message: string } | null>(null)
+  const [toneError, setToneError] = useState("")
+  const [toneNotice, setToneNotice] = useState("")
+  const toneFreeCap = TONE_REWRITE_FREE_CAP[letter.tier] ?? 0
+
+  const requestToneRewrite = useCallback(
+    async (nextTone: string, acknowledgeLetterSpend: boolean) => {
+      setToneError("")
+      setToneNotice("")
+      setToneConfirm(null)
+      setRewritingTone(nextTone)
+      try {
+        const res = await fetch(`/api/letters/${letter.id}/rewrite-tone`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(
+            acknowledgeLetterSpend
+              ? { tone: nextTone, acknowledgeLetterSpend: true }
+              : { tone: nextTone }
+          ),
+        })
+        const data = (await res.json().catch(() => ({}))) as {
+          error?: string
+          needsLetterSlotConfirmation?: boolean
+          finalLetter?: string
+          toneRewriteCount?: number | null
+          consumedLetterSlot?: boolean
+        }
+        if (res.status === 402 && data.needsLetterSlotConfirmation) {
+          setToneConfirm({
+            tone: nextTone,
+            message: data.error || "This rewrite will use one of your monthly letter slots.",
+          })
+          return
+        }
+        if (!res.ok || !data.finalLetter) {
+          throw new Error(data.error || "Rewrite failed — please try again.")
+        }
+        setText(data.finalLetter)
+        setTone(nextTone)
+        if (typeof data.toneRewriteCount === "number") {
+          setToneRewriteCount(data.toneRewriteCount)
+        }
+        setToneNotice(
+          data.consumedLetterSlot
+            ? "Letter rewritten. One letter slot was used from your monthly allowance."
+            : "Letter rewritten in the new tone — no letter slot used."
+        )
+        router.refresh()
+      } catch (err) {
+        setToneError(err instanceof Error ? err.message : "Rewrite failed — please try again.")
+      } finally {
+        setRewritingTone(null)
+      }
+    },
+    [letter.id, router]
+  )
 
   const updateApplicationStatus = useCallback(
     async (next: ApplicationStatus) => {
@@ -266,6 +348,86 @@ export function LetterDetailClient({
         </div>
       )}
 
+      {letter.generationStatus === "passed" || letter.generationStatus === "failed" ? (
+        <div className="dashboard-card" aria-label="Tone rewrite">
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: 8 }}>
+            <h2 style={{ margin: 0, fontSize: 17 }}>Rewrite in a different tone</h2>
+            <span style={{ fontSize: 12.5, color: "var(--muted)" }}>
+              {toneFreeCap > 0
+                ? `${Math.min(toneRewriteCount, toneFreeCap)} of ${toneFreeCap} free ${toneFreeCap === 1 ? "rewrite" : "rewrites"} used for this letter`
+                : "Tone rewrites on Starter use a letter slot from your monthly allowance"}
+            </span>
+          </div>
+          <p style={{ margin: "6px 0 12px", fontSize: 13.5, color: "var(--muted)" }}>
+            The full agent pipeline re-runs with the same facts and job posting —
+            only the voice changes. Your letter stays grounded in your real experience.
+          </p>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {TONE_OPTIONS.map((option) => {
+              const isCurrent = option.key === tone
+              const isRunning = rewritingTone === option.key
+              return (
+                <button
+                  key={option.key}
+                  type="button"
+                  className={isCurrent ? "button" : "button-secondary"}
+                  disabled={isCurrent || rewritingTone != null}
+                  aria-pressed={isCurrent}
+                  onClick={() => void requestToneRewrite(option.key, false)}
+                >
+                  {isRunning
+                    ? "Rewriting…"
+                    : isCurrent
+                      ? `${option.label} · current`
+                      : option.label}
+                </button>
+              )
+            })}
+          </div>
+          {rewritingTone ? (
+            <p style={{ margin: "12px 0 0", fontSize: 13, color: "var(--muted)" }}>
+              Re-running the pipeline in the new tone — typically 30–90 seconds.
+              Keep this page open.
+            </p>
+          ) : null}
+          {toneNotice ? (
+            <p style={{ margin: "12px 0 0", fontSize: 13, color: "var(--teal, #0b6b70)", fontWeight: 600 }}>
+              {toneNotice}
+            </p>
+          ) : null}
+          {toneError ? <div className="alert" style={{ marginTop: 12 }}>{toneError}</div> : null}
+          {toneConfirm ? (
+            <div
+              style={{
+                marginTop: 12,
+                padding: "12px 14px",
+                borderRadius: 10,
+                border: "1px solid rgba(178, 58, 48, 0.25)",
+                background: "rgba(178, 58, 48, 0.05)",
+              }}
+            >
+              <p style={{ margin: "0 0 10px", fontSize: 13.5 }}>{toneConfirm.message}</p>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <button
+                  type="button"
+                  className="button"
+                  onClick={() => void requestToneRewrite(toneConfirm.tone, true)}
+                >
+                  Use a letter slot &amp; rewrite
+                </button>
+                <button
+                  type="button"
+                  className="button-secondary"
+                  onClick={() => setToneConfirm(null)}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
       <section className={`letter-tracker letter-tracker--${appStatus}`} aria-label="Application outcome tracker">
         <div className="letter-tracker__header">
           <div>
@@ -397,7 +559,9 @@ export function LetterDetailClient({
           <div className="dashboard-card" style={{ maxWidth: 420, width: "100%" }}>
             <h3 style={{ marginTop: 0 }}>Delete this letter?</h3>
             <p style={{ color: "var(--muted)" }}>
-              This will permanently delete the letter and its agent trace. This cannot be undone.
+              The letter will be removed from your library and can&apos;t be
+              restored. It still counts toward this month&apos;s allowance —
+              deleting a letter doesn&apos;t return the slot.
             </p>
             <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 16 }}>
               <button className="button-secondary" onClick={() => setShowDeleteConfirm(false)} disabled={deleting}>

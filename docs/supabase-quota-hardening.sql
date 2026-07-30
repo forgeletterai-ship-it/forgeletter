@@ -67,6 +67,15 @@ begin
   -- refunds a slot is a true pipeline crash (no output at all) or a
   -- stale running row that never finalised.
   --
+  -- 'tone_rewrite_spend' placeholder rows (content stays NULL — the
+  -- rewrite lands on the ORIGINAL letter row) also consume a slot:
+  -- they are how a paid tone rewrite beyond the free per-letter
+  -- allowance is accounted. Without this branch the acknowledged
+  -- "use one of your monthly letter slots" was a silent no-op.
+  --
+  -- Soft-deleted letters keep their content, so they keep counting
+  -- via the first branch — deleting a letter never refunds a slot.
+  --
   -- Running rows older than 7 minutes are treated as orphaned
   -- (Vercel function timed out, pipeline crashed pre-status-update,
   -- etc.) and excluded so they automatically refund the slot.
@@ -76,6 +85,7 @@ begin
     and created_at >= p_period_start
     and (
       final_cover_letter is not null
+      or generation_status = 'tone_rewrite_spend'
       or (
         generation_status = 'running'
         and final_cover_letter is null
