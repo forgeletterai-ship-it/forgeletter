@@ -264,9 +264,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           user.email = normalizeEmail(email)
           ;(user as any).plan = appUser.plan || "free"
         } catch (error) {
+          // Provisioning the users row failed (e.g. Supabase
+          // unreachable). Deny the sign-in instead of issuing a 30-day
+          // session with no backing row. A rowless session is the crack
+          // that later surfaces as a misleading "Authentication required"
+          // on every dashboard page: the JWT is valid, so the layout
+          // lets the request through, but getCurrentAppUser() can't find
+          // the account. Failing loud here keeps the invariant "a valid
+          // session always has a users row" — the user simply retries.
+          // Credentials sign-in is unaffected (its row already exists).
           logOAuthProvisioningError("signIn", error)
-          user.email = normalizeEmail(email)
-          ;(user as any).plan = "free"
+          return false
         }
       }
 

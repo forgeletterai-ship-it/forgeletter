@@ -1,12 +1,10 @@
 import {
-  defaultProfile,
-  defaultSettings,
   getApplicationBriefs,
   getCurrentPeriodLetterCount,
-  getCurrentAppUser,
   getSupabaseSchemaCapabilities,
   getUserProfile,
   getUserSettings,
+  requireAppUser,
 } from "@/lib/app-data"
 import { computeFairLetterCap } from "@/lib/plans"
 import { supabaseAdmin } from "@/lib/supabase"
@@ -60,9 +58,9 @@ export default async function DashboardPage({
 }: {
   searchParams?: Promise<{ duplicateFrom?: string }>
 }) {
-  const { user } = await getCurrentAppUser()
-  const userId = user?.id || ""
-  const plan = user?.plan || "free"
+  const user = await requireAppUser()
+  const userId = user.id
+  const plan = user.plan
   const sp = (await searchParams) || {}
   const duplicateFromId = sp.duplicateFrom?.trim() || ""
   const [
@@ -72,27 +70,14 @@ export default async function DashboardPage({
     { count: periodBriefCount, setupError: usageError },
     latestLetter,
     capabilities,
-  ] = userId
-    ? await Promise.all([
-        getApplicationBriefs(userId),
-        getUserProfile(userId),
-        getUserSettings(userId),
-        getCurrentPeriodLetterCount(userId, plan, user?.currentPeriodStart),
-        getLatestLetter(userId),
-        getSupabaseSchemaCapabilities(),
-      ])
-    : [
-        { briefs: [], setupError: "Authentication required" },
-        { profile: defaultProfile, setupError: "Authentication required" },
-        { settings: defaultSettings },
-        { count: 0, setupError: "Authentication required" },
-        null,
-        {
-          userProfileExperienceBlocks: true,
-          applicationBriefsSelectedExperienceIds: true,
-          generatedLettersSelectedExperienceIds: true,
-        },
-      ]
+  ] = await Promise.all([
+    getApplicationBriefs(userId),
+    getUserProfile(userId),
+    getUserSettings(userId),
+    getCurrentPeriodLetterCount(userId, plan, user.currentPeriodStart),
+    getLatestLetter(userId),
+    getSupabaseSchemaCapabilities(),
+  ])
 
   // Dashboard meter uses fair-cap math: mid-cycle upgraders see
   // their actual prorated allowance, plus a "Prorated" indicator
@@ -100,14 +85,12 @@ export default async function DashboardPage({
   // the nominal plan cap (35 / 240 / 20 / etc.) because the
   // fast-path inside computeFairLetterCap returns planLimit when
   // accrued === 0 and segment_start aligns with period_start.
-  const fairCap = user
-    ? computeFairLetterCap({
-        plan: user.plan,
-        accruedCapThisPeriod: user.accruedCapThisPeriod ?? 0,
-        currentSegmentStartedAt: user.currentSegmentStartedAt,
-        currentPeriodStart: user.currentPeriodStart,
-      })
-    : undefined
+  const fairCap = computeFairLetterCap({
+    plan: user.plan,
+    accruedCapThisPeriod: user.accruedCapThisPeriod ?? 0,
+    currentSegmentStartedAt: user.currentSegmentStartedAt,
+    currentPeriodStart: user.currentPeriodStart,
+  })
 
   // If we arrived via /dashboard?duplicateFrom=LETTER_ID, fetch the
   // role/company/tone from that letter so the workspace can pre-fill.
@@ -169,10 +152,10 @@ export default async function DashboardPage({
       setupError={briefsError || profileError || usageError}
       initialLatestLetter={latestLetter}
       experiencePersistenceAvailable={capabilities.userProfileExperienceBlocks}
-      pastDueSince={user?.pastDueSince ?? null}
-      disputedAt={user?.disputedAt ?? null}
+      pastDueSince={user.pastDueSince ?? null}
+      disputedAt={user.disputedAt ?? null}
       fairCap={fairCap}
-      scheduledPlanChange={user?.scheduledPlanChange ?? null}
+      scheduledPlanChange={user.scheduledPlanChange ?? null}
       duplicateSource={duplicateSource}
       staleSubmittedCount={staleSubmittedCount}
     />
