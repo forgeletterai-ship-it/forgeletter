@@ -71,6 +71,19 @@ export async function POST(req: NextRequest) {
     // If the user accepted the save offer, apply a 50% off coupon
     // for one cycle to the subscription and DO NOT cancel.
     if (acceptedSaveOffer) {
+      // One save offer per subscription, ever. Without this check the
+      // metadata flag was written but never read — a user could walk
+      // the cancel flow every cycle, accept the offer, and pay half
+      // price forever.
+      if (sub.metadata?.save_offer_accepted === "true") {
+        return NextResponse.json(
+          {
+            error:
+              "The retention discount has already been used on this subscription. You can continue cancelling, or keep your plan at the regular price.",
+          },
+          { status: 409 }
+        )
+      }
       try {
         // Use a known stable coupon id if you configure one in
         // Stripe Dashboard. Otherwise create on the fly. We try a
@@ -90,7 +103,7 @@ export async function POST(req: NextRequest) {
         })
         await writeConsentLog({
           userId: user.id,
-          action: "cancel_scheduled_change",
+          action: "save_offer_accepted",
           fromPlan: user.plan,
           toPlan: user.plan,
           metadata: { saveOfferAccepted: true, reason, detail },
@@ -154,7 +167,7 @@ export async function POST(req: NextRequest) {
 
 async function writeConsentLog(args: {
   userId: string
-  action: "cancel_subscription" | "cancel_scheduled_change"
+  action: "cancel_subscription" | "cancel_scheduled_change" | "save_offer_accepted"
   fromPlan: string
   toPlan: string
   effectiveAt?: Date
