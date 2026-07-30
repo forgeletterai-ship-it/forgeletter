@@ -3,7 +3,8 @@ import type { Provider } from "next-auth/providers"
 import Credentials from "next-auth/providers/credentials"
 import Google from "next-auth/providers/google"
 import Facebook from "next-auth/providers/facebook"
-import { compare } from "bcryptjs"
+import { compare, hashSync } from "bcryptjs"
+import { checkRateLimit, rateLimitKey } from "./lib/rate-limit"
 import { supabaseAdmin } from "./lib/supabase"
 
 const PRODUCTION_AUTH_URL = "https://forgeletter.vercel.app"
@@ -28,10 +29,23 @@ enforceProductionAuthUrl()
 type AppAuthUser = {
   id: string
   plan: string | null
+  password?: string | null
+  password_changed_at?: string | null
 }
 
 function normalizeEmail(email: string) {
   return email.trim().toLowerCase()
+}
+
+// Precomputed-per-instance bcrypt hash used to equalize timing when
+// the account doesn't exist or has no password. Lazy so cold-start
+// doesn't pay the cost-12 hash unless a login actually needs it.
+let dummyHash: string | null = null
+function getDummyHash(): string {
+  if (!dummyHash) {
+    dummyHash = hashSync("forgeletter-timing-equalizer", 12)
+  }
+  return dummyHash
 }
 
 function isDuplicateError(error: unknown) {
@@ -60,17 +74,33 @@ function logOAuthProvisioningError(stage: string, error: unknown) {
 }
 
 async function findUserByEmail(email: string) {
-  const { data, error } = await supabaseAdmin
+  // Prefer the full column set (password for the OAuth-link security
+  // check, password_changed_at for session revocation). Fall back to
+  // the base set while the auth-hardening migration hasn't run.
+  const full = await supabaseAdmin
     .from("users")
-    .select("id,plan")
+    .select("id,plan,password,password_changed_at")
     .eq("email", email)
     .maybeSingle()
 
-  if (error) {
-    throw error
+  if (!full.error) return full.data as AppAuthUser | null
+
+  const code = (full.error as { code?: string }).code
+  if (code !== "42703" && code !== "PGRST204") {
+    throw full.error
   }
 
-  return data as AppAuthUser | null
+  const base = await supabaseAdmin
+    .from("users")
+    .select("id,plan,password")
+    .eq("email", email)
+    .maybeSingle()
+
+  if (base.error) {
+    throw base.error
+  }
+
+  return base.data as AppAuthUser | null
 }
 
 async function ensureOAuthUser({
@@ -90,14 +120,30 @@ async function ensureOAuthUser({
   const existing = await findUserByEmail(normalizedEmail)
 
   if (existing) {
+    const patch: Record<string, unknown> = {
+      name: name || normalizedEmail.split("@")[0],
+      image,
+      provider,
+      provider_id: providerAccountId,
+    }
+    // SECURITY: OAuth proves ownership of the email (Google/Facebook
+    // verify it). If this row carries a password, it may have been set
+    // by an attacker who signed up with someone else's address before
+    // the real owner arrived via OAuth — signup does no email
+    // verification. Null the password on link so the only remaining
+    // access paths are OAuth (the verified owner) and the email-bound
+    // password reset. A legitimate dual-method user keeps OAuth access
+    // and can restore a password via reset at any time.
+    if (existing.password) {
+      patch.password = null
+      console.warn(
+        `[auth] OAuth link to existing credentials account — password cleared for user ${existing.id}`
+      )
+    }
+
     const { error: updateError } = await supabaseAdmin
       .from("users")
-      .update({
-        name: name || normalizedEmail.split("@")[0],
-        image,
-        provider,
-        provider_id: providerAccountId,
-      })
+      .update(patch)
       .eq("id", existing.id)
 
     if (updateError) {
@@ -145,26 +191,60 @@ const providers: Provider[] = [
 
       const email = String(credentials.email).trim().toLowerCase()
 
+      // Rate limit: 10 attempts per email per 15 minutes. Keyed by
+      // email (not IP) because credential stuffing rotates IPs but
+      // targets specific accounts. Fails open if the table is absent.
+      const limit = await checkRateLimit({
+        key: rateLimitKey("login", email),
+        max: 10,
+        windowSeconds: 15 * 60,
+      })
+      if (!limit.allowed) return null
+
       try {
         const { data: user, error } = await supabaseAdmin
           .from("users")
-          .select("id,email,name,password,plan")
+          .select("id,email,name,password,plan,password_changed_at")
           .eq("email", email)
           .maybeSingle()
 
-        if (error) return null
+        let row = user as
+          | (typeof user & { password_changed_at?: string | null })
+          | null
+        if (error) {
+          const code = (error as { code?: string }).code
+          if (code !== "42703" && code !== "PGRST204") return null
+          // password_changed_at column missing (migration pending) —
+          // retry without it.
+          const retry = await supabaseAdmin
+            .from("users")
+            .select("id,email,name,password,plan")
+            .eq("email", email)
+            .maybeSingle()
+          if (retry.error) return null
+          row = retry.data as typeof row
+        }
 
-        if (!user?.password) return null
+        if (!row?.password) {
+          // Timing-oracle defense: burn the same bcrypt cost whether
+          // or not the account exists, so response time doesn't leak
+          // account existence.
+          await compare(credentials.password as string, getDummyHash())
+          return null
+        }
 
-        const ok = await compare(credentials.password as string, user.password)
+        const ok = await compare(credentials.password as string, row.password)
         if (!ok) return null
 
         return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          plan: user.plan,
-        }
+          id: row.id,
+          email: row.email,
+          name: row.name,
+          plan: row.plan,
+          // Session-revocation anchor — carried into the JWT so a
+          // later password reset invalidates this session.
+          pwdChangedAt: row.password_changed_at ?? null,
+        } as { id: string; email: string; name: string | null }
       } catch {
         return null
       }
@@ -177,7 +257,14 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      checks: ["none"],
+      // Default checks (PKCE + state) are REQUIRED. A previous
+      // `checks: ["none"]` workaround disabled both, opening login-CSRF
+      // and code-injection attacks. If Google sign-in fails after this,
+      // fix the Google Cloud console instead of weakening checks:
+      // APIs & Services → Credentials → OAuth client → Authorized
+      // redirect URIs must contain EXACTLY
+      //   https://forgeletter.vercel.app/api/auth/callback/google
+      //   http://localhost:3000/api/auth/callback/google (for dev)
     })
   )
 }
@@ -263,6 +350,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           user.id = appUser.id
           user.email = normalizeEmail(email)
           ;(user as any).plan = appUser.plan || "free"
+          ;(user as any).pwdChangedAt = appUser.password_changed_at ?? null
         } catch (error) {
           // Provisioning the users row failed (e.g. Supabase
           // unreachable). Deny the sign-in instead of issuing a 30-day
@@ -301,6 +389,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           token.id = appUser.id
           token.plan = appUser.plan || "free"
           token.email = normalizeEmail(email)
+          token.pwdca = appUser.password_changed_at ?? null
         } catch (error) {
           logOAuthProvisioningError("jwt", error)
           token.plan ||= "free"
@@ -310,6 +399,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (user) {
         token.id ||= user.id
         token.plan = (user as any).plan || "free"
+        if ("pwdChangedAt" in (user as object)) {
+          token.pwdca = (user as { pwdChangedAt?: string | null }).pwdChangedAt ?? null
+        }
       }
       return token
     },
@@ -318,6 +410,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (token && session.user) {
         ;(session.user as any).id = token.id
         ;(session.user as any).plan = token.plan
+        // Session-revocation anchor: compared against the users row on
+        // every getCurrentAppUser call. `undefined` (pre-deploy JWTs)
+        // means "no anchor" and skips the check until natural expiry.
+        ;(session.user as any).pwdca = token.pwdca
       }
       return session
     },

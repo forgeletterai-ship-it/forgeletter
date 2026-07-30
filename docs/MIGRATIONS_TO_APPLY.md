@@ -1,5 +1,11 @@
 # Pending Supabase migrations — apply before merging the engine PR
 
+> **2026-05-31 — NEW: `docs/supabase-auth-hardening.sql`**
+> Adds the `auth_rate_limits` table (login/signup/reset rate limiting
+> — the app fails OPEN without it) and `users.password_changed_at`
+> (session revocation on password reset — skipped without it). Both
+> are launch security controls; apply before go-live.
+
 > **2026-05-31 — RE-RUN REQUIRED: `docs/supabase-quota-hardening.sql`**
 > The `try_start_letter` counter now also counts
 > `generation_status = 'tone_rewrite_spend'` placeholder rows — the

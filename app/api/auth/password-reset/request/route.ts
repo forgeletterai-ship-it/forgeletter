@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createHash, randomBytes } from "crypto"
 import { dataErrorMessage } from "@/lib/app-data"
+import { checkRateLimit, clientIpFrom, rateLimitKey } from "@/lib/rate-limit"
 import { supabaseAdmin } from "@/lib/supabase"
 
 function hashToken(token: string) {
@@ -63,6 +64,29 @@ export async function POST(req: NextRequest) {
 
   if (!normalizedEmail) {
     return NextResponse.json({ error: "Email is required" }, { status: 400 })
+  }
+
+  // Rate limits: 5 requests per IP and 3 per target email per 15
+  // minutes — stops token-row flooding and outbound email spam. Both
+  // checks run BEFORE the user lookup so throttling stays uniform
+  // (no account-existence oracle).
+  const [ipLimit, emailLimit] = await Promise.all([
+    checkRateLimit({
+      key: rateLimitKey("reset-ip", clientIpFrom(req.headers)),
+      max: 5,
+      windowSeconds: 15 * 60,
+    }),
+    checkRateLimit({
+      key: rateLimitKey("reset-email", normalizedEmail),
+      max: 3,
+      windowSeconds: 15 * 60,
+    }),
+  ])
+  if (!ipLimit.allowed || !emailLimit.allowed) {
+    return NextResponse.json(
+      { error: "Too many reset requests. Please wait a few minutes and try again." },
+      { status: 429 }
+    )
   }
 
   // Config check BEFORE the user lookup so the failure is uniform for

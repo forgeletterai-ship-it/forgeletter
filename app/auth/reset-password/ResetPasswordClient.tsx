@@ -80,6 +80,17 @@ export function ResetPasswordClient() {
           ) : null}
           {error ? <div className="alert">{error}</div> : null}
 
+          {/* A dead-end state (missing token, expired link) must
+              always offer an exit — previously the user sat on a
+              disabled form with no way out. */}
+          {!complete && (!token || error) ? (
+            <p className="muted-link" style={{ marginBottom: 14 }}>
+              <Link href="/auth/forgot-password">Request a new reset link</Link>
+              {" · "}
+              <Link href="/auth/login">Back to login</Link>
+            </p>
+          ) : null}
+
           {complete ? (
             <Link className="button" href="/auth/login" style={{ width: "100%" }}>
               Back to login

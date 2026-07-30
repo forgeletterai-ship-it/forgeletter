@@ -33,8 +33,49 @@ export async function POST(req: NextRequest) {
       email?: string | null
       name?: string | null
     }
+
+    // OAuth accounts created without an email get a synthetic
+    // @no-email.local address. Stripe would accept it and then
+    // black-hole every receipt, invoice, and dunning email forever.
+    if (user.email?.endsWith("@no-email.local")) {
+      return NextResponse.json(
+        {
+          error:
+            "Your account has no email address for billing receipts. Contact support to add one before subscribing.",
+        },
+        { status: 400 }
+      )
+    }
+
     const appUrl = getAppUrl(req.nextUrl.origin)
     const stripe = getStripe()
+
+    // Already-subscribed guard: a direct POST while on a paid plan
+    // (or after a lost webhook left the DB stale) would create a
+    // SECOND concurrently-billing subscription on a brand-new Stripe
+    // customer. Route those users through the plan-switch flow.
+    if (user.email) {
+      const existingCustomers = await stripe.customers.list({
+        email: user.email,
+        limit: 3,
+      })
+      for (const customer of existingCustomers.data) {
+        const subs = await stripe.subscriptions.list({
+          customer: customer.id,
+          status: "active",
+          limit: 1,
+        })
+        if (subs.data.length > 0) {
+          return NextResponse.json(
+            {
+              error:
+                "You already have an active subscription. Use the billing page to switch plans instead — this prevents double billing.",
+            },
+            { status: 409 }
+          )
+        }
+      }
+    }
 
     const checkoutSession = await stripe.checkout.sessions.create({
       mode: "subscription",
