@@ -50,7 +50,7 @@ export default function AccessibilityPage() {
         },
         {
           title: "6. Reporting a barrier",
-          body: "If you encounter a page or feature you cannot use because of an accessibility issue, please tell us. We aim to acknowledge your message within two working days and to provide an alternative or fix within ten working days where reasonably possible. Send a description, the URL, and (if possible) details of the assistive technology you use to accessibility@forgeletter.app.",
+          body: "If you encounter a page or feature you cannot use because of an accessibility issue, please tell us. We aim to acknowledge your message within two working days and to provide an alternative or fix within ten working days where reasonably possible. Send a description, the URL, and (if possible) details of the assistive technology you use to forgeletterai@gmail.com.",
         },
         {
           title: "7. Enforcement procedure",

@@ -35,12 +35,10 @@ export default function ImprintPage() {
         },
         {
           title: "3. Contact",
-          body: "General enquiries: hello@forgeletter.app",
+          body: "All enquiries — general, legal, privacy, abuse reports and billing — are handled through a single monitored address. Put the topic in the subject line so it reaches the right person quickly.",
           points: [
-            "Legal notices: legal@forgeletter.app",
-            "Privacy and data-protection requests: privacy@forgeletter.app",
-            "Abuse reports: abuse@forgeletter.app",
-            "Billing enquiries: billing@forgeletter.app",
+            "Email: forgeletterai@gmail.com",
+            "Contact form: forgeletter.vercel.app/contact",
             "Postal address: [Registered address], Republic of Bulgaria",
           ],
         },

@@ -139,7 +139,7 @@ export default function TermsPage() {
         },
         {
           title: "27. Notices, contact and miscellaneous",
-          body: "Legal notices to ForgeLetter must be sent to legal@forgeletter.app (or via the contact page) with a clear subject line indicating the topic. We may notify you through the email address registered to your account or by an in-app message. If any provision of these terms is held invalid or unenforceable, the remainder remains in effect. These terms, together with the Privacy Policy, Cookie Policy, Acceptable Use Policy and Refund Policy, constitute the entire agreement between you and ForgeLetter. We may assign these terms in connection with a merger, acquisition or sale of assets; you may not assign them without our written consent. Failure to enforce a right is not a waiver of it.",
+          body: "Legal notices to ForgeLetter must be sent to forgeletterai@gmail.com (or via the contact page) with a clear subject line indicating the topic. We may notify you through the email address registered to your account or by an in-app message. If any provision of these terms is held invalid or unenforceable, the remainder remains in effect. These terms, together with the Privacy Policy, Cookie Policy, Acceptable Use Policy and Refund Policy, constitute the entire agreement between you and ForgeLetter. We may assign these terms in connection with a merger, acquisition or sale of assets; you may not assign them without our written consent. Failure to enforce a right is not a waiver of it.",
         },
       ]}
     />

@@ -3,9 +3,11 @@ import {
   dataErrorMessage,
   getCurrentAppUser,
 } from "@/lib/app-data"
+import { checkRateLimit, clientIpFrom, rateLimitKey } from "@/lib/rate-limit"
 import { supabaseAdmin } from "@/lib/supabase"
 
 const allowedTopics = new Set(["support", "billing", "partnerships", "security"])
+const MAX_MESSAGE_LENGTH = 5000
 
 async function sendContactEmail(payload: {
   name: string
@@ -25,7 +27,9 @@ async function sendContactEmail(payload: {
     },
     body: JSON.stringify({
       from: process.env.RESEND_FROM_EMAIL,
-      to: process.env.SUPPORT_EMAIL || "hello@forgeletter.io",
+      // Single support mailbox until the custom domain lands — must
+      // match the address published on the legal pages.
+      to: process.env.SUPPORT_EMAIL || "forgeletterai@gmail.com",
       subject: `ForgeLetter ${payload.topic} request`,
       reply_to: payload.email,
       text: [
@@ -59,6 +63,26 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       { error: "Add your email and a clear message before sending." },
       { status: 400 }
+    )
+  }
+  if (payload.message.length > MAX_MESSAGE_LENGTH) {
+    return NextResponse.json(
+      { error: `Message must be ${MAX_MESSAGE_LENGTH} characters or fewer.` },
+      { status: 400 }
+    )
+  }
+
+  // Rate limit: 5 messages per IP per hour — an open unauthenticated
+  // insert + outbound email is otherwise a spam sink.
+  const limit = await checkRateLimit({
+    key: rateLimitKey("contact-ip", clientIpFrom(req.headers)),
+    max: 5,
+    windowSeconds: 60 * 60,
+  })
+  if (!limit.allowed) {
+    return NextResponse.json(
+      { error: "Too many messages from this network. Please try again later." },
+      { status: 429 }
     )
   }
 

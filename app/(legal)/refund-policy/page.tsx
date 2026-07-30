@@ -14,7 +14,7 @@ export default function RefundPolicyPage() {
       sections={[
         {
           title: "1. Scope",
-          body: "This policy applies to monthly and annual subscriptions purchased directly from forgeletter.app. Purchases made through an app-store, reseller, or enterprise contract are governed by the refund rules of that provider or the relevant order form.",
+          body: "This policy applies to monthly and annual subscriptions purchased directly from the ForgeLetter website. Purchases made through an app-store, reseller, or enterprise contract are governed by the refund rules of that provider or the relevant order form.",
         },
         {
           title: "2. EU and UK 14-day right of withdrawal",
@@ -50,7 +50,7 @@ export default function RefundPolicyPage() {
         },
         {
           title: "10. How to request a refund",
-          body: "Email billing@forgeletter.app (or use the contact form) with your account email, the invoice number from Stripe, and a brief reason. We aim to acknowledge requests within two working days and to process eligible refunds within five further working days. The refund is returned to the original payment method; clearing time depends on your card issuer (typically 3-10 working days).",
+          body: "Email forgeletterai@gmail.com (or use the contact form) with your account email, the invoice number from Stripe, and a brief reason. We aim to acknowledge requests within two working days and to process eligible refunds within five further working days. The refund is returned to the original payment method; clearing time depends on your card issuer (typically 3-10 working days).",
         },
         {
           title: "11. Exceptions",

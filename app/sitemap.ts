@@ -24,9 +24,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const topLevel: MetadataRoute.Sitemap = [
     { url: `${siteUrl}/`, lastModified: today, changeFrequency: "weekly", priority: 1.0 },
     { url: `${siteUrl}/blog`, lastModified: today, changeFrequency: "weekly", priority: 0.8 },
-    { url: `${siteUrl}/cover-letter-tips`, lastModified: today, changeFrequency: "monthly", priority: 0.7 },
-    { url: `${siteUrl}/interview-prep`, lastModified: today, changeFrequency: "monthly", priority: 0.7 },
-    { url: `${siteUrl}/job-search-guide`, lastModified: today, changeFrequency: "monthly", priority: 0.7 },
     { url: `${siteUrl}/contact`, lastModified: today, changeFrequency: "monthly", priority: 0.5 },
   ]
 

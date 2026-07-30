@@ -161,7 +161,7 @@ export function LetterTemplate({
         </View>
 
         <Text style={styles.footer} fixed>
-          Generated with ForgeLetter — forgeletter.com
+          Generated with ForgeLetter — forgeletter.vercel.app
         </Text>
       </Page>
     </Document>

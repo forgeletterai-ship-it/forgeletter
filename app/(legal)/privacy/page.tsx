@@ -20,7 +20,7 @@ export default function PrivacyPage() {
           title: "2. How to reach us",
           body: "All privacy and data-protection requests are handled by our designated privacy contact. ForgeLetter is not required to appoint a formal Data Protection Officer under Article 37 GDPR — our processing is not large-scale monitoring of individuals and does not involve special-category data — but we still respond to GDPR requests within the statutory timeframes.",
           points: [
-            "Privacy and data-protection requests: privacy@forgeletter.app",
+            "Privacy and data-protection requests: forgeletterai@gmail.com",
             "Postal: [Legal entity name], [Registered address], Republic of Bulgaria",
           ],
         },
@@ -159,7 +159,7 @@ export default function PrivacyPage() {
         },
         {
           title: "7. International transfers",
-          body: "Some sub-processors are located outside the EEA / UK. We rely on the EU Standard Contractual Clauses, the UK International Data Transfer Addendum and the EU-US Data Privacy Framework as the legal basis for these transfers. Copies of the SCCs we use are available on request via privacy@forgeletter.app.",
+          body: "Some sub-processors are located outside the EEA / UK. We rely on the EU Standard Contractual Clauses, the UK International Data Transfer Addendum and the EU-US Data Privacy Framework as the legal basis for these transfers. Copies of the SCCs we use are available on request via forgeletterai@gmail.com.",
         },
         {
           title: "8. How we protect your data",
@@ -206,7 +206,7 @@ export default function PrivacyPage() {
         },
         {
           title: "11. How to exercise your rights",
-          body: "Email privacy@forgeletter.app from the email address on your account, or submit a request via the contact page. We may ask for additional information to verify your identity before acting on the request. We do not charge a fee unless the request is manifestly unfounded or excessive, in line with Article 12(5) GDPR.",
+          body: "Email forgeletterai@gmail.com from the email address on your account, or submit a request via the contact page. We may ask for additional information to verify your identity before acting on the request. We do not charge a fee unless the request is manifestly unfounded or excessive, in line with Article 12(5) GDPR.",
         },
         {
           title: "12. Sign in with Google — limited use disclosure",
@@ -222,7 +222,7 @@ export default function PrivacyPage() {
         },
         {
           title: "15. Children",
-          body: "ForgeLetter is not directed at children under 16 and we do not knowingly collect their data. If you believe a child has signed up, contact us at privacy@forgeletter.app and we will delete the account. In jurisdictions where the digital-consent age is higher (e.g. 13 under US COPPA, 16 in most of the EU), the local minimum applies.",
+          body: "ForgeLetter is not directed at children under 16 and we do not knowingly collect their data. If you believe a child has signed up, contact us at forgeletterai@gmail.com and we will delete the account. In jurisdictions where the digital-consent age is higher (e.g. 13 under US COPPA, 16 in most of the EU), the local minimum applies.",
         },
         {
           title: "16. Changes to this policy",
@@ -230,7 +230,7 @@ export default function PrivacyPage() {
         },
         {
           title: "17. Contact",
-          body: "Privacy questions and rights requests can be sent to privacy@forgeletter.app or via the contact page. We aim to respond within one working week and at the latest within 30 days as required by the GDPR.",
+          body: "Privacy questions and rights requests can be sent to forgeletterai@gmail.com or via the contact page. We aim to respond within one working week and at the latest within 30 days as required by the GDPR.",
         },
       ]}
     />

@@ -27,7 +27,7 @@ export function AccountStateBanner({ pastDueSince, disputedAt }: AccountState) {
             We&apos;ve received a chargeback notice from your card issuer for a
             recent ForgeLetter payment. Your account remains accessible while
             we investigate. If this was a mistake, please contact us at{" "}
-            <a href="mailto:billing@forgeletter.app">billing@forgeletter.app</a>{" "}
+            <a href="mailto:forgeletterai@gmail.com">forgeletterai@gmail.com</a>{" "}
             so we can resolve it together — disputed charges that go through
             can result in account suspension.
           </p>

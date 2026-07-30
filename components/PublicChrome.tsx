@@ -67,17 +67,16 @@ export function PublicFooter() {
             links={[
               { href: "/#how-it-works", label: "How It Works" },
               { href: "/#pricing", label: "Pricing" },
-              { href: "/dashboard", label: "Dashboard" },
+              { href: "/auth/signup", label: "Start free" },
               { href: "/contact", label: "Contact" },
             ]}
           />
           <FooterColumn
             title="Resources"
             links={[
-              { href: "/blog", label: "Blog" },
-              { href: "/cover-letter-tips", label: "Cover letter tips" },
-              { href: "/job-search-guide", label: "Job search guide" },
-              { href: "/interview-prep", label: "Interview prep" },
+              { href: "/blog", label: "Blog & guides" },
+              { href: "/auth/signup", label: "Create an account" },
+              { href: "/auth/login", label: "Sign in" },
             ]}
           />
           <FooterColumn
@@ -95,7 +94,7 @@ export function PublicFooter() {
           />
         </div>
         <div className="footer-bottom">
-          <span>&copy; 2026 ForgeLetter. All rights reserved.</span>
+          <span>&copy; {new Date().getFullYear()} ForgeLetter. All rights reserved.</span>
         </div>
       </div>
     </footer>
