@@ -578,17 +578,46 @@ async function runBlueprintPipeline(
     // is not "none", deterministically strip EVERY flagged sentence
     // (fabricated, unmapped, AND soft/unverified) and re-check once.
     // Returns the possibly-trimmed letter and its measured verdict.
-    const certifyGrounded = async (
-      letter: string,
-      cycleBase: number
-    ): Promise<{ letter: string; check: HallucinationCheck }> => {
-      const first = await runHallucinationDetector({
-        letter,
+    // Run the detector, retrying once when its fallback triggers —
+    // fallback means the verifier was UNREACHABLE, not that the text
+    // measured "low". An unreachable verifier is not a measurement,
+    // so after the retry the caller must fail closed rather than
+    // treat the fallback's optimistic "low" as evidence.
+    const detectWithRetry = async (letterText: string, cycleBase: number) => {
+      let res = await runHallucinationDetector({
+        letter: letterText,
         profile,
         jobDescription: sanitizedJobDescription,
         cycleNumber: cycleBase,
       })
-      recordLog(first.log)
+      recordLog(res.log)
+      if (res.log.fallbackTriggered) {
+        res = await runHallucinationDetector({
+          letter: letterText,
+          profile,
+          jobDescription: sanitizedJobDescription,
+          cycleNumber: cycleBase + 0.1,
+        })
+        recordLog(res.log)
+      }
+      return res
+    }
+
+    const certifyGrounded = async (
+      letter: string,
+      cycleBase: number
+    ): Promise<{ letter: string; check: HallucinationCheck; verifierUnreachable: boolean }> => {
+      const first = await detectWithRetry(letter, cycleBase)
+      if (first.log.fallbackTriggered) {
+        // Both attempts failed — we cannot certify anything. Fail
+        // closed: report "high" so no uncertified text is ever
+        // delivered as grounded.
+        return {
+          letter,
+          check: { ...first.data, risk: "high" },
+          verifierUnreachable: true,
+        }
+      }
       let check = first.data
       let out = letter
       if (check.risk !== "none") {
@@ -614,17 +643,18 @@ async function runBlueprintPipeline(
         })
         if (cleaned.removed.length > 0) {
           out = cleaned.letter
-          const second = await runHallucinationDetector({
-            letter: out,
-            profile,
-            jobDescription: sanitizedJobDescription,
-            cycleNumber: cycleBase + 0.5,
-          })
-          recordLog(second.log)
+          const second = await detectWithRetry(out, cycleBase + 0.5)
+          if (second.log.fallbackTriggered) {
+            return {
+              letter: out,
+              check: { ...second.data, risk: "high" },
+              verifierUnreachable: true,
+            }
+          }
           check = second.data
         }
       }
-      return { letter: out, check }
+      return { letter: out, check, verifierUnreachable: false }
     }
 
     // (1) Certify the best LLM draft on the ACTUAL delivered text.
@@ -632,12 +662,36 @@ async function runBlueprintPipeline(
     bestLetter = primary.letter
     let finalGroundingCheck: HallucinationCheck = primary.check
 
+    if (primary.verifierUnreachable) {
+      // Distinct outage path: the verifier could not be reached even
+      // after retries, so certification is impossible for ANY text —
+      // re-certifying the grounded fallback letter would fail the
+      // same way and just burn more spend. Fail closed on the current
+      // draft with an explicit marker so support can distinguish
+      // "verifier outage" from "letter actually hallucinated".
+      recordLog({
+        agent: "HallucinationCheck",
+        cycle: 99.9,
+        outputJson: {
+          finalGate: true,
+          verifierUnreachable: true,
+          reason:
+            "Grounding verifier unreachable after retries — certification impossible, failing closed at risk=high. This is an API outage, not a measured hallucination.",
+        },
+        modelUsed: "deterministic",
+        durationMs: 0,
+        tokensInput: 0,
+        tokensOutput: 0,
+        fallbackTriggered: true,
+      })
+    }
+
     // (2) If the LLM draft still cannot be certified "none", fall back
     // to a letter built ONLY from the candidate's wins (grounded by
     // construction) and certify THAT too. A plainer fully-grounded
     // letter always beats a polished letter that implies experience
     // the candidate does not have.
-    if (finalGroundingCheck.risk !== "none") {
+    if (finalGroundingCheck.risk !== "none" && !primary.verifierUnreachable) {
       const grounded = scrubDashes(buildGroundedLetter({ profile, job }))
       const fallback = await certifyGrounded(grounded, 97)
       bestLetter = fallback.letter

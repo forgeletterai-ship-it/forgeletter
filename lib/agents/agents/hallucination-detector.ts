@@ -115,19 +115,40 @@ export async function runHallucinationDetector(args: {
   })
 
   // Enforce a hard guarantee: any winId returned that isn't in the
-  // provided profile is reset to null (no fake mapping).
+  // provided profile is reset to null (no fake mapping). When a
+  // profile is supplied, an empty win inventory means NO winId is
+  // valid — a model-invented id must never count as grounding.
   const knownWinIds = new Set(args.profile?.wins.map((w) => w.id) ?? [])
   const cleanedClaimMap = result.data.claimMap.map((c) => ({
     sentence: c.sentence,
-    winId: c.winId && (knownWinIds.size === 0 || knownWinIds.has(c.winId)) ? c.winId : null,
+    winId:
+      c.winId && (args.profile ? knownWinIds.has(c.winId) : true)
+        ? c.winId
+        : null,
   }))
 
+  // Deterministic reconciliation: never trust the model-emitted risk
+  // enum below what its own evidence lists prove. A response of
+  // risk:"none" alongside a non-empty fabricatedFacts list would
+  // otherwise ship flagged content — the certification must be
+  // derived from the evidence, not the summary field.
+  const unmapped = result.data.unmappedClaims ?? []
+  const evidenceRisk: HallucinationCheckFull["risk"] =
+    result.data.fabricatedFacts.length > 0
+      ? "high"
+      : unmapped.length > 0 || cleanedClaimMap.some((c) => c.winId === null)
+        ? "medium"
+        : result.data.unverifiedClaims.length > 0
+          ? "low"
+          : "none"
+  const risk = maxRisk(result.data.risk, evidenceRisk)
+
   const data: HallucinationCheck = {
-    risk: result.data.risk,
+    risk,
     unverifiedClaims: result.data.unverifiedClaims,
     fabricatedFacts: result.data.fabricatedFacts,
     claimMap: cleanedClaimMap,
-    unmappedClaims: result.data.unmappedClaims,
+    unmappedClaims: unmapped,
   }
 
   return {
@@ -299,6 +320,16 @@ function protectAbbreviations(text: string, placeholder: string): string {
 
 function restoreAbbreviations(text: string, placeholder: string): string {
   return text.split(placeholder).join(".")
+}
+
+const RISK_ORDER: HallucinationCheck["risk"][] = ["none", "low", "medium", "high"]
+
+/** Return the stricter (higher) of two risk levels. */
+function maxRisk(
+  a: HallucinationCheck["risk"],
+  b: HallucinationCheck["risk"]
+): HallucinationCheck["risk"] {
+  return RISK_ORDER.indexOf(a) >= RISK_ORDER.indexOf(b) ? a : b
 }
 
 function renderWinsForVerifier(p: ProfileAnalysis): string {

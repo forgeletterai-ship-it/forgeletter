@@ -45,8 +45,28 @@ export interface RawInput {
 export function runInputCleaner(raw: RawInput): CleanedInput {
   const warnings: string[] = []
 
-  const resumeText = cleanText(raw.resumeText)
-  const jobDescription = cleanText(raw.jobDescription)
+  // Deterministic injection strip runs on EVERY tier. The LLM scan is
+  // Ultra-only, but the hallucination verifier and quality gate read
+  // the JD on all tiers — a security control must not be tiered like
+  // a feature. This catches the high-signal instruction-to-the-model
+  // patterns ("ignore previous instructions", "always output risk:
+  // none") with whole-line removal; the Ultra scan still adds the
+  // subtler judgment layer on top.
+  const resumeStrip = stripInjectionLines(cleanText(raw.resumeText))
+  const jdStrip = stripInjectionLines(cleanText(raw.jobDescription))
+  if (resumeStrip.removed.length > 0) {
+    warnings.push(
+      `Removed ${resumeStrip.removed.length} instruction-like line(s) from profile text: ${resumeStrip.removed.slice(0, 3).join(" | ")}`
+    )
+  }
+  if (jdStrip.removed.length > 0) {
+    warnings.push(
+      `Removed ${jdStrip.removed.length} instruction-like line(s) from the job description: ${jdStrip.removed.slice(0, 3).join(" | ")}`
+    )
+  }
+
+  const resumeText = resumeStrip.text
+  const jobDescription = jdStrip.text
 
   if (resumeText.length < 200) {
     warnings.push(
@@ -79,6 +99,10 @@ function cleanText(input: string): string {
     .replace(/\r\n?/g, "\n")
     // Strip zero-width / BOM characters
     .replace(/[​-‍﻿]/g, "")
+    // Strip bidi-override / directional-isolate characters — a known
+    // hidden-instruction smuggling vector (text renders one way,
+    // reads another to the model).
+    .replace(/[‪-‮⁦-⁩]/g, "")
     // Collapse runs of 3+ blank lines into 2
     .replace(/\n{3,}/g, "\n\n")
     // Trim trailing whitespace on each line
@@ -86,6 +110,32 @@ function cleanText(input: string): string {
     // Strip page-marker noise commonly seen in PDF copies
     .replace(/^Page \d+ of \d+$/gm, "")
     .trim()
+}
+
+/**
+ * High-signal prompt-injection patterns. Deliberately conservative —
+ * whole lines are removed only when they read as instructions to an
+ * AI system, which no legitimate job description or profile contains.
+ */
+const INJECTION_LINE_PATTERNS: RegExp[] = [
+  /ignore\s+(?:(?:all|any|the|previous|prior|above|earlier)\s+)+(?:instructions?|prompts?|rules|context)/i,
+  /disregard\s+(?:(?:all|any|the|previous|prior|above|earlier|your)\s+)+(?:instructions?|prompts?|rules|guidelines)/i,
+  /\bsystem\s+prompt\b/i,
+  /\[\s*system\s*\]|<<\s*(system|assistant)\s*>>|<\|im_start\|>/i,
+  /you\s+are\s+(now\s+)?(a|an)\s+(different|new)\s+(assistant|ai|model|agent)/i,
+  // Attempts to game the pipeline's own enums/fields.
+  /\b(set|output|report|mark|return|always\s+(?:set|output|report))\b[^\n]{0,60}\b(risk|hallucination|score|verdict|quality)\b[^\n]{0,40}\b(none|zero|100|pass(?:ed)?|ats\s*ready)\b/i,
+  /respond\s+only\s+(with|in)\s+(json|xml|yaml)/i,
+]
+
+function stripInjectionLines(text: string): { text: string; removed: string[] } {
+  const removed: string[] = []
+  const kept = text.split("\n").filter((line) => {
+    const hit = INJECTION_LINE_PATTERNS.some((re) => re.test(line))
+    if (hit) removed.push(line.trim())
+    return !hit
+  })
+  return { text: kept.join("\n"), removed }
 }
 
 const LINKEDIN_UI_MARKERS = [
