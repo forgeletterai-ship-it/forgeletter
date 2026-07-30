@@ -208,7 +208,15 @@ export async function POST(req: NextRequest) {
         )
       }
       if (!row.granted) {
-        const usage = getPlanUsageDetails(user.plan, row.used_count ?? planLimit)
+        // Pass the fair cap as the override so the refusal message
+        // quotes the SAME limit the gate just enforced — a prorated
+        // mid-cycle upgrader must not read "all 35 letters" when
+        // their meter honestly shows 27/27.
+        const usage = getPlanUsageDetails(
+          user.plan,
+          row.used_count ?? planLimit,
+          planLimit
+        )
         return sseError(
           `You have used all ${usage.limit} letters for this ${usage.periodNoun}. Upgrade your plan or wait until your allowance resets.`,
           402
@@ -236,7 +244,7 @@ export async function POST(req: NextRequest) {
       return sseError(dataErrorMessage(countError, "generated_letters"), 500)
     }
     if (count >= planLimit) {
-      const usage = getPlanUsageDetails(user.plan, count)
+      const usage = getPlanUsageDetails(user.plan, count, planLimit)
       return sseError(
         `You have used all ${usage.limit} letters for this ${usage.periodNoun}. Upgrade your plan or wait until your allowance resets.`,
         402

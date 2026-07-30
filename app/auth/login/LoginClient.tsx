@@ -11,6 +11,8 @@ type LoginClientProps = {
   facebookEnabled: boolean
   autoProvider?: "google" | "facebook" | null
   initialCallbackUrl?: string
+  /** Human-readable message derived from Auth.js's ?error= code. */
+  initialError?: string
 }
 
 function GoogleIcon() {
@@ -41,6 +43,7 @@ export default function LoginClient({
   facebookEnabled,
   autoProvider = null,
   initialCallbackUrl,
+  initialError = "",
 }: LoginClientProps) {
   const router = useRouter()
   const callbackUrl = useMemo(
@@ -50,7 +53,7 @@ export default function LoginClient({
 
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
+  const [error, setError] = useState(initialError)
   const [loadingProvider, setLoadingProvider] = useState<
     "" | "google" | "facebook"
   >("")
@@ -237,7 +240,10 @@ export default function LoginClient({
 function normalizeCallbackUrl(value?: string) {
   if (!value) return "/dashboard"
 
-  if (value.startsWith("/") && !value.startsWith("//")) {
+  // Same-site relative path only. Reject "//" (protocol-relative) AND
+  // any backslash — browsers normalize "/\evil.com" to "//evil.com",
+  // which would turn this into an open redirect for phishing.
+  if (value.startsWith("/") && !value.startsWith("//") && !value.includes("\\")) {
     return value
   }
 
