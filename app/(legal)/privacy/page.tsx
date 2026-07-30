@@ -33,7 +33,7 @@ export default function PrivacyPage() {
             "Generation inputs: the job description text and the prompt parameters you submit to the AI pipeline.",
             "Billing identifiers: a Stripe customer ID and subscription metadata. Raw card numbers are handled by Stripe and never reach our servers.",
             "Technical data: IP address, user-agent and request timestamps in standard server logs.",
-            "Consent log: the cookie-category choices you make in the banner, plus a timestamp and policy revision.",
+            "Consent log: the cookie-category choices you make in the banner (timestamp + policy revision), and — for billing actions like plan switches, cancellations and retention offers — a record of your confirmation with a salted hash of your IP address (the raw IP is never stored) and browser user-agent, kept as proof of consent for charges.",
           ],
         },
         {
@@ -81,6 +81,11 @@ export default function PrivacyPage() {
                 "Cookie consent log",
                 "182 days, then we re-prompt",
                 "Legal obligation under ePrivacy + Art. 7 GDPR",
+              ],
+              [
+                "Billing consent records (plan switches, cancellations — IP hash + user-agent)",
+                "Retained with billing records as proof of consent for charges, incl. after account deletion",
+                "Legal obligation + legal claims (Art. 6(1)(c), Art. 17(3)(e))",
               ],
               [
                 "Support correspondence",

@@ -77,6 +77,19 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // EU Consumer Rights Directive Art. 16(m): the 14-day withdrawal
+    // right is only waived with the consumer's EXPRESS consent to
+    // immediate performance + acknowledgment of the loss. The refund
+    // policy describes exactly this consent at checkout, so checkout
+    // must actually capture it.
+    //   - custom_text.submit states the waiver next to the pay button
+    //     (always on — no dashboard dependency).
+    //   - consent_collection.terms_of_service adds the required
+    //     checkbox, but Stripe rejects it until the Terms URL is set
+    //     in Dashboard → Settings → Business → Public details. Flip
+    //     STRIPE_TOS_CONSENT=1 after configuring that (ops runbook).
+    const collectTosConsent = process.env.STRIPE_TOS_CONSENT === "1"
+
     const checkoutSession = await stripe.checkout.sessions.create({
       mode: "subscription",
       line_items: [getCheckoutLineItem(plan, period)],
@@ -86,6 +99,19 @@ export async function POST(req: NextRequest) {
       cancel_url: `${appUrl}/dashboard/billing?checkout=cancelled`,
       allow_promotion_codes: true,
       billing_address_collection: "auto",
+      ...(collectTosConsent
+        ? {
+            consent_collection: {
+              terms_of_service: "required" as const,
+            },
+          }
+        : {}),
+      custom_text: {
+        submit: {
+          message:
+            "By subscribing you agree to the ForgeLetter Terms and expressly request immediate access to the service. You acknowledge that once you use a generation feature, you lose the EU/UK 14-day right of withdrawal, as described in our Refund Policy.",
+        },
+      },
       metadata: {
         plan,
         period,

@@ -15860,6 +15860,16 @@ button.tone-chip:hover {
   gap: 8px;
 }
 
+.billing-renewal-note {
+  margin: 0 0 16px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(16, 82, 80, 0.14);
+  background: rgba(16, 82, 80, 0.04);
+  font-size: 13px;
+  color: rgba(16, 39, 55, 0.75);
+}
+
 .generation-modal__cancel {
   margin-top: 14px;
   padding: 6px 10px;

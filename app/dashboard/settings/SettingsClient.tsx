@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { signOut } from "next-auth/react"
 import type { UserSettings } from "@/lib/app-data"
 
 type SettingsClientProps = {
@@ -83,8 +84,33 @@ export function SettingsClient({
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [confirmation, setConfirmation] = useState("")
+  const [accountConfirmation, setAccountConfirmation] = useState("")
+  const [deletingAccount, setDeletingAccount] = useState(false)
   const [message, setMessage] = useState("")
   const [error, setError] = useState(setupError || "")
+
+  async function deleteAccount() {
+    setDeletingAccount(true)
+    setMessage("")
+    setError("")
+    try {
+      const res = await fetch("/api/account/delete-account", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ confirmation: accountConfirmation }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        throw new Error(data.error || "Could not delete the account.")
+      }
+      // The users row is gone — every session is invalid server-side.
+      // Sign out client-side and land on the homepage.
+      await signOut({ callbackUrl: "/" })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not delete the account.")
+      setDeletingAccount(false)
+    }
+  }
 
   async function saveSettings(nextSettings = settings, notice = "Settings saved.") {
     setSaving(true)
@@ -112,17 +138,6 @@ export function SettingsClient({
     } finally {
       setSaving(false)
     }
-  }
-
-  async function updateEmailPreference(field: "email_updates" | "product_updates", value: boolean) {
-    const nextSettings = { ...settings, [field]: value }
-    setSettings(nextSettings)
-    await saveSettings(
-      nextSettings,
-      field === "product_updates"
-        ? "Product update emails saved."
-        : "Account notification emails saved."
-    )
   }
 
   async function deleteWorkspaceData() {
@@ -212,40 +227,10 @@ export function SettingsClient({
           </button>
         </section>
 
-        <section className="settings-card">
-          <div className="settings-card__icon">
-            <SettingsIcon type="mail" />
-          </div>
-          <h2>Email preferences</h2>
-          <div className="settings-card__rule" />
-          <p>Control product and account updates.</p>
-          <div className="settings-toggle-list">
-            <label className="settings-toggle-row">
-              <input
-                type="checkbox"
-                checked={settings.email_updates}
-                onChange={(event) =>
-                  updateEmailPreference("email_updates", event.target.checked)
-                }
-                disabled={saving}
-              />
-              <span aria-hidden="true" />
-              <strong>Account notifications</strong>
-            </label>
-            <label className="settings-toggle-row">
-              <input
-                type="checkbox"
-                checked={settings.product_updates}
-                onChange={(event) =>
-                  updateEmailPreference("product_updates", event.target.checked)
-                }
-                disabled={saving}
-              />
-              <span aria-hidden="true" />
-              <strong>Product updates via email</strong>
-            </label>
-          </div>
-        </section>
+        {/* Email-preference toggles removed deliberately: no marketing
+            email system exists, so the switches persisted state that
+            nothing read. Every control on this page does something
+            real. Re-add together with an actual email pipeline. */}
 
         <section className="settings-card">
           <div className="settings-card__icon">
@@ -269,8 +254,10 @@ export function SettingsClient({
               Download my data (JSON)
             </a>
             <p className="settings-export-note">
-              Includes account fields, profile, briefs, settings. Stripe
-              billing history lives in your billing portal.
+              Includes your account fields, profile, briefs, all generated
+              letters with their agent traces, feedback, support messages,
+              consent records, and settings. Stripe billing history lives
+              in your billing portal.
             </p>
           </div>
           <div className="settings-card__divider" />
@@ -311,8 +298,36 @@ export function SettingsClient({
               <a href="mailto:forgeletterai@gmail.com">forgeletterai@gmail.com</a>{" "}
               if you change your mind in that window. After 30 days
               the snapshot is purged and the data is unrecoverable.
-              To also delete your account itself, cancel your
-              subscription first from the Billing page.
+            </p>
+
+            <div className="settings-card__divider" />
+
+            <label htmlFor="delete-account-confirm">
+              Type DELETE MY ACCOUNT to permanently delete your account
+            </label>
+            <input
+              id="delete-account-confirm"
+              value={accountConfirmation}
+              onChange={(event) => setAccountConfirmation(event.target.value)}
+              placeholder="DELETE MY ACCOUNT"
+            />
+            <button
+              className="settings-delete-button"
+              type="button"
+              disabled={deletingAccount || accountConfirmation !== "DELETE MY ACCOUNT"}
+              onClick={deleteAccount}
+            >
+              <SettingsIcon type="trash" />
+              {deletingAccount ? "Deleting account..." : "Delete my account"}
+            </button>
+            <p className="settings-danger-zone__note">
+              Deletes your workspace data <strong>and</strong> your login
+              itself — you'll be signed out immediately. Requires an
+              inactive subscription (cancel from Billing first; you keep
+              access until the paid period ends). Consent records for
+              past payments are retained as required for billing audit,
+              as described in the Privacy Policy. A 30-day recovery
+              snapshot applies, then everything is purged.
             </p>
           </div>
         </section>
