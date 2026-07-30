@@ -1052,7 +1052,6 @@ body:has(.command-palette-fab) .back-to-top {
   border-radius: 999px;
   color: #f8c76a;
   background: rgba(255, 253, 248, 0.06);
-  cursor: pointer;
 }
 
 .ai-engine-arrow svg {
@@ -15858,6 +15857,28 @@ button.tone-chip:hover {
   align-items: center;
   justify-content: center;
   gap: 8px;
+}
+
+/* Slim legal footer inside the authenticated app */
+.dashboard-legal-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  justify-content: center;
+  padding: 18px 20px 26px;
+  border-top: 1px solid rgba(16, 82, 80, 0.1);
+}
+
+.dashboard-legal-footer a {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(16, 39, 55, 0.55);
+  text-decoration: none;
+}
+
+.dashboard-legal-footer a:hover {
+  color: rgba(16, 39, 55, 0.85);
+  text-decoration: underline;
 }
 
 /* Dashboard segment pending UI (app/dashboard/loading.tsx) */

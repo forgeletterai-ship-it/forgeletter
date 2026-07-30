@@ -1,7 +1,7 @@
 import { LegalPage } from "@/components/LegalPage"
 
 export const metadata = {
-  title: "Privacy policy — ForgeLetter",
+  title: "Privacy policy",
   description:
     "What data ForgeLetter collects, why, who we share it with, how long we keep it, and the rights you have over it. Compliant with GDPR, UK GDPR, ePrivacy, CCPA / CPRA, LGPD.",
 }

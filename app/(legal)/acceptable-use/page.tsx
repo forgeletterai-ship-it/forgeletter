@@ -1,7 +1,7 @@
 import { LegalPage } from "@/components/LegalPage"
 
 export const metadata = {
-  title: "Acceptable use policy — ForgeLetter",
+  title: "Acceptable use policy",
   description:
     "What you may and may not do with ForgeLetter, including content rules, prohibited uses, and how violations are handled.",
 }

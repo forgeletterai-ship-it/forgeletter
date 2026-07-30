@@ -188,8 +188,12 @@ export default function HomePage() {
                   Start free
                   <span className="hero-button-arrow" aria-hidden="true">-&gt;</span>
                 </Link>
+                {/* The anchor target is the ForgeLetter-vs-alternatives
+                    comparison, so the label must say that — "Try the
+                    workspace" promised an interactive demo that isn't
+                    on this page. */}
                 <Link className="button-secondary hero-secondary-button" href="#workspace">
-                  Try the workspace
+                  See the difference
                   <span className="hero-button-arrow" aria-hidden="true">-&gt;</span>
                 </Link>
               </div>
@@ -401,12 +405,15 @@ export default function HomePage() {
                   <div className="ai-engine-rule" aria-hidden="true" />
                   <h3>{feature.title}</h3>
                   <p>{feature.body}</p>
-                  <button className="ai-engine-arrow" type="button" aria-label={`${feature.title} details`}>
+                  {/* Decorative arrow only — previously a <button> that
+                      did nothing, a dead interactive element for
+                      keyboard and screen-reader users. */}
+                  <span className="ai-engine-arrow" aria-hidden="true">
                     <svg viewBox="0 0 24 24" aria-hidden="true">
                       <path d="M5 12h13" />
                       <path d="M13 7l5 5-5 5" />
                     </svg>
-                  </button>
+                  </span>
                 </article>
               ))}
             </div>
@@ -468,7 +475,7 @@ export default function HomePage() {
             <aside className="faq-luxury__copy" aria-labelledby="faq-heading">
               <span className="faq-luxury__kicker">FAQ</span>
               <h2 id="faq-heading">
-                The original customer questions, <span className="headline-teal">answered</span> clearly.
+                Real questions, <span className="headline-teal">answered</span> clearly.
               </h2>
               <div className="faq-luxury__rule" aria-hidden="true" />
               <p>

@@ -1,7 +1,7 @@
 import { LegalPage } from "@/components/LegalPage"
 
 export const metadata = {
-  title: "Refund policy — ForgeLetter",
+  title: "Refund policy",
   description:
     "When ForgeLetter refunds subscriptions, how to request one, EU/UK 14-day withdrawal rights, and what happens to unused credits.",
 }

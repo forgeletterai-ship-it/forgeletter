@@ -1,7 +1,7 @@
 import { LegalPage } from "@/components/LegalPage"
 
 export const metadata = {
-  title: "Terms of service — ForgeLetter",
+  title: "Terms of service",
   description:
     "The legal terms that govern your use of ForgeLetter, including billing, AI-generated content, liability, and dispute resolution.",
 }

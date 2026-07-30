@@ -1,7 +1,7 @@
 import { LegalPage } from "@/components/LegalPage"
 
 export const metadata = {
-  title: "Imprint / Impressum — ForgeLetter",
+  title: "Imprint / Impressum",
   description:
     "Legal entity details for ForgeLetter, including company registration, contact, and responsible person, as required by §5 TMG (Germany), §63 ECG (Austria) and equivalent laws.",
 }

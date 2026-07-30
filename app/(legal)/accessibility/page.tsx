@@ -1,7 +1,7 @@
 import { LegalPage } from "@/components/LegalPage"
 
 export const metadata = {
-  title: "Accessibility statement — ForgeLetter",
+  title: "Accessibility statement",
   description:
     "ForgeLetter's commitment to digital accessibility, the standards we follow, known limitations, and how to report a barrier.",
 }

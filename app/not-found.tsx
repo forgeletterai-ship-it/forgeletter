@@ -3,7 +3,7 @@ import Link from "next/link"
 import { PublicFooter, PublicNav } from "@/components/PublicChrome"
 
 export const metadata: Metadata = {
-  title: "Page not found — ForgeLetter",
+  title: "Page not found",
   description:
     "We couldn't find that page. Try the homepage or jump to one of our most-visited destinations.",
   robots: { index: false, follow: true },
