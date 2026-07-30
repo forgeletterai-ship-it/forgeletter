@@ -3,6 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import {
+  annualAmountCents,
   getBasePlan,
   getBillingPeriod,
   type BillingPeriod,
@@ -181,9 +182,6 @@ function formatPrice(cents: number) {
   return (cents / 100).toFixed(2)
 }
 
-function annualPrice(monthlyCents: number) {
-  return Math.round(monthlyCents * 12 * 0.9)
-}
 
 export function PricingCards({
   currentPlan,
@@ -208,7 +206,11 @@ export function PricingCards({
           const period = periods[plan.key]
           const periodNoun = period === "annual" ? "year" : "month"
           const lettersForPeriod = period === "annual" ? plan.letters * 12 : plan.letters
-          const price = period === "monthly" ? plan.monthlyCents : annualPrice(plan.monthlyCents)
+          // Annual price must come from the same helper Stripe checkout
+          // uses (lib/plans.ts annualAmountCents, 25% off) so the number
+          // a customer sees is the number their card is charged.
+          const price =
+            period === "monthly" ? plan.monthlyCents : annualAmountCents(plan.monthlyCents)
           const cadence = period === "monthly" ? "/ month" : "/ year"
           const currentBasePlan = getBasePlan(currentPlan)
           const currentPeriod = getBillingPeriod(currentPlan)
