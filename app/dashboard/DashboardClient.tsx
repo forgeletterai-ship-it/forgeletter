@@ -1338,6 +1338,18 @@ function GenerationModal({
   const totalCount = agentRows.length || 12
   const runningAgent = agentRows.find((r) => r.status === "running")
 
+  // The modal must never trap the user: Escape closes it in every
+  // phase. While running, closing aborts the client stream only —
+  // the server pipeline finishes and persists the letter, so it still
+  // appears in the library (closeModal handles the abort).
+  useEffect(() => {
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") onClose()
+    }
+    document.addEventListener("keydown", onKey)
+    return () => document.removeEventListener("keydown", onKey)
+  }, [onClose])
+
   return (
     <div role="dialog" aria-modal="true" className="generation-modal-root">
       <div className="generation-modal-backdrop" aria-hidden="true" />
@@ -1411,6 +1423,14 @@ function GenerationModal({
               Sit tight — the 12-agent pipeline writes, fact-checks, and quality-gates
               your letter. Typical run: 30–90 seconds.
             </p>
+
+            <button
+              type="button"
+              className="generation-modal__cancel"
+              onClick={onClose}
+            >
+              Stop watching — the letter will still finish and appear in My letters
+            </button>
           </>
         )}
 

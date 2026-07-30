@@ -213,6 +213,29 @@ export default async function LettersPage({
   const { data: letters } = await listQuery.limit(100)
   const rows = (letters || []) as LetterRow[]
 
+  // Crash-failed generations (no output at all — function killed,
+  // pipeline died). Their quota slot was refunded automatically, but
+  // the sweep above writes a failure_reason that was previously shown
+  // NOWHERE: the rows were filtered out of every list, so a user
+  // whose tab died mid-run found an empty library with no
+  // explanation. Surface them in their own section, newest first.
+  const { data: crashRows } = await supabaseAdmin
+    .from("generated_letters")
+    .select("id,job_title,company_name,failure_reason,tier,created_at")
+    .eq("user_id", user.id)
+    .eq("generation_status", "failed")
+    .is("final_cover_letter", null)
+    .order("created_at", { ascending: false })
+    .limit(10)
+  const failedGenerations = (crashRows || []) as Array<{
+    id: string
+    job_title: string | null
+    company_name: string | null
+    failure_reason: string | null
+    tier: string
+    created_at: string
+  }>
+
   // Insights aggregator now reads the accurate per-status counts.
   const insights = (() => {
     const submitted =
@@ -354,6 +377,38 @@ export default async function LettersPage({
           counts={byStatus}
           total={totalCount}
         />
+      ) : null}
+
+      {failedGenerations.length > 0 ? (
+        <section
+          className="letters-failed"
+          aria-label="Failed generations (not charged)"
+        >
+          <h2 className="letters-failed__title">
+            {failedGenerations.length} failed{" "}
+            {failedGenerations.length === 1 ? "generation" : "generations"} — not
+            counted against your allowance
+          </h2>
+          <ul className="letters-failed__list">
+            {failedGenerations.map((f) => (
+              <li key={f.id} className="letters-failed__row">
+                <div>
+                  <strong>
+                    {f.job_title || "Untitled role"}
+                    {f.company_name ? ` at ${f.company_name}` : ""}
+                  </strong>
+                  <span className="letters-failed__meta">
+                    {formatRelative(f.created_at)} · {f.tier.toUpperCase()}
+                  </span>
+                </div>
+                <p className="letters-failed__reason">
+                  {f.failure_reason ||
+                    "Generation did not complete. The letter slot was refunded — try again from the workspace."}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </section>
       ) : null}
 
       {rows.length === 0 ? (

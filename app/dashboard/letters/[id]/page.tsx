@@ -29,6 +29,30 @@ export default async function LetterDetailPage({ params }: PageProps) {
     notFound()
   }
 
+  // Same crash recovery the letters list runs, scoped to this row —
+  // without it, a letter whose pipeline died mid-run showed "still
+  // generating, refresh in a moment" forever on the detail URL (the
+  // sweep only ran on the list page).
+  const TEN_MINUTES = 10 * 60 * 1000
+  if (
+    ["running", "queued"].includes(data.generation_status) &&
+    Date.now() - new Date(data.created_at).getTime() > TEN_MINUTES
+  ) {
+    data.generation_status = "failed"
+    data.failure_reason =
+      "Pipeline timed out — function exceeded the runtime limit. Try again."
+    await supabaseAdmin
+      .from("generated_letters")
+      .update({
+        generation_status: "failed",
+        failure_reason: data.failure_reason,
+        completed_at: new Date().toISOString(),
+      })
+      .eq("id", id)
+      .eq("user_id", user.id)
+      .in("generation_status", ["running", "queued"])
+  }
+
   const basePlan = getBasePlan(user.plan)
 
   return (
