@@ -17,10 +17,6 @@ const plans = [
     letters: 8,
     rewrites: 0,
     monthlyCents: 999,
-    // The bar each plan auto-improves letters to before delivery.
-    // Quality rewrites happen for free in the background — never
-    // counted against the user's letter allowance.
-    qualityBar: 90,
     features: [
       "Both templates",
       "Photo upload",
@@ -47,7 +43,6 @@ const plans = [
     letters: 20,
     rewrites: 1,
     monthlyCents: 1999,
-    qualityBar: 93,
     features: [
       "ATS score",
       "LinkedIn import",
@@ -76,7 +71,6 @@ const plans = [
     letters: 35,
     rewrites: 3,
     monthlyCents: 3499,
-    qualityBar: 95,
     features: [
       "All 12 agents",
       "3 tone rewrites included",
@@ -312,15 +306,6 @@ export function PricingCards({
                       : `${plan.rewrites} included tone ${plan.rewrites === 1 ? "rewrite" : "rewrites"}`}
                   </strong>
                   <span>{plan.rewriteCopy}</span>
-                </div>
-
-                <div
-                  className="pricing-quality-bar"
-                  aria-label={`Letters auto-improved to ${plan.qualityBar} percent quality bar`}
-                  title="Quality rewrites happen in the background — free, never counted against your letter allowance."
-                >
-                  <strong>{plan.qualityBar}%</strong>
-                  <span>quality bar · auto-improved free</span>
                 </div>
 
                 {onSelectPlan ? (
