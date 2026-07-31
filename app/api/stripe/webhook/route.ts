@@ -25,6 +25,7 @@ const handledEventTypes = new Set([
   "invoice.payment_succeeded",
   "invoice.payment_failed",
   "charge.dispute.created",
+  "charge.dispute.closed",
   // subscription_schedule.released fires when a scheduled downgrade
   // either completes (Stripe applied the new phase) or is manually
   // released. We use it to clear the scheduled_plan_change banner.
@@ -82,7 +83,7 @@ export async function POST(req: NextRequest) {
 
   // Idempotency check. Stripe retries failed deliveries for up to 3
   // days; without this guard every retry would re-run the side
-  // effects (double-credit one-time purchases, repeated plan flips).
+  // effects (repeated plan flips, duplicate period-start writes).
   const alreadyProcessed = await recordEventProcessed(event.id, event.type)
   if (alreadyProcessed) {
     return NextResponse.json({ received: true, duplicate: true })
@@ -106,6 +107,9 @@ export async function POST(req: NextRequest) {
         break
       case "charge.dispute.created":
         await handleDisputeCreated(event.data.object as Stripe.Dispute)
+        break
+      case "charge.dispute.closed":
+        await handleDisputeClosed(event.data.object as Stripe.Dispute)
         break
       case "subscription_schedule.released":
       case "subscription_schedule.completed":
@@ -289,20 +293,27 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
 
   const patch: Record<string, unknown> = { past_due_since: null }
 
-  // Try to capture the new period start from the line items (invoice
-  // line items carry the new period anchor on a renewal invoice).
-  const periodStartSeconds =
-    (invoice as { period_start?: number }).period_start ??
-    invoice.lines?.data?.[0]?.period?.start
-  if (typeof periodStartSeconds === "number") {
-    const periodStartIso = new Date(periodStartSeconds * 1000).toISOString()
-    patch.current_period_start = periodStartIso
-    // Renewal invoices (billing_reason: 'subscription_cycle') indicate
-    // a fresh period. Reset accrued cap + segment start so the
-    // fair-cap math starts over. Subscription-update / proration
-    // invoices keep the existing segment data intact.
-    const reason = (invoice as { billing_reason?: string }).billing_reason
-    if (reason === "subscription_cycle" || reason === "subscription_create") {
+  // Capture the new period start from the LINE ITEM, and only on
+  // invoices that actually open a new service period. Two past bugs
+  // guarded against here:
+  //  1. Invoice-level `period_start` on a renewal invoice is the
+  //     PREVIOUS period's start (Stripe semantics: the invoicing
+  //     period, not the new service period). Writing it made last
+  //     cycle's letters count against the fresh cycle. The line item
+  //     carries the new service-period anchor.
+  //  2. Proration invoices from mid-cycle plan switches
+  //     (billing_reason: 'subscription_update') must not move the
+  //     quota window at all — only renewals and creations do.
+  const reason = (invoice as { billing_reason?: string }).billing_reason
+  if (reason === "subscription_cycle" || reason === "subscription_create") {
+    const periodStartSeconds =
+      invoice.lines?.data?.[0]?.period?.start ??
+      (invoice as { period_start?: number }).period_start
+    if (typeof periodStartSeconds === "number") {
+      const periodStartIso = new Date(periodStartSeconds * 1000).toISOString()
+      patch.current_period_start = periodStartIso
+      // A fresh period also resets the fair-cap segment fields so the
+      // letter quota cleanly starts over.
       patch.accrued_cap_this_period = 0
       patch.current_segment_started_at = periodStartIso
     }
@@ -336,8 +347,11 @@ async function handleSubscriptionScheduleReleased(
 
 async function handlePaymentFailed(invoice: Stripe.Invoice) {
   // Renewal payment failed (expired card, insufficient funds, etc.).
-  // Flag the user so the UI can prompt them to update their card and
-  // a downgrade job can pick them up after the grace period expires.
+  // Flag the user so the UI can prompt them to update their card.
+  // There is no grace period: the subscription.updated handler
+  // downgrades access as soon as Stripe reports a non-active status,
+  // and restores it when a retried payment succeeds (which also
+  // clears this flag via handlePaymentSucceeded).
   const lookup = lookupFromInvoice(invoice)
   if (!lookup.userId && !lookup.email) return
   await updateUsersRow(lookup, { past_due_since: new Date().toISOString() })
@@ -347,9 +361,33 @@ async function handleDisputeCreated(dispute: Stripe.Dispute) {
   // Someone has disputed a charge with their card issuer. Flag the
   // account for ops review so chargeback fraud (use the service then
   // dispute the charge) is detectable.
+  const lookup = await lookupFromDispute(dispute)
+  if (!lookup) return
+  await updateUsersRow(lookup, { disputed_at: new Date().toISOString() })
+}
+
+async function handleDisputeClosed(dispute: Stripe.Dispute) {
+  // The dispute is resolved. Stripe semantics: status "won" = WE won
+  // (the charge was upheld as legitimate — the customer effectively
+  // paid), "warning_closed" = the early-warning inquiry closed with
+  // no formal dispute. Both mean the account is in good standing, so
+  // clear the flag — without this, a customer whose bank auto-filed
+  // a dispute in error stayed locked out of plan changes forever,
+  // fixable only by manual DB surgery. A "lost" dispute (the money
+  // went back to the cardholder after they used the service) keeps
+  // the flag; ops decides what happens to that account.
+  if (dispute.status !== "won" && dispute.status !== "warning_closed") return
+  const lookup = await lookupFromDispute(dispute)
+  if (!lookup) return
+  await updateUsersRow(lookup, { disputed_at: null })
+}
+
+async function lookupFromDispute(
+  dispute: Stripe.Dispute
+): Promise<UserLookup | null> {
   const charge = dispute.charge
   const chargeId = typeof charge === "string" ? charge : charge?.id
-  if (!chargeId) return
+  if (!chargeId) return null
 
   // Charges carry the same metadata as the originating subscription.
   // We have to read the charge to get its metadata + customer email
@@ -360,7 +398,6 @@ async function handleDisputeCreated(dispute: Stripe.Dispute) {
   const userId = chargeObj.metadata?.userId || null
   const email = chargeObj.billing_details?.email || chargeObj.receipt_email || null
 
-  if (!userId && !email) return
-
-  await updateUsersRow({ userId, email }, { disputed_at: new Date().toISOString() })
+  if (!userId && !email) return null
+  return { userId, email }
 }

@@ -27,7 +27,7 @@ export function AccountStateBanner({ pastDueSince, disputedAt }: AccountState) {
             We&apos;ve received a chargeback notice from your card issuer for a
             recent ForgeLetter payment. Your account remains accessible while
             we investigate. If this was a mistake, please contact us at{" "}
-            <a href="mailto:billing@forgeletter.app">billing@forgeletter.app</a>{" "}
+            <a href="mailto:forgeletterai@gmail.com">forgeletterai@gmail.com</a>{" "}
             so we can resolve it together — disputed charges that go through
             can result in account suspension.
           </p>
@@ -46,8 +46,9 @@ export function AccountStateBanner({ pastDueSince, disputedAt }: AccountState) {
           <strong>Your latest renewal payment was declined</strong>
           <p>
             We tried to charge your card on file and Stripe returned a decline.
-            Your subscription is in a grace period — please update your card
-            within the next few days to avoid losing access to your workspace.
+            Paid features are paused until the payment goes through — update
+            your card and Stripe will retry automatically, restoring access
+            right away.
           </p>
         </div>
         <Link

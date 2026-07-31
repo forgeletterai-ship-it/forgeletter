@@ -161,9 +161,9 @@ export function CommandPalette() {
       {
         id: "security",
         label: "Security",
-        description: "Password, sessions, two-factor",
+        description: "Password reset and account email",
         group: "Account",
-        keywords: ["password", "2fa", "sessions"],
+        keywords: ["password", "reset", "email"],
         icon: <Icon name="security" />,
         onRun: go("/dashboard/security"),
       },
@@ -193,7 +193,10 @@ export function CommandPalette() {
         group: "Help",
         keywords: ["terms", "privacy", "refund", "gdpr", "imprint", "dpa"],
         icon: <Icon name="legal" />,
-        onRun: go("/legal"),
+        // (legal) is a route group — it contributes no URL segment, so
+        // /legal does not exist. Terms is the legal hub (its sidebar
+        // links every other legal page).
+        onRun: go("/terms"),
       },
     ]
   }, [router, close])

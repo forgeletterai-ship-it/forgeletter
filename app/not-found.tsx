@@ -3,7 +3,7 @@ import Link from "next/link"
 import { PublicFooter, PublicNav } from "@/components/PublicChrome"
 
 export const metadata: Metadata = {
-  title: "Page not found — ForgeLetter",
+  title: "Page not found",
   description:
     "We couldn't find that page. Try the homepage or jump to one of our most-visited destinations.",
   robots: { index: false, follow: true },
@@ -13,8 +13,7 @@ const POPULAR_LINKS = [
   { href: "/", label: "Home", description: "Back to the landing page" },
   { href: "/#pricing", label: "Pricing", description: "Plans and what's included" },
   { href: "/blog", label: "Resources", description: "Cover-letter and job-search guides" },
-  { href: "/cover-letter-tips", label: "Cover letter tips", description: "Writing principles that work" },
-  { href: "/interview-prep", label: "Interview prep", description: "Get ready for the next round" },
+  { href: "/auth/signup", label: "Start free", description: "Create your account in a minute" },
   { href: "/contact", label: "Contact", description: "Reach the ForgeLetter team" },
 ] as const
 

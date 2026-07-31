@@ -136,7 +136,7 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     countColumnAvailable = false
   }
 
-  if (!row) {
+  if (!row || row.generation_status === "deleted") {
     return NextResponse.json({ error: "Letter not found" }, { status: 404 })
   }
   if (row.user_id !== user.id) {

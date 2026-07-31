@@ -1,5 +1,5 @@
 import { MODELS, runAgentText } from "../run-agent"
-import { safeSlice, scrubDashes } from "../utils"
+import { ALL_BANNED_PHRASES, safeSlice, scrubDashes } from "../utils"
 import type {
   AgentRunLog,
   JobAnalysis,
@@ -46,26 +46,9 @@ const TONE_GUIDANCE: Record<Tone, string> = {
     "tight. 3 short paragraphs. Every sentence carries weight. No throat-clearing.",
 }
 
-const BANNED_PHRASES: ReadonlyArray<string> = [
-  "i am writing to express",
-  "i am writing to apply",
-  "i hope this email finds you well",
-  "to whom it may concern",
-  "please find attached",
-  "team player",
-  "hit the ground running",
-  "synergy",
-  "synergies",
-  "go-getter",
-  "results-oriented",
-  "detail-oriented",
-  "passionate about",
-  "rockstar",
-  "ninja",
-  "in today's fast-paced world",
-  "perfect candidate",
-  "i look forward to hearing from you",
-]
+// Single source of truth in ../utils — three files previously kept
+// drifted copies of this list.
+const BANNED_PHRASES: ReadonlyArray<string> = ALL_BANNED_PHRASES
 
 const BASE_SYSTEM = `You are a senior cover-letter writer who has placed candidates at top companies. You write letters that hiring managers actually want to read.
 

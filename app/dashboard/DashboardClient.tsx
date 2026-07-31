@@ -616,7 +616,16 @@ export function DashboardClient({
           buffer = buffer.slice(sepIdx + 2)
           const dataLine = frame.split("\n").find((l) => l.startsWith("data:"))
           if (!dataLine) continue
-          const payload = JSON.parse(dataLine.slice(5).trim()) as Record<string, unknown>
+          // One malformed frame (proxy truncation, partial flush) must
+          // not throw the whole run into the error state — the pipeline
+          // finishes server-side regardless. Skip the frame instead.
+          let payload: Record<string, unknown>
+          try {
+            payload = JSON.parse(dataLine.slice(5).trim()) as Record<string, unknown>
+          } catch {
+            console.warn("[dashboard] skipping malformed SSE frame")
+            continue
+          }
           handleSSE(payload)
         }
       }
@@ -668,7 +677,11 @@ export function DashboardClient({
       setIsEditing(false)
       setPercent(100)
       setPhase("done")
-      setMessage("Letter generated successfully.")
+      setMessage(
+        newLetter.generationStatus === "failed"
+          ? "Best draft delivered — see the note above the letter."
+          : "Letter generated successfully."
+      )
       // Draft completed its lifecycle — clear localStorage so the
       // user starts the next brief from a clean slate.
       clearAutosavedDraft()
@@ -1274,6 +1287,7 @@ export function DashboardClient({
           score={latestLetter?.finalScore}
           atsScore={latestLetter?.atsScore ?? null}
           atsMissingKeywords={topMissingKeywords}
+          bestEffort={latestLetter?.generationStatus === "failed"}
         />
       ) : null}
 
@@ -1322,6 +1336,7 @@ function GenerationModal({
   score,
   atsScore,
   atsMissingKeywords,
+  bestEffort = false,
 }: {
   phase: "running" | "done" | "error"
   percent: number
@@ -1332,11 +1347,26 @@ function GenerationModal({
   score: number | undefined
   atsScore: number | null
   atsMissingKeywords: string[]
+  /** True when the run delivered a best-effort draft (status:"failed")
+   *  — the modal must not celebrate it as a clean pass. */
+  bestEffort?: boolean
 }) {
   const elapsed = useElapsedSeconds(phase === "running")
   const completedCount = agentRows.filter((r) => r.status === "done").length
   const totalCount = agentRows.length || 12
   const runningAgent = agentRows.find((r) => r.status === "running")
+
+  // The modal must never trap the user: Escape closes it in every
+  // phase. While running, closing aborts the client stream only —
+  // the server pipeline finishes and persists the letter, so it still
+  // appears in the library (closeModal handles the abort).
+  useEffect(() => {
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") onClose()
+    }
+    document.addEventListener("keydown", onKey)
+    return () => document.removeEventListener("keydown", onKey)
+  }, [onClose])
 
   return (
     <div role="dialog" aria-modal="true" className="generation-modal-root">
@@ -1411,6 +1441,14 @@ function GenerationModal({
               Sit tight — the 12-agent pipeline writes, fact-checks, and quality-gates
               your letter. Typical run: 30–90 seconds.
             </p>
+
+            <button
+              type="button"
+              className="generation-modal__cancel"
+              onClick={onClose}
+            >
+              Stop watching — the letter will still finish and appear in My letters
+            </button>
           </>
         )}
 
@@ -1426,7 +1464,17 @@ function GenerationModal({
                 </svg>
               </span>
             </div>
-            <h2 className="generation-modal__title">Your letter is ready</h2>
+            <h2 className="generation-modal__title">
+              {bestEffort ? "Best draft delivered" : "Your letter is ready"}
+            </h2>
+            {bestEffort ? (
+              <p className="generation-modal__ats-note">
+                This run didn&apos;t clear your tier&apos;s quality bar, so
+                we&apos;re delivering the strongest fully-grounded draft
+                instead of nothing. Review it — the note above the letter
+                explains what fell short.
+              </p>
+            ) : null}
             <p className="generation-modal__subtitle">
               Quality{" "}
               <strong>{score ?? "—"}/100</strong>

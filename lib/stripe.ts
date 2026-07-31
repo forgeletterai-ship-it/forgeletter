@@ -29,7 +29,6 @@ export function getStripe() {
 }
 
 export type BillingPlan = PaidPlanId
-export type OneTimeProduct = "single-letter-pack" | "cv-review" | "interview-prep"
 
 export const billingPlans: Record<
   BillingPlan,
@@ -75,35 +74,6 @@ export const billingPlans: Record<
       annual: annualAmountCents(3499),
     },
     lookupKey: "forgeletter_ultra_monthly",
-  },
-}
-
-export const oneTimeProducts: Record<
-  OneTimeProduct,
-  {
-    name: string
-    description: string
-    priceIdEnv: string
-    unitAmount: number
-  }
-> = {
-  "single-letter-pack": {
-    name: "Single Cover Letter Pack",
-    description: "One polished cover letter brief and export-ready draft.",
-    priceIdEnv: "STRIPE_SINGLE_LETTER_PACK_PRICE_ID",
-    unitAmount: 700,
-  },
-  "cv-review": {
-    name: "CV Review",
-    description: "One-time CV review add-on for a stronger application package.",
-    priceIdEnv: "STRIPE_CV_REVIEW_PRICE_ID",
-    unitAmount: 2900,
-  },
-  "interview-prep": {
-    name: "Interview Prep Session",
-    description: "One-time interview preparation add-on.",
-    priceIdEnv: "STRIPE_INTERVIEW_PREP_PRICE_ID",
-    unitAmount: 3900,
   },
 }
 
@@ -173,29 +143,6 @@ export async function resolveOrCreatePriceId(
     },
   })
   return price.id
-}
-
-export function getOneTimeLineItem(
-  product: OneTimeProduct
-): CheckoutLineItem {
-  const config = oneTimeProducts[product]
-  const price = process.env[config.priceIdEnv]
-
-  if (price) {
-    return { price, quantity: 1 }
-  }
-
-  return {
-    quantity: 1,
-    price_data: {
-      currency: "eur",
-      unit_amount: config.unitAmount,
-      product_data: {
-        name: config.name,
-        description: config.description,
-      },
-    },
-  }
 }
 
 /**

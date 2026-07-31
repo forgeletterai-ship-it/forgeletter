@@ -1,5 +1,21 @@
 # Pending Supabase migrations — apply before merging the engine PR
 
+> **2026-05-31 — NEW: `docs/supabase-auth-hardening.sql`**
+> Adds the `auth_rate_limits` table (login/signup/reset rate limiting
+> — the app fails OPEN without it) and `users.password_changed_at`
+> (session revocation on password reset — skipped without it). Both
+> are launch security controls; apply before go-live.
+
+> **2026-05-31 — RE-RUN REQUIRED: `docs/supabase-quota-hardening.sql`**
+> The `try_start_letter` counter now also counts
+> `generation_status = 'tone_rewrite_spend'` placeholder rows — the
+> accounting for paid tone rewrites beyond the free per-letter cap.
+> Until this is re-run, an acknowledged "use one of your monthly
+> letter slots" tone rewrite does not actually consume a slot at the
+> gate (the dashboard display counter already counts it). The script
+> is idempotent (`create or replace function`); paste the whole file
+> into the Supabase SQL Editor and run it once.
+
 This branch's engine work introduces three columns + one extension +
 one RPC. None of the application code requires them to run — every
 agent and route is gated by a schema-capability probe that falls back

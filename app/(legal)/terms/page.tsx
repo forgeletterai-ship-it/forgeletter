@@ -1,7 +1,7 @@
 import { LegalPage } from "@/components/LegalPage"
 
 export const metadata = {
-  title: "Terms of service — ForgeLetter",
+  title: "Terms of service",
   description:
     "The legal terms that govern your use of ForgeLetter, including billing, AI-generated content, liability, and dispute resolution.",
 }
@@ -55,7 +55,7 @@ export default function TermsPage() {
         },
         {
           title: "9. Third-party services",
-          body: "The service relies on third-party providers, including Vercel (hosting), Supabase (database), Stripe (payments), Anthropic (AI), and optional sign-in through Google or Facebook. Each provider has its own terms and privacy policies, which apply to your interaction with their services. We are not responsible for the acts, omissions, availability, or content of third-party services.",
+          body: "The service relies on third-party providers, including Vercel (hosting), Supabase (database), Stripe (payments), Anthropic (AI), OpenAI (text embeddings for example matching), Resend (transactional email), and optional sign-in through Google or Facebook. Each provider has its own terms and privacy policies, which apply to your interaction with their services. We are not responsible for the acts, omissions, availability, or content of third-party services.",
         },
         {
           title: "10. Subscription, fees and billing — general",
@@ -70,11 +70,7 @@ export default function TermsPage() {
           body: "An annual plan is paid in advance for twelve months and renews automatically each year on the anniversary date until cancelled. Annual plans are non-refundable beyond the EU/UK 14-day withdrawal window described in section 12, except where a sustained service failure makes retention of the fee inequitable. We will send a renewal reminder at least 30 days before the renewal date.",
         },
         {
-          title: "10c. One-off purchases",
-          body: "Where ForgeLetter offers one-off credit packs or single-letter purchases, these are consumed on use, do not renew, and are non-refundable once the corresponding feature has been used. Unused credits expire 12 months after purchase unless a longer period is shown at checkout.",
-        },
-        {
-          title: "10d. Changes in fees",
+          title: "10c. Changes in fees",
           body: "We may change the price of a subscription plan with at least 30 days' notice by email and on the pricing page. Price changes take effect at the start of your next billing period; if you do not accept the change, you may cancel before the renewal date. Continued payment after the effective date constitutes acceptance.",
         },
         {
@@ -143,7 +139,7 @@ export default function TermsPage() {
         },
         {
           title: "27. Notices, contact and miscellaneous",
-          body: "Legal notices to ForgeLetter must be sent to legal@forgeletter.app (or via the contact page) with a clear subject line indicating the topic. We may notify you through the email address registered to your account or by an in-app message. If any provision of these terms is held invalid or unenforceable, the remainder remains in effect. These terms, together with the Privacy Policy, Cookie Policy, Acceptable Use Policy and Refund Policy, constitute the entire agreement between you and ForgeLetter. We may assign these terms in connection with a merger, acquisition or sale of assets; you may not assign them without our written consent. Failure to enforce a right is not a waiver of it.",
+          body: "Legal notices to ForgeLetter must be sent to forgeletterai@gmail.com (or via the contact page) with a clear subject line indicating the topic. We may notify you through the email address registered to your account or by an in-app message. If any provision of these terms is held invalid or unenforceable, the remainder remains in effect. These terms, together with the Privacy Policy, Cookie Policy, Acceptable Use Policy and Refund Policy, constitute the entire agreement between you and ForgeLetter. We may assign these terms in connection with a merger, acquisition or sale of assets; you may not assign them without our written consent. Failure to enforce a right is not a waiver of it.",
         },
       ]}
     />

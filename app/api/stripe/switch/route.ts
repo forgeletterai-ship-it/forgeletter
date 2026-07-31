@@ -192,7 +192,12 @@ export async function POST(req: NextRequest) {
         { status: 500 }
       )
     }
-    if (item.price.id === (await resolveOrCreatePriceId(stripe, newPlan, newPeriod))) {
+    // Resolve the target price ONCE — the previous double call created
+    // two orphan ad-hoc Stripe Prices per switch when the env price
+    // IDs are unset, and guaranteed the "already on this plan" guard
+    // below could never match (fresh price id every call).
+    const newPriceId = await resolveOrCreatePriceId(stripe, newPlan, newPeriod)
+    if (item.price.id === newPriceId) {
       // The price IDs match — duplicate call.
       return NextResponse.json({ error: "Already on this plan." }, { status: 400 })
     }
@@ -207,8 +212,6 @@ export async function POST(req: NextRequest) {
       ""
     const ipHash = ipRaw ? createHash("sha256").update(ipRaw + ipSalt).digest("hex") : null
     const userAgent = req.headers.get("user-agent")?.slice(0, 500) || null
-
-    const newPriceId = await resolveOrCreatePriceId(stripe, newPlan, newPeriod)
 
     // Read the cycle boundaries (used for segment math + downgrade
     // schedule anchor).
@@ -227,6 +230,24 @@ export async function POST(req: NextRequest) {
 
     if (direction === "upgrade") {
       // --------------------- UPGRADE PATH ---------------------
+      // Release any existing subscription schedule FIRST. A pending
+      // downgrade attaches a schedule, and Stripe rejects direct
+      // price updates on a schedule-managed subscription — without
+      // this release, upgrading after a scheduled downgrade always
+      // failed and was misreported to the customer as a card decline.
+      if (sub.schedule) {
+        try {
+          await stripe.subscriptionSchedules.release(
+            typeof sub.schedule === "string" ? sub.schedule : sub.schedule.id
+          )
+        } catch (err) {
+          console.warn(
+            "[/api/stripe/switch] could not release schedule before upgrade:",
+            err instanceof Error ? err.message : err
+          )
+        }
+      }
+
       // Charge immediately for the prorated delta AND refuse to flip
       // the subscription unless the payment clears synchronously.
       //
@@ -253,18 +274,38 @@ export async function POST(req: NextRequest) {
           },
         })
       } catch (err) {
-        // Stripe throws here when the card decline keeps the
-        // subscription out of an active state. Surface a
-        // customer-readable message and abort cleanly.
-        const message =
-          err instanceof Error ? err.message : "Card was declined"
+        const stripeErr = err as {
+          type?: string
+          code?: string
+          message?: string
+        }
+        const message = stripeErr.message || "Plan change failed"
+        // Only genuine card failures get the "card declined" copy.
+        // Any other Stripe error (API hiccup, config problem) must
+        // not send the customer off to update a card that is fine.
+        const isCardError =
+          stripeErr.type === "StripeCardError" ||
+          stripeErr.code === "card_declined" ||
+          stripeErr.code === "payment_intent_payment_attempt_failed" ||
+          stripeErr.code === "subscription_payment_intent_requires_action"
+        if (isCardError) {
+          return NextResponse.json(
+            {
+              error:
+                "Your card was declined for the prorated charge. The plan has not changed. Please update your payment method from the billing portal and try again.",
+              details: message,
+            },
+            { status: 402 }
+          )
+        }
+        console.error("[/api/stripe/switch] upgrade failed (non-card):", message)
         return NextResponse.json(
           {
             error:
-              "Your card was declined for the prorated charge. The plan has not changed. Please update your payment method from the billing portal and try again.",
+              "We couldn't apply the plan change — nothing was charged and your plan is unchanged. Please try again in a moment or contact support.",
             details: message,
           },
-          { status: 402 }
+          { status: 502 }
         )
       }
 

@@ -45,10 +45,11 @@ export default function BillingCancelPage() {
           </article>
           <article className="billing-result-card">
             <span>03</span>
-            <h3>Keep using Starter</h3>
+            <h3>Your account is safe</h3>
             <p>
-              Your free account remains available while you prepare your next
-              application.
+              Your profile, saved experiences, and any existing letters stay
+              exactly as they were. Pick a plan whenever you&apos;re ready to
+              generate.
             </p>
           </article>
         </section>

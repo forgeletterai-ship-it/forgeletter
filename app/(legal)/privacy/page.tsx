@@ -1,7 +1,7 @@
 import { LegalPage } from "@/components/LegalPage"
 
 export const metadata = {
-  title: "Privacy policy — ForgeLetter",
+  title: "Privacy policy",
   description:
     "What data ForgeLetter collects, why, who we share it with, how long we keep it, and the rights you have over it. Compliant with GDPR, UK GDPR, ePrivacy, CCPA / CPRA, LGPD.",
 }
@@ -20,7 +20,7 @@ export default function PrivacyPage() {
           title: "2. How to reach us",
           body: "All privacy and data-protection requests are handled by our designated privacy contact. ForgeLetter is not required to appoint a formal Data Protection Officer under Article 37 GDPR — our processing is not large-scale monitoring of individuals and does not involve special-category data — but we still respond to GDPR requests within the statutory timeframes.",
           points: [
-            "Privacy and data-protection requests: privacy@forgeletter.app",
+            "Privacy and data-protection requests: forgeletterai@gmail.com",
             "Postal: [Legal entity name], [Registered address], Republic of Bulgaria",
           ],
         },
@@ -33,7 +33,7 @@ export default function PrivacyPage() {
             "Generation inputs: the job description text and the prompt parameters you submit to the AI pipeline.",
             "Billing identifiers: a Stripe customer ID and subscription metadata. Raw card numbers are handled by Stripe and never reach our servers.",
             "Technical data: IP address, user-agent and request timestamps in standard server logs.",
-            "Consent log: the cookie-category choices you make in the banner, plus a timestamp and policy revision.",
+            "Consent log: the cookie-category choices you make in the banner (timestamp + policy revision), and — for billing actions like plan switches, cancellations and retention offers — a record of your confirmation with a salted hash of your IP address (the raw IP is never stored) and browser user-agent, kept as proof of consent for charges.",
           ],
         },
         {
@@ -83,6 +83,11 @@ export default function PrivacyPage() {
                 "Legal obligation under ePrivacy + Art. 7 GDPR",
               ],
               [
+                "Billing consent records (plan switches, cancellations — IP hash + user-agent)",
+                "Retained with billing records as proof of consent for charges, incl. after account deletion",
+                "Legal obligation + legal claims (Art. 6(1)(c), Art. 17(3)(e))",
+              ],
+              [
                 "Support correspondence",
                 "3 years after closure of the ticket",
                 "Legitimate interest",
@@ -121,7 +126,19 @@ export default function PrivacyPage() {
               ],
               [
                 "Anthropic PBC",
-                "AI text generation (zero-retention API)",
+                "AI text generation (API inputs and outputs are not used to train models)",
+                "United States",
+                "SCCs + EU-US Data Privacy Framework",
+              ],
+              [
+                "OpenAI LLC",
+                "Text embeddings for example matching (job-description-derived text only)",
+                "United States",
+                "SCCs + EU-US Data Privacy Framework",
+              ],
+              [
+                "Resend Inc.",
+                "Transactional email (password resets, support replies)",
                 "United States",
                 "SCCs + EU-US Data Privacy Framework",
               ],
@@ -142,7 +159,7 @@ export default function PrivacyPage() {
         },
         {
           title: "7. International transfers",
-          body: "Some sub-processors are located outside the EEA / UK. We rely on the EU Standard Contractual Clauses, the UK International Data Transfer Addendum and the EU-US Data Privacy Framework as the legal basis for these transfers. Copies of the SCCs we use are available on request via privacy@forgeletter.app.",
+          body: "Some sub-processors are located outside the EEA / UK. We rely on the EU Standard Contractual Clauses, the UK International Data Transfer Addendum and the EU-US Data Privacy Framework as the legal basis for these transfers. Copies of the SCCs we use are available on request via forgeletterai@gmail.com.",
         },
         {
           title: "8. How we protect your data",
@@ -151,8 +168,7 @@ export default function PrivacyPage() {
             "All traffic between your browser and ForgeLetter is encrypted with TLS 1.2 or higher.",
             "Data at rest on Supabase is encrypted with AES-256.",
             "Passwords are stored hashed with bcrypt (12+ rounds) — we cannot read your plaintext password.",
-            "Two-factor authentication is offered for accounts and required for production access by our staff.",
-            "Production access is least-privilege, logged, and reviewed quarterly.",
+            "Production access by our staff requires two-factor authentication, is least-privilege, logged, and reviewed quarterly.",
             "All third-party providers we use are SOC 2 Type II or ISO 27001 certified (Vercel, Supabase, Stripe, Anthropic).",
             "We monitor for vulnerabilities and apply security patches promptly.",
             "We will notify you and the relevant supervisory authority of a personal data breach within 72 hours where required by Article 33 GDPR.",
@@ -190,7 +206,7 @@ export default function PrivacyPage() {
         },
         {
           title: "11. How to exercise your rights",
-          body: "Email privacy@forgeletter.app from the email address on your account, or submit a request via the contact page. We may ask for additional information to verify your identity before acting on the request. We do not charge a fee unless the request is manifestly unfounded or excessive, in line with Article 12(5) GDPR.",
+          body: "Email forgeletterai@gmail.com from the email address on your account, or submit a request via the contact page. We may ask for additional information to verify your identity before acting on the request. We do not charge a fee unless the request is manifestly unfounded or excessive, in line with Article 12(5) GDPR.",
         },
         {
           title: "12. Sign in with Google — limited use disclosure",
@@ -206,7 +222,7 @@ export default function PrivacyPage() {
         },
         {
           title: "15. Children",
-          body: "ForgeLetter is not directed at children under 16 and we do not knowingly collect their data. If you believe a child has signed up, contact us at privacy@forgeletter.app and we will delete the account. In jurisdictions where the digital-consent age is higher (e.g. 13 under US COPPA, 16 in most of the EU), the local minimum applies.",
+          body: "ForgeLetter is not directed at children under 16 and we do not knowingly collect their data. If you believe a child has signed up, contact us at forgeletterai@gmail.com and we will delete the account. In jurisdictions where the digital-consent age is higher (e.g. 13 under US COPPA, 16 in most of the EU), the local minimum applies.",
         },
         {
           title: "16. Changes to this policy",
@@ -214,7 +230,7 @@ export default function PrivacyPage() {
         },
         {
           title: "17. Contact",
-          body: "Privacy questions and rights requests can be sent to privacy@forgeletter.app or via the contact page. We aim to respond within one working week and at the latest within 30 days as required by the GDPR.",
+          body: "Privacy questions and rights requests can be sent to forgeletterai@gmail.com or via the contact page. We aim to respond within one working week and at the latest within 30 days as required by the GDPR.",
         },
       ]}
     />

@@ -358,7 +358,7 @@ export async function getCurrentAppUser(): Promise<{
     // migrations haven't all been applied — keeps the dashboard
     // working during a partial rollout.
     const fullCols =
-      "id,email,name,image,plan,current_period_start,past_due_since,disputed_at,accrued_cap_this_period,current_segment_started_at,scheduled_plan_change"
+      "id,email,name,image,plan,current_period_start,past_due_since,disputed_at,accrued_cap_this_period,current_segment_started_at,scheduled_plan_change,password_changed_at"
     const mediumCols =
       "id,email,name,image,plan,current_period_start,past_due_since,disputed_at"
     const baseCols = "id,email,name,image,plan"
@@ -391,6 +391,22 @@ export async function getCurrentAppUser(): Promise<{
     }
     if (!row) {
       return { user: null, error: "Account record not found" }
+    }
+
+    // Session revocation: the JWT is stamped with password_changed_at
+    // at sign-in. A password reset updates the column, so every
+    // session issued before the reset stops validating here — without
+    // this, a stolen session survived a password change for its full
+    // 30-day lifetime. Sessions minted before this feature carry no
+    // anchor (undefined) and are grandfathered until natural expiry;
+    // the check also no-ops while the column migration is pending.
+    const sessionAnchor = (session?.user as { pwdca?: string | null })?.pwdca
+    if (sessionAnchor !== undefined && "password_changed_at" in row) {
+      const rowAnchor = row.password_changed_at as string | null
+      const normalize = (v: string | null) => (v ? new Date(v).toISOString() : "")
+      if (normalize(sessionAnchor ?? null) !== normalize(rowAnchor)) {
+        return { user: null, error: "Authentication required" }
+      }
     }
 
     const scheduledRaw = row.scheduled_plan_change as
@@ -539,6 +555,11 @@ export async function getApplicationBriefs(userId: string) {
       .select("*")
       .eq("user_id", userId)
       .order("updated_at", { ascending: false })
+      // A brief (with up to 5000-char JD + full resume text) is
+      // inserted on EVERY generation, and only the newest seeds the
+      // workspace form. Unbounded, a heavy user paid an ever-growing
+      // payload on every dashboard load.
+      .limit(25)
 
     if (error) {
       return {
@@ -612,16 +633,26 @@ export async function getCurrentPeriodLetterCount(
       Date.now() - RUNNING_LETTER_MAX_AGE_SECONDS * 1000
     ).toISOString()
 
-    // Two-query approach. One for completed letters (any row with
-    // output, passed OR quality-failed). One for currently in-flight
-    // running rows newer than the orphan cutoff.
-    const [completedResult, runningResult] = await Promise.all([
+    // Three-query approach, mirroring the try_start_letter RPC. One
+    // for completed letters (any row with output, passed OR
+    // quality-failed — soft-deleted rows keep their content, so they
+    // keep counting). One for tone-rewrite spend placeholders (content
+    // stays NULL — the rewrite lands on the original row). One for
+    // currently in-flight running rows newer than the orphan cutoff.
+    const [completedResult, spendResult, runningResult] = await Promise.all([
       supabaseAdmin
         .from("generated_letters")
         .select("id", { count: "exact", head: true })
         .eq("user_id", userId)
         .gte("created_at", periodStart)
         .not("final_cover_letter", "is", null),
+      supabaseAdmin
+        .from("generated_letters")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", userId)
+        .eq("generation_status", "tone_rewrite_spend")
+        .gte("created_at", periodStart)
+        .is("final_cover_letter", null),
       supabaseAdmin
         .from("generated_letters")
         .select("id", { count: "exact", head: true })
@@ -646,7 +677,10 @@ export async function getCurrentPeriodLetterCount(
     }
 
     return {
-      count: (completedResult.count || 0) + (runningResult.count || 0),
+      count:
+        (completedResult.count || 0) +
+        (spendResult.error ? 0 : spendResult.count || 0) +
+        (runningResult.count || 0),
     }
   } catch (error) {
     return {

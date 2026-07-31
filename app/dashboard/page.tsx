@@ -110,6 +110,7 @@ export default async function DashboardPage({
         .select("id", { count: "exact", head: true })
         .eq("user_id", userId)
         .eq("application_status", "submitted")
+        .neq("generation_status", "deleted")
         .lt("submitted_at", sevenDaysAgo)
       staleSubmittedCount = count ?? 0
     } catch {

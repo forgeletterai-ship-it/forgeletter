@@ -1,7 +1,7 @@
 import { LegalPage } from "@/components/LegalPage"
 
 export const metadata = {
-  title: "Acceptable use policy — ForgeLetter",
+  title: "Acceptable use policy",
   description:
     "What you may and may not do with ForgeLetter, including content rules, prohibited uses, and how violations are handled.",
 }
@@ -61,7 +61,7 @@ export default function AcceptableUsePage() {
         },
         {
           title: "6. Reporting violations",
-          body: "If you believe someone has violated this policy — including content posted on third-party sites that originated from ForgeLetter — send a notice to abuse@forgeletter.app with the relevant URLs, screenshots, and a brief description. We do not require a court order to investigate plausible abuse reports.",
+          body: "If you believe someone has violated this policy — including content posted on third-party sites that originated from ForgeLetter — send a notice to forgeletterai@gmail.com with the relevant URLs, screenshots, and a brief description. We do not require a court order to investigate plausible abuse reports.",
         },
         {
           title: "7. Enforcement",

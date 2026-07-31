@@ -3,6 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import {
+  annualAmountCents,
   getBasePlan,
   getBillingPeriod,
   type BillingPeriod,
@@ -17,10 +18,6 @@ const plans = [
     letters: 8,
     rewrites: 0,
     monthlyCents: 999,
-    // The bar each plan auto-improves letters to before delivery.
-    // Quality rewrites happen for free in the background — never
-    // counted against the user's letter allowance.
-    qualityBar: 90,
     features: [
       "Both templates",
       "Photo upload",
@@ -47,7 +44,6 @@ const plans = [
     letters: 20,
     rewrites: 1,
     monthlyCents: 1999,
-    qualityBar: 93,
     features: [
       "ATS score",
       "LinkedIn import",
@@ -76,7 +72,6 @@ const plans = [
     letters: 35,
     rewrites: 3,
     monthlyCents: 3499,
-    qualityBar: 95,
     features: [
       "All 12 agents",
       "3 tone rewrites included",
@@ -187,9 +182,6 @@ function formatPrice(cents: number) {
   return (cents / 100).toFixed(2)
 }
 
-function annualPrice(monthlyCents: number) {
-  return Math.round(monthlyCents * 12 * 0.9)
-}
 
 export function PricingCards({
   currentPlan,
@@ -214,16 +206,18 @@ export function PricingCards({
           const period = periods[plan.key]
           const periodNoun = period === "annual" ? "year" : "month"
           const lettersForPeriod = period === "annual" ? plan.letters * 12 : plan.letters
-          const price = period === "monthly" ? plan.monthlyCents : annualPrice(plan.monthlyCents)
+          // Annual price must come from the same helper Stripe checkout
+          // uses (lib/plans.ts annualAmountCents, 25% off) so the number
+          // a customer sees is the number their card is charged.
+          const price =
+            period === "monthly" ? plan.monthlyCents : annualAmountCents(plan.monthlyCents)
           const cadence = period === "monthly" ? "/ month" : "/ year"
           const currentBasePlan = getBasePlan(currentPlan)
           const currentPeriod = getBillingPeriod(currentPlan)
           const isCurrentPlan = currentBasePlan === plan.key && currentPeriod === period
-          const features = plan.features.map((feature) =>
-            feature.includes("letters per month")
-              ? `${lettersForPeriod} letters per ${periodNoun}`
-              : feature
-          )
+          // (No feature-string rewriting — the letters/period line is
+          // rendered from lettersForPeriod directly below.)
+          const features = plan.features
           const actionClass = `pricing-arch-button${
             isHighlighted ? " pricing-arch-button--gold" : ""
           }${isCurrentPlan ? " pricing-arch-button--current" : ""}`
@@ -312,15 +306,6 @@ export function PricingCards({
                       : `${plan.rewrites} included tone ${plan.rewrites === 1 ? "rewrite" : "rewrites"}`}
                   </strong>
                   <span>{plan.rewriteCopy}</span>
-                </div>
-
-                <div
-                  className="pricing-quality-bar"
-                  aria-label={`Letters auto-improved to ${plan.qualityBar} percent quality bar`}
-                  title="Quality rewrites happen in the background — free, never counted against your letter allowance."
-                >
-                  <strong>{plan.qualityBar}%</strong>
-                  <span>quality bar · auto-improved free</span>
                 </div>
 
                 {onSelectPlan ? (

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createHash, randomBytes } from "crypto"
 import { dataErrorMessage } from "@/lib/app-data"
+import { checkRateLimit, clientIpFrom, rateLimitKey } from "@/lib/rate-limit"
 import { supabaseAdmin } from "@/lib/supabase"
 
 function hashToken(token: string) {
@@ -15,24 +16,46 @@ function appUrl(origin: string) {
   ).replace(/\/$/, "")
 }
 
-async function sendResetEmail(email: string, resetUrl: string) {
+/**
+ * Send the reset email via Resend. Returns true only when Resend
+ * accepted the message. Failing LOUD here matters: silently returning
+ * while the UI says "check your inbox" strands a locked-out user with
+ * no recovery path — the exact production dead-end this replaces.
+ */
+async function sendResetEmail(email: string, resetUrl: string): Promise<boolean> {
   if (!process.env.RESEND_API_KEY || !process.env.RESEND_FROM_EMAIL) {
-    return
+    console.error(
+      "[password-reset] RESEND_API_KEY / RESEND_FROM_EMAIL not configured — reset emails CANNOT be delivered."
+    )
+    return false
   }
 
-  await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from: process.env.RESEND_FROM_EMAIL,
-      to: email,
-      subject: "Reset your ForgeLetter password",
-      text: `Use this secure link to reset your ForgeLetter password:\n\n${resetUrl}\n\nThis link expires in 45 minutes.`,
-    }),
-  })
+  try {
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: process.env.RESEND_FROM_EMAIL,
+        to: email,
+        subject: "Reset your ForgeLetter password",
+        text: `Use this secure link to reset your ForgeLetter password:\n\n${resetUrl}\n\nThis link expires in 45 minutes.`,
+      }),
+    })
+    if (!response.ok) {
+      const body = await response.text().catch(() => "")
+      console.error(
+        `[password-reset] Resend rejected the email (HTTP ${response.status}): ${body.slice(0, 300)}`
+      )
+      return false
+    }
+    return true
+  } catch (error) {
+    console.error("[password-reset] Resend request failed:", error)
+    return false
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -41,6 +64,48 @@ export async function POST(req: NextRequest) {
 
   if (!normalizedEmail) {
     return NextResponse.json({ error: "Email is required" }, { status: 400 })
+  }
+
+  // Rate limits: 5 requests per IP and 3 per target email per 15
+  // minutes — stops token-row flooding and outbound email spam. Both
+  // checks run BEFORE the user lookup so throttling stays uniform
+  // (no account-existence oracle).
+  const [ipLimit, emailLimit] = await Promise.all([
+    checkRateLimit({
+      key: rateLimitKey("reset-ip", clientIpFrom(req.headers)),
+      max: 5,
+      windowSeconds: 15 * 60,
+    }),
+    checkRateLimit({
+      key: rateLimitKey("reset-email", normalizedEmail),
+      max: 3,
+      windowSeconds: 15 * 60,
+    }),
+  ])
+  if (!ipLimit.allowed || !emailLimit.allowed) {
+    return NextResponse.json(
+      { error: "Too many reset requests. Please wait a few minutes and try again." },
+      { status: 429 }
+    )
+  }
+
+  // Config check BEFORE the user lookup so the failure is uniform for
+  // every request (no account-existence oracle). In development the
+  // dev-only resetUrl below still makes the flow usable without email.
+  const emailConfigured = Boolean(
+    process.env.RESEND_API_KEY && process.env.RESEND_FROM_EMAIL
+  )
+  if (!emailConfigured && process.env.NODE_ENV === "production") {
+    console.error(
+      "[password-reset] Email delivery is not configured in production — refusing to pretend an email was sent."
+    )
+    return NextResponse.json(
+      {
+        error:
+          "Password reset email delivery is temporarily unavailable. Please contact support to regain access.",
+      },
+      { status: 503 }
+    )
   }
 
   let user: { id: string; email: string } | null = null
@@ -95,7 +160,19 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  await sendResetEmail(user.email, resetUrl).catch(() => null)
+  const delivered = await sendResetEmail(user.email, resetUrl)
+
+  // In production a failed send must NOT masquerade as success — the
+  // UI would tell the user to check an inbox that will stay empty.
+  if (!delivered && process.env.NODE_ENV === "production") {
+    return NextResponse.json(
+      {
+        error:
+          "We couldn't send the reset email right now. Please try again in a few minutes or contact support.",
+      },
+      { status: 503 }
+    )
+  }
 
   return NextResponse.json({
     ok: true,

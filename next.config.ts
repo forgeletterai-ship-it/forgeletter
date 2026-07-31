@@ -75,6 +75,17 @@ const nextConfig: NextConfig = {
   },
   poweredByHeader: false,
   reactStrictMode: true,
+  async redirects() {
+    // The three thin guide pages were removed pre-launch (owner
+    // decision) — their content duplicated /blog material. Permanent
+    // redirects preserve any external links and pass SEO signal to
+    // the resources hub.
+    return [
+      { source: "/cover-letter-tips", destination: "/blog", permanent: true },
+      { source: "/interview-prep", destination: "/blog", permanent: true },
+      { source: "/job-search-guide", destination: "/blog", permanent: true },
+    ]
+  },
   async headers() {
     return [
       {

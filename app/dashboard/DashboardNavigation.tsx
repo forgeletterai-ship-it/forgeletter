@@ -354,6 +354,9 @@ export function DashboardNavigation({
             <AccountMenuItem href="/dashboard/settings" icon={<AccountIcon />} onClick={closeMenus}>
               Account settings
             </AccountMenuItem>
+            <AccountMenuItem href="/dashboard/profile" icon={<AccountIcon />} onClick={closeMenus}>
+              Profile
+            </AccountMenuItem>
             <AccountMenuItem href="/dashboard/security" icon={<SecurityIcon />} onClick={closeMenus}>
               Security
             </AccountMenuItem>
@@ -398,6 +401,9 @@ export function DashboardNavigation({
             </AccountMenuItem>
             <AccountMenuItem href="/dashboard/settings" icon={<AccountIcon />} onClick={closeMenus}>
               Account settings
+            </AccountMenuItem>
+            <AccountMenuItem href="/dashboard/profile" icon={<AccountIcon />} onClick={closeMenus}>
+              Profile
             </AccountMenuItem>
             <AccountMenuItem href="/dashboard/security" icon={<SecurityIcon />} onClick={closeMenus}>
               Security
@@ -469,6 +475,9 @@ export function DashboardNavigation({
         </SheetItem>
         <SheetItem href="/dashboard/settings" icon={<AccountIcon />} onClick={closeMenus}>
           Account settings
+        </SheetItem>
+        <SheetItem href="/dashboard/profile" icon={<AccountIcon />} onClick={closeMenus}>
+          Profile
         </SheetItem>
         <SheetItem href="/dashboard/security" icon={<SecurityIcon />} onClick={closeMenus}>
           Security

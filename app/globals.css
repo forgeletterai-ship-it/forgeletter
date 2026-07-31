@@ -1,4 +1,6 @@
-@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
+/* Plus Jakarta Sans is self-hosted via next/font in app/layout.tsx
+   (exposed as --font-jakarta). No Google Fonts request: faster first
+   paint and no EU-GDPR exposure from shipping visitor IPs to Google. */
 
 :root {
   --ink: #17120f;
@@ -44,7 +46,7 @@ body {
   max-width: 100%;
   background: var(--canvas);
   color: var(--ink);
-  font-family: "Plus Jakarta Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--font-jakarta, "Segoe UI"), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
 }
@@ -1052,7 +1054,6 @@ body:has(.command-palette-fab) .back-to-top {
   border-radius: 999px;
   color: #f8c76a;
   background: rgba(255, 253, 248, 0.06);
-  cursor: pointer;
 }
 
 .ai-engine-arrow svg {
@@ -1713,7 +1714,7 @@ button.tone-chip:hover {
 
 .pricing-arch-price em {
   color: #102737;
-  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  font-family: var(--font-jakarta, "Segoe UI"), system-ui, sans-serif;
   font-size: 15px;
   font-style: normal;
   font-weight: 700;
@@ -11802,50 +11803,6 @@ button.tone-chip:hover {
   color: rgba(247, 244, 238, 0.84);
 }
 
-.pricing-quality-bar {
-  width: min(356px, 100%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  margin: 0 0 16px;
-  padding: 10px 12px;
-  text-align: center;
-  border-top: 1px dashed rgba(40, 120, 94, 0.32);
-  cursor: help;
-}
-
-.pricing-quality-bar strong {
-  font-family: var(--font-serif, "Plus Jakarta Sans"), serif;
-  font-size: 36px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  line-height: 1;
-  color: #1b6f4d;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
-}
-
-.pricing-quality-bar span {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: lowercase;
-  color: rgba(31, 58, 57, 0.66);
-}
-
-.pricing-arch-card--featured .pricing-quality-bar {
-  border-top-color: rgba(34, 188, 138, 0.42);
-}
-
-.pricing-arch-card--featured .pricing-quality-bar strong {
-  color: #34c47d;
-  text-shadow: 0 1px 0 rgba(0, 30, 24, 0.5);
-}
-
-.pricing-arch-card--featured .pricing-quality-bar span {
-  color: rgba(220, 232, 220, 0.7);
-}
-
 .pricing-arch-button {
   width: min(252px, 100%);
   min-height: 48px;
@@ -12167,7 +12124,7 @@ button.tone-chip:hover {
 .resources-luxury__head p,
 .pricing-luxury__head p,
 .faq-luxury__copy p {
-  font-family: "Plus Jakarta Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+  font-family: var(--font-jakarta, "Segoe UI"), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
   font-size: clamp(17px, 1.18vw, 19px) !important;
   font-style: normal !important;
   font-weight: 500 !important;
@@ -12215,7 +12172,7 @@ button.tone-chip:hover {
 .resources-luxury__kicker,
 .pricing-luxury__kicker,
 .faq-luxury__kicker {
-  font-family: "Plus Jakarta Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+  font-family: var(--font-jakarta, "Segoe UI"), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
   font-size: 13px !important;
   font-style: normal !important;
   font-weight: 900 !important;
@@ -14156,7 +14113,7 @@ button.tone-chip:hover {
   border-radius: 999px;
   background: #105250;
   color: #f9e8c4;
-  font-family: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  font-family: var(--font-jakarta, "Segoe UI"), system-ui, -apple-system, sans-serif;
   font-weight: 600;
   font-size: 15px;
   text-decoration: none;
@@ -14710,7 +14667,7 @@ button.tone-chip:hover {
   --cc-section-border: #ece6d8;
   --cc-overlay-bg: rgba(40, 26, 12, 0.45);
   font-family:
-    "Plus Jakarta Sans", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    var(--font-jakarta, "Segoe UI"), "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 #cc-main .cm,
 #cc-main .pm {
@@ -14878,7 +14835,7 @@ button.tone-chip:hover {
   padding: 11px 14px;
   border-bottom: 1px solid #ece6d8;
   font-family:
-    "Plus Jakarta Sans", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    var(--font-jakarta, "Segoe UI"), "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   letter-spacing: 0.01em;
 }
 .legal-table td {
@@ -14925,7 +14882,7 @@ button.tone-chip:hover {
   font-size: 12.5px;
   font-weight: 600;
   letter-spacing: 0.01em;
-  font-family: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  font-family: var(--font-jakarta, "Segoe UI"), system-ui, -apple-system, sans-serif;
   border: 1px solid transparent;
   transition: all 0.18s ease;
 }
@@ -15904,6 +15861,107 @@ button.tone-chip:hover {
   gap: 8px;
 }
 
+/* Slim legal footer inside the authenticated app */
+.dashboard-legal-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  justify-content: center;
+  padding: 18px 20px 26px;
+  border-top: 1px solid rgba(16, 82, 80, 0.1);
+}
+
+.dashboard-legal-footer a {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(16, 39, 55, 0.55);
+  text-decoration: none;
+}
+
+.dashboard-legal-footer a:hover {
+  color: rgba(16, 39, 55, 0.85);
+  text-decoration: underline;
+}
+
+/* Dashboard segment pending UI (app/dashboard/loading.tsx) */
+.dashboard-loading {
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.dashboard-loading__bar,
+.dashboard-loading__block {
+  border-radius: 14px;
+  background: linear-gradient(
+    100deg,
+    rgba(16, 82, 80, 0.06) 40%,
+    rgba(16, 82, 80, 0.12) 50%,
+    rgba(16, 82, 80, 0.06) 60%
+  );
+  background-size: 200% 100%;
+  animation: dashboard-loading-shimmer 1.4s ease-in-out infinite;
+}
+
+.dashboard-loading__bar {
+  height: 46px;
+  max-width: 420px;
+}
+
+.dashboard-loading__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 18px;
+}
+
+.dashboard-loading__block {
+  height: 180px;
+}
+
+.dashboard-loading__block--tall {
+  height: 260px;
+}
+
+@keyframes dashboard-loading-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-loading__bar,
+  .dashboard-loading__block {
+    animation: none;
+  }
+}
+
+.billing-renewal-note {
+  margin: 0 0 16px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(16, 82, 80, 0.14);
+  background: rgba(16, 82, 80, 0.04);
+  font-size: 13px;
+  color: rgba(16, 39, 55, 0.75);
+}
+
+.generation-modal__cancel {
+  margin-top: 14px;
+  padding: 6px 10px;
+  border: none;
+  background: none;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(16, 39, 55, 0.5);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.generation-modal__cancel:hover {
+  color: rgba(16, 39, 55, 0.78);
+}
+
 @media (max-width: 520px) {
   .generation-modal {
     padding: 28px 22px 22px;
@@ -16022,6 +16080,49 @@ button.tone-chip:hover {
   flex-direction: column;
   align-items: center;
   gap: 8px;
+}
+
+/* Crash-failed generations — quota refunded, reason surfaced */
+.letters-failed {
+  margin: 0 0 18px;
+  padding: 16px 18px;
+  border-radius: 16px;
+  background: rgba(178, 58, 48, 0.05);
+  border: 1px solid rgba(178, 58, 48, 0.18);
+}
+
+.letters-failed__title {
+  margin: 0 0 10px;
+  font-size: 14px;
+  font-weight: 650;
+  color: #8a2f28;
+}
+
+.letters-failed__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.letters-failed__row strong {
+  font-size: 13.5px;
+  color: #102737;
+  margin-right: 8px;
+}
+
+.letters-failed__meta {
+  font-size: 12px;
+  color: rgba(16, 39, 55, 0.55);
+}
+
+.letters-failed__reason {
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: rgba(16, 39, 55, 0.72);
 }
 
 .letters-empty__icon {

@@ -1,6 +1,16 @@
+import type { Metadata } from "next"
 import Link from "next/link"
 import { PublicFooter, PublicNav } from "@/components/PublicChrome"
 import { resourceArticles } from "@/lib/resources"
+
+export const metadata: Metadata = {
+  title: "Career resources & guides",
+  description:
+    "Practical guides and frameworks for writing stronger cover letters and running a sharper job search.",
+  alternates: {
+    canonical: "/blog",
+  },
+}
 
 export default function BlogPage() {
   return (

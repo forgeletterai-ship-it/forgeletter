@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { redirect } from "next/navigation"
 import type { ReactNode } from "react"
 import { auth, signOut } from "@/auth"
@@ -67,6 +68,15 @@ export default async function DashboardLayout({
         planTier={planTier}
       />
       <section className="dashboard-main">{children}</section>
+      {/* Slim legal footer — imprint/terms must be reachable from
+          inside the app too, not only from the public pages. */}
+      <footer className="dashboard-legal-footer" aria-label="Legal">
+        <Link href="/terms">Terms</Link>
+        <Link href="/privacy">Privacy</Link>
+        <Link href="/refund-policy">Refunds</Link>
+        <Link href="/imprint">Imprint</Link>
+        <Link href="/contact">Support</Link>
+      </footer>
       <CommandPalette />
     </main>
   )

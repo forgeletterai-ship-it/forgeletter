@@ -19,6 +19,12 @@ type BillingClientProps = {
     toPlan: string
     effectiveAt: string
   } | null
+  /** Live Stripe facts fetched server-side: pending cancellation and
+   *  the next renewal date. Null when free or Stripe unreachable. */
+  subscriptionInfo?: {
+    cancelAtPeriodEnd: boolean
+    periodEnd: string | null
+  } | null
 }
 
 type ModalState =
@@ -44,6 +50,7 @@ type ModalState =
 export function BillingClient({
   currentPlan,
   scheduledPlanChange = null,
+  subscriptionInfo = null,
 }: BillingClientProps) {
   const [portalLoading, setPortalLoading] = useState(false)
   const [cancelScheduledLoading, setCancelScheduledLoading] = useState(false)
@@ -209,6 +216,38 @@ export function BillingClient({
     <>
       {error ? <div className="alert" style={{ marginBottom: 16 }}>{error}</div> : null}
       {message ? <div className="billing-success">{message}</div> : null}
+
+      {/* Honest subscription state: a pending cancellation must be
+          visible (previously the page looked identical to an untouched
+          subscription), and the renewal date answers "when am I
+          charged next" without opening the Stripe portal. */}
+      {subscriptionInfo?.cancelAtPeriodEnd ? (
+        <div className="billing-scheduled-banner" role="status">
+          <div className="billing-scheduled-banner__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 7v5l3 2" />
+            </svg>
+          </div>
+          <div className="billing-scheduled-banner__copy">
+            <strong>Cancellation scheduled</strong>
+            <p>
+              Your subscription ends
+              {subscriptionInfo.periodEnd
+                ? ` on ${new Date(subscriptionInfo.periodEnd).toLocaleDateString()}`
+                : " at the close of the current billing period"}
+              . You keep full access until then. To keep your plan instead,
+              reactivate it from the Stripe portal (Manage billing below).
+            </p>
+          </div>
+        </div>
+      ) : subscriptionInfo?.periodEnd ? (
+        <p className="billing-renewal-note" role="note">
+          Next renewal:{" "}
+          <strong>{new Date(subscriptionInfo.periodEnd).toLocaleDateString()}</strong>
+          {" · "}invoices and payment methods live in the Stripe portal.
+        </p>
+      ) : null}
 
       {showScheduledBanner && scheduledPlanChange ? (
         <div className="billing-scheduled-banner" role="status">

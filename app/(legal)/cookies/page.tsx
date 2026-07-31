@@ -1,7 +1,7 @@
 import { LegalPage } from "@/components/LegalPage"
 
 export const metadata = {
-  title: "Cookie policy — ForgeLetter",
+  title: "Cookie policy",
   description:
     "What cookies ForgeLetter uses, why each one exists, and how you can change your choices at any time.",
 }

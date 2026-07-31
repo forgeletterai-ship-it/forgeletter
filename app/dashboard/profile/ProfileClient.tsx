@@ -259,16 +259,16 @@ function makeBlock(type: BlockType): ProfileBlock {
 
 function createDefaultDraft(initialProfile?: UserProfile): ProfileDraft {
   return {
-    headline:
-      initialProfile?.professional_headline ||
-      "Growth marketer with 5 years in SaaS and lifecycle marketing",
+    // New users start EMPTY — sample careers live in placeholders,
+    // never in values. Pre-filled fiction ("Growth marketer with 5
+    // years in SaaS…") pre-satisfied the save-gate and, once saved,
+    // grounded every future letter in a marketing career the user
+    // never had — the exact opposite of the zero-hallucination
+    // promise.
+    headline: initialProfile?.professional_headline || "",
     seniority: "mid",
-    skills:
-      initialProfile?.strengths ||
-      "A/B testing, lifecycle marketing, paid social, stakeholder management",
-    tools:
-      initialProfile?.tools ||
-      "HubSpot, Marketo, SQL, Google Analytics",
+    skills: initialProfile?.strengths || "",
+    tools: initialProfile?.tools || "",
     qualifications: initialProfile?.qualifications ?? "",
     notes: initialProfile?.notes ?? "",
     portfolioLink: initialProfile?.portfolio_link ?? "",
@@ -856,7 +856,11 @@ export function ProfileClient({
       setError(
         `Fill in ${missingRequiredFields.join(", ")} before saving your profile.`
       )
+      // Some required fields live in the step-2 card — unlock it so
+      // the user can actually see what the message asks for, and
+      // scroll to the error banner at the top of the page.
       if (!experienceUnlocked) setExperienceUnlocked(true)
+      window.scrollTo({ top: 0, behavior: "smooth" })
       return
     }
 
@@ -915,16 +919,16 @@ export function ProfileClient({
           <button className="pp-btn-ghost" type="button" onClick={discardChanges}>
             Discard changes
           </button>
+          {/* Deliberately NOT disabled when incomplete: a disabled
+              button can't explain itself (no click, no reliable
+              tooltip, nothing on touch). Clicking routes through the
+              handleSave guard, which names the missing fields and
+              unlocks step 2 so the user can actually see them. */}
           <button
             className={`pp-btn-primary${message ? " pp-btn-saved" : ""}`}
             type="button"
             onClick={handleSave}
-            disabled={saving || !profileComplete}
-            title={
-              !profileComplete
-                ? `Fill in ${missingRequiredFields.join(", ")} to save`
-                : undefined
-            }
+            disabled={saving}
           >
             {saving ? "Saving..." : message ? "Saved" : "Save profile"}
           </button>
@@ -1284,12 +1288,7 @@ export function ProfileClient({
                 className={`pp-save-btn${message ? " pp-save-btn--saved" : ""}`}
                 type="button"
                 onClick={handleSave}
-                disabled={saving || !profileComplete}
-                title={
-                  !profileComplete
-                    ? `Fill in ${missingRequiredFields.join(", ")} to save`
-                    : undefined
-                }
+                disabled={saving}
               >
                 {saving
                   ? "Saving..."

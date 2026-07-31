@@ -148,44 +148,26 @@ export function SecurityClient({
           </button>
         </section>
 
-        <section className="settings-card security-card">
-          <div className="settings-card__icon">
-            <SecurityIcon type="session" />
-          </div>
-          <h2>Session safety</h2>
-          <div className="settings-card__rule" />
-          <p>
-            Your dashboard is protected by an authenticated session. Log out
-            when using a shared device.
-          </p>
-
-          <div className="security-status-list">
-            <div className="security-status-row">
-              <span>Current dashboard session</span>
-              <strong>Active</strong>
-            </div>
-            <div className="security-status-row">
-              <span>Workspace access</span>
-              <strong>Protected</strong>
-            </div>
-          </div>
-        </section>
-
+        {/* The former "session safety" card with hardcoded
+            Active/Protected statuses was decorative theater — removed
+            per owner decision. Real session facts worth knowing live
+            in the copy below. */}
         <section className="settings-card security-card">
           <div className="settings-card__icon">
             <SecurityIcon type="shield" />
           </div>
-          <h2>Security checklist</h2>
+          <h2>How sessions work</h2>
           <div className="settings-card__rule" />
           <p>
-            Keep your account protected with a strong email password and a
-            private device passcode.
+            Signing in keeps you logged in on this device for up to 30 days.
+            Resetting your password signs out every other device immediately.
+            Log out when using a shared computer.
           </p>
 
           <ul className="security-checklist">
-            <li>Use a unique password for your email account.</li>
-            <li>Keep Google or Facebook sign-in accounts protected.</li>
-            <li>Review billing access only from the secure dashboard.</li>
+            <li>Use a unique password you don&apos;t reuse anywhere else.</li>
+            <li>Keep the email account you sign in with protected — it can reset this account.</li>
+            <li>If you use Google or Facebook sign-in, their account security protects ForgeLetter too.</li>
           </ul>
         </section>
       </div>

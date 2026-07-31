@@ -2,7 +2,7 @@ const separatorItems = [
   "12-agent AI pipeline",
   "ATS keyword matching",
   "Photo-ready templates",
-  "95+ quality guarantee",
+  "Quality-gated delivery",
   "Verified experience",
   "Interview-ready letters",
 ]

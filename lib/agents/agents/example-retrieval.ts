@@ -296,6 +296,9 @@ async function fetchUserWinnerExamples(
       .eq("user_id", userId)
       .in("application_status", ["offer", "interviewing"])
       .not("final_cover_letter", "is", null)
+      // Respect soft deletion — a letter the user removed from their
+      // library must not resurface as a style example.
+      .neq("generation_status", "deleted")
       .order("outcome_at", { ascending: false, nullsFirst: false })
       .limit(pool)
 

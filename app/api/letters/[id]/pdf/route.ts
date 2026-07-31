@@ -90,7 +90,7 @@ async function handle(req: NextRequest, { params }: RouteParams) {
       { status: 500 }
     )
   }
-  if (!data) {
+  if (!data || data.generation_status === "deleted") {
     return NextResponse.json({ error: "Letter not found" }, { status: 404 })
   }
   if (data.user_id !== user.id) {

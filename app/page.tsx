@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import Image from "next/image"
 import Link from "next/link"
 import { AnimatedSeparator } from "@/components/AnimatedSeparator"
@@ -6,6 +7,14 @@ import { HowItWorksDemo } from "@/components/HowItWorksDemo"
 import { PricingCards } from "@/components/PricingCards"
 import { PublicFooter, PublicNav } from "@/components/PublicChrome"
 import { ResourceSlider } from "@/components/ResourceSlider"
+
+// Canonical lives here, NOT in the root layout — a root-level
+// canonical of "/" would cascade to every page without its own.
+export const metadata: Metadata = {
+  alternates: {
+    canonical: "/",
+  },
+}
 
 const engineFeatures = [
   {
@@ -57,7 +66,7 @@ const faqs = [
   },
   {
     q: "Is my data safe?",
-    a: "Yes. Your resume, letters, and personal information are stored securely and never shared with third parties. You can delete your account and all associated data at any time.",
+    a: "Yes. Your profile and letters are stored securely and are only processed by the infrastructure providers we need to run the service (hosting, database, payments, AI) — never sold or shared for advertising. Our Privacy Policy lists every provider, and you can request deletion of your data from the settings page.",
   },
 ]
 
@@ -171,16 +180,20 @@ export default function HomePage() {
               <p className="hero-copy">
                 ForgeLetter uses up to a 12-agent AI pipeline to write,
                 verify and auto-improve your cover letter before you see it.
-                Every letter clears your tier&apos;s quality bar (90% on
-                Starter, 93% on Pro, 95% on Ultra) at no extra cost.
+                Every letter is quality-checked and refined in the background
+                at no extra cost.
               </p>
               <div className="hero-actions">
                 <Link className="button hero-primary-button" href="/auth/signup">
                   Start free
                   <span className="hero-button-arrow" aria-hidden="true">-&gt;</span>
                 </Link>
+                {/* The anchor target is the ForgeLetter-vs-alternatives
+                    comparison, so the label must say that — "Try the
+                    workspace" promised an interactive demo that isn't
+                    on this page. */}
                 <Link className="button-secondary hero-secondary-button" href="#workspace">
-                  Try the workspace
+                  See the difference
                   <span className="hero-button-arrow" aria-hidden="true">-&gt;</span>
                 </Link>
               </div>
@@ -392,12 +405,15 @@ export default function HomePage() {
                   <div className="ai-engine-rule" aria-hidden="true" />
                   <h3>{feature.title}</h3>
                   <p>{feature.body}</p>
-                  <button className="ai-engine-arrow" type="button" aria-label={`${feature.title} details`}>
+                  {/* Decorative arrow only — previously a <button> that
+                      did nothing, a dead interactive element for
+                      keyboard and screen-reader users. */}
+                  <span className="ai-engine-arrow" aria-hidden="true">
                     <svg viewBox="0 0 24 24" aria-hidden="true">
                       <path d="M5 12h13" />
                       <path d="M13 7l5 5-5 5" />
                     </svg>
-                  </button>
+                  </span>
                 </article>
               ))}
             </div>
@@ -459,7 +475,7 @@ export default function HomePage() {
             <aside className="faq-luxury__copy" aria-labelledby="faq-heading">
               <span className="faq-luxury__kicker">FAQ</span>
               <h2 id="faq-heading">
-                The original customer questions, <span className="headline-teal">answered</span> clearly.
+                Real questions, <span className="headline-teal">answered</span> clearly.
               </h2>
               <div className="faq-luxury__rule" aria-hidden="true" />
               <p>
@@ -499,8 +515,9 @@ export default function HomePage() {
           <div className="container">
             <h2>Stop sending generic letters. Start getting interviews.</h2>
             <p>
-              Join thousands of job seekers using ForgeLetter to write stronger,
-              faster, more specific cover letters.
+              ForgeLetter turns your real experience into stronger, faster,
+              more specific cover letters — one focused workflow from job
+              posting to send-ready letter.
             </p>
             <Link className="button" href="/auth/signup">
               Create your free account -&gt;
