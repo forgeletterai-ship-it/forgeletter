@@ -300,7 +300,7 @@ export function LetterDetailClient({
               borderRadius: 8,
               background: "var(--paper)",
               color: "var(--ink)",
-              fontFamily: "Plus Jakarta Sans, sans-serif",
+              fontFamily: "inherit",
               fontSize: 14,
               lineHeight: 1.6,
               resize: "vertical",

@@ -1,4 +1,6 @@
-@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
+/* Plus Jakarta Sans is self-hosted via next/font in app/layout.tsx
+   (exposed as --font-jakarta). No Google Fonts request: faster first
+   paint and no EU-GDPR exposure from shipping visitor IPs to Google. */
 
 :root {
   --ink: #17120f;
@@ -44,7 +46,7 @@ body {
   max-width: 100%;
   background: var(--canvas);
   color: var(--ink);
-  font-family: "Plus Jakarta Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--font-jakarta, "Segoe UI"), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
 }
@@ -1712,7 +1714,7 @@ button.tone-chip:hover {
 
 .pricing-arch-price em {
   color: #102737;
-  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  font-family: var(--font-jakarta, "Segoe UI"), system-ui, sans-serif;
   font-size: 15px;
   font-style: normal;
   font-weight: 700;
@@ -12122,7 +12124,7 @@ button.tone-chip:hover {
 .resources-luxury__head p,
 .pricing-luxury__head p,
 .faq-luxury__copy p {
-  font-family: "Plus Jakarta Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+  font-family: var(--font-jakarta, "Segoe UI"), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
   font-size: clamp(17px, 1.18vw, 19px) !important;
   font-style: normal !important;
   font-weight: 500 !important;
@@ -12170,7 +12172,7 @@ button.tone-chip:hover {
 .resources-luxury__kicker,
 .pricing-luxury__kicker,
 .faq-luxury__kicker {
-  font-family: "Plus Jakarta Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+  font-family: var(--font-jakarta, "Segoe UI"), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
   font-size: 13px !important;
   font-style: normal !important;
   font-weight: 900 !important;
@@ -14111,7 +14113,7 @@ button.tone-chip:hover {
   border-radius: 999px;
   background: #105250;
   color: #f9e8c4;
-  font-family: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  font-family: var(--font-jakarta, "Segoe UI"), system-ui, -apple-system, sans-serif;
   font-weight: 600;
   font-size: 15px;
   text-decoration: none;
@@ -14665,7 +14667,7 @@ button.tone-chip:hover {
   --cc-section-border: #ece6d8;
   --cc-overlay-bg: rgba(40, 26, 12, 0.45);
   font-family:
-    "Plus Jakarta Sans", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    var(--font-jakarta, "Segoe UI"), "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 #cc-main .cm,
 #cc-main .pm {
@@ -14833,7 +14835,7 @@ button.tone-chip:hover {
   padding: 11px 14px;
   border-bottom: 1px solid #ece6d8;
   font-family:
-    "Plus Jakarta Sans", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    var(--font-jakarta, "Segoe UI"), "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   letter-spacing: 0.01em;
 }
 .legal-table td {
@@ -14880,7 +14882,7 @@ button.tone-chip:hover {
   font-size: 12.5px;
   font-weight: 600;
   letter-spacing: 0.01em;
-  font-family: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  font-family: var(--font-jakarta, "Segoe UI"), system-ui, -apple-system, sans-serif;
   border: 1px solid transparent;
   transition: all 0.18s ease;
 }
