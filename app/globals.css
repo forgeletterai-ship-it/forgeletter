@@ -9337,12 +9337,12 @@ button.tone-chip:hover {
 .cover-tone-card {
   position: relative;
   min-width: 0;
-  min-height: 168px;
-  padding: 18px 18px 16px;
+  min-height: 108px;
+  padding: 14px 14px 12px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 12px;
+  gap: 8px;
   border: 1px solid var(--cover-line);
   border-radius: 10px;
   color: var(--cover-ink);
@@ -9369,8 +9369,8 @@ button.tone-chip:hover {
 }
 
 .cover-tone-icon {
-  width: 48px;
-  height: 48px;
+  width: 34px;
+  height: 34px;
   display: grid;
   place-items: center;
   border-radius: 999px;
@@ -9380,8 +9380,8 @@ button.tone-chip:hover {
 }
 
 .cover-tone-icon svg {
-  width: 28px;
-  height: 28px;
+  width: 20px;
+  height: 20px;
 }
 
 .cover-tone-icon--diamond {
@@ -9403,38 +9403,41 @@ button.tone-chip:hover {
 
 .cover-tone-card strong {
   color: var(--cover-ink);
-  font-size: 18px;
-  letter-spacing: -0.03em;
-  max-width: calc(100% - 42px);
-  overflow-wrap: anywhere;
+  font-size: 15px;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  max-width: calc(100% - 28px);
+  /* Never split a word ("Professio-nal") — wrap whole words only. */
+  overflow-wrap: normal;
+  hyphens: none;
 }
 
 .cover-tone-card small {
   color: var(--cover-muted);
-  font-size: 13px;
-  line-height: 1.65;
-  overflow-wrap: anywhere;
+  font-size: 12.5px;
+  line-height: 1.5;
+  overflow-wrap: normal;
 }
 
 .cover-tone-check {
   position: absolute;
-  top: 22px;
-  right: 18px;
-  width: 34px;
-  height: 34px;
+  top: 12px;
+  right: 12px;
+  width: 22px;
+  height: 22px;
   display: grid;
   place-items: center;
   border-radius: 999px;
   color: var(--cover-gold-bright);
-  border: 3px solid currentColor;
+  border: 2px solid currentColor;
   background: #fffdf8;
-  box-shadow: 0 8px 18px rgba(176, 108, 20, 0.18);
+  box-shadow: 0 6px 14px rgba(176, 108, 20, 0.16);
 }
 
 .cover-tone-check svg {
-  width: 20px;
-  height: 20px;
-  stroke-width: 2.8;
+  width: 13px;
+  height: 13px;
+  stroke-width: 2.6;
 }
 
 .cover-field-grid {
@@ -12420,7 +12423,7 @@ button.tone-chip:hover {
 
 .cover-tone-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-  gap: 22px !important;
+  gap: 14px !important;
 }
 
 .cover-tone-card {
