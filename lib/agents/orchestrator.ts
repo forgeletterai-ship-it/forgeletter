@@ -1058,6 +1058,19 @@ async function persistAgentOutputs(
   }))
   const { error } = await supabase.from("agent_outputs").insert(rows)
   if (error) {
+    // Live-audit finding: fractional cycle markers (0.25, 98.5, 99.9)
+    // fail against a legacy `cycle_number int` column, and ONE bad row
+    // rejects the WHOLE batch — production telemetry silently died for
+    // two months this way. docs/supabase-optimizations.sql widens the
+    // column to numeric; until that runs, retry with rounded cycles so
+    // an entire generation's audit trail is never lost to a type
+    // mismatch.
+    const rounded = rows.map((r) => ({
+      ...r,
+      cycle_number: Math.round(Number(r.cycle_number)),
+    }))
+    const retry = await supabase.from("agent_outputs").insert(rounded)
+    if (!retry.error) return
     throw new Error(`agent_outputs insert failed: ${error.message}`)
   }
 }
