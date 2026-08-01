@@ -11,7 +11,12 @@ import { runMatchAnalyst } from "./agents/match-analyst"
 import { runProfileAnalyst } from "./agents/profile-analyst"
 import { runQualityGate } from "./agents/quality-gate"
 import { runRewriteAgent } from "./agents/rewrite"
-import { buildGroundedLetter, ensureParagraphs, runWriterAgent } from "./agents/writer"
+import {
+  buildGroundedLetter,
+  enforceCanonicalClosing,
+  ensureParagraphs,
+  runWriterAgent,
+} from "./agents/writer"
 import { getTierConfig } from "./tiers"
 import { scrubDashes } from "./utils"
 import type {
@@ -782,7 +787,14 @@ async function runBlueprintPipeline(
       // with one giant wall-of-text paragraph. ensureParagraphs only
       // inserts blank lines at sentence boundaries, so the word/
       // coverage stats above remain valid against this string.
-      finalLetter: ensureParagraphs(scrubDashes(bestLetter)),
+      // enforceCanonicalClosing runs LAST: the auto-cleaner can strip
+      // the model's closing sentence, and the owner rule requires the
+      // delivered letter to end with the tone's canonical invitation
+      // verbatim on every path.
+      finalLetter: enforceCanonicalClosing(
+        ensureParagraphs(scrubDashes(bestLetter)),
+        tone
+      ),
       finalScore: Math.round(bestScore),
       hallucinationRisk: bestHallucination?.risk ?? "none",
       atsScore: bestATS?.score,
