@@ -41,6 +41,10 @@ type DashboardClientProps = {
   plan: string
   profile: UserProfile
   settings: UserSettings
+  /** Account identity — prefills the PDF contact fields so name and
+   *  email are "automatically added" per the product spec. */
+  userName?: string | null
+  userEmail?: string | null
   setupError?: string
   initialLatestLetter: LatestLetter | null
   /** True if the Supabase schema has the experience_blocks column.
@@ -275,6 +279,8 @@ export function DashboardClient({
   plan,
   profile,
   settings,
+  userName = null,
+  userEmail = null,
   setupError,
   initialLatestLetter,
   experiencePersistenceAvailable = true,
@@ -1294,7 +1300,8 @@ export function DashboardClient({
       {showPdfPicker && latestLetter ? (
         <TemplatePickerModal
           letterId={latestLetter.id}
-          defaultName={profile.professional_headline ? undefined : undefined}
+          defaultName={userName ?? undefined}
+          defaultEmail={userEmail ?? undefined}
           onClose={() => setShowPdfPicker(false)}
         />
       ) : null}

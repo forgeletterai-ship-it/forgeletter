@@ -82,6 +82,8 @@ export default async function LetterDetailPage({ params }: PageProps) {
         outcomeNotes: data.outcome_notes ?? "",
       }}
       basePlan={basePlan}
+      userName={user.name ?? null}
+      userEmail={user.email ?? null}
     />
   )
 }

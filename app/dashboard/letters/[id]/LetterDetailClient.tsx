@@ -72,9 +72,14 @@ const STATUS_OPTIONS: Array<{
 export function LetterDetailClient({
   letter,
   basePlan,
+  userName = null,
+  userEmail = null,
 }: {
   letter: Letter
   basePlan: BasePlan
+  /** Account identity — prefills the PDF contact fields. */
+  userName?: string | null
+  userEmail?: string | null
 }) {
   const router = useRouter()
   const [text, setText] = useState(letter.finalCoverLetter)
@@ -540,6 +545,8 @@ export function LetterDetailClient({
       {showPdfPicker && (
         <TemplatePickerModal
           letterId={letter.id}
+          defaultName={userName ?? undefined}
+          defaultEmail={userEmail ?? undefined}
           onClose={() => setShowPdfPicker(false)}
         />
       )}
