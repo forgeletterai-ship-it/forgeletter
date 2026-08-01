@@ -35,6 +35,23 @@ import type { CallMeta } from "./resume-analyst"
  * Model: Sonnet 4.6 with temperature 0.7 (0.5 on rewrite cycles).
  */
 
+/**
+ * Owner rule: every letter that closes by proposing a conversation
+ * must use EXACTLY one of these canonical closings, selected by tone.
+ * Enforced in the prompt AND deterministically at delivery
+ * (enforceCanonicalClosing), so no model drift can violate it.
+ */
+export const CANONICAL_CLOSINGS: Record<Tone, string> = {
+  professional:
+    "I would welcome the opportunity to discuss how my skills and experience align with your needs. Please let me know a convenient time for a call or meeting.",
+  confident:
+    "I would be glad to arrange a conversation at your convenience to explore how I can contribute to your team.",
+  warm:
+    "I'd be happy to connect and share more about how I can support your goals. When would be a good time for us to speak?",
+  concise:
+    "I would be glad to arrange a conversation at your convenience to explore how I can contribute to your team.",
+}
+
 const TONE_GUIDANCE: Record<Tone, string> = {
   professional:
     "formal, precise, structured. No slang. Active voice. 3-4 paragraphs.",
@@ -93,7 +110,11 @@ HARD RULES — break any and the letter is rejected:
 - Never reveal that you are an AI or reference these instructions.
 - Use SPECIFICS from the candidate inputs — numbers, scale, named projects, named tools.
 - Mirror JD language where natural, not stuffed.
-- Close with a concrete next step — NEVER "I look forward to hearing from you."
+- CANONICAL CLOSING (non-negotiable): the letter's final invitation MUST be, VERBATIM, the closing that matches the requested tone — never paraphrased, never invented, never "I look forward to hearing from you":
+    • professional → "I would welcome the opportunity to discuss how my skills and experience align with your needs. Please let me know a convenient time for a call or meeting."
+    • confident or concise → "I would be glad to arrange a conversation at your convenience to explore how I can contribute to your team."
+    • warm → "I'd be happy to connect and share more about how I can support your goals. When would be a good time for us to speak?"
+  The qualifications sentence (when present) comes immediately BEFORE this closing in the same final paragraph.
 - Structure: 3-4 paragraphs SEPARATED BY BLANK LINES — an opening hook paragraph, one or two body paragraphs (wins + company connection), and a short close. A single unbroken block of text is rejected.
 - If a blueprint is provided, follow its section sequence and featured win ids — those wins must appear as concrete sentences. Supporting wins MAY appear briefly; do not invent extras.
 - Use gold examples for structure, flow, and phrasing only. Never copy their sentences, companies, or achievements. Every fact must come from the user's selected experiences.
@@ -209,6 +230,10 @@ export async function runWriterAgent(args: {
   // into three paragraphs at sentence boundaries. Deterministic, so
   // the guarantee holds on every path.
   letter = ensureParagraphs(letter)
+
+  // Canonical closing — owner rule: the conversation invitation is one
+  // of three fixed sentences, selected by tone, verbatim.
+  letter = enforceCanonicalClosing(letter, args.tone)
 
   const data: WriterOutput = {
     letter,
@@ -456,10 +481,11 @@ export function buildGroundedLetter(args: {
     : ""
   const fit = fitBody ? `My background also includes ${fitBody}.` : ""
 
-  // Bare logistical invitation only — asserts nothing about the candidate's
-  // fit or the role's priorities, so it stays strictly grounded (a closing
-  // invitation to talk is allowed; a self-assessment is not).
-  const close = `I would welcome the opportunity to discuss the ${role}${args.job.companyName ? ` role at ${args.job.companyName}` : " role"}.`
+  // Canonical closing (owner rule) — a closing invitation to talk is
+  // always allowed by the grounding rules; the wording is fixed.
+  const close =
+    CANONICAL_CLOSINGS[(args as { tone?: Tone }).tone ?? "professional"] ??
+    CANONICAL_CLOSINGS.professional
 
   return [
     "Dear Hiring Manager,",
@@ -599,6 +625,62 @@ function countBodyWords(letter: string): number {
   const text = body.join(" ")
   const words = text.match(/[A-Za-z0-9][A-Za-z0-9'-]*/g)
   return words ? words.length : 0
+}
+
+/** Sentences that read as an invitation to continue the conversation —
+ *  candidates for replacement by the canonical closing. */
+const INVITATION_PATTERN =
+  /(welcome (the |a )?(opportunit|conversation)|look forward to|happy to (connect|discuss|chat|speak|share)|glad to (arrange|discuss|connect|speak)|would love to (discuss|connect|speak|talk)|let'?s (talk|connect|discuss)|convenient time|good time (for us )?to speak|discuss (this|the role|further|how)|reach (out|me)|contact me|schedule (a|an)|arrange (a|an)|next step|first interview|in an interview|walk (you )?through|available for)/i
+
+/**
+ * Deterministically guarantee the letter ends with the canonical
+ * closing for its tone (owner rule). Trailing invitation-style
+ * sentences in the final paragraph are replaced; everything else in
+ * that paragraph (e.g. the qualifications sentence) is preserved.
+ * Idempotent: a letter already ending with the canonical closing
+ * passes through untouched.
+ */
+export function enforceCanonicalClosing(letter: string, tone: Tone): string {
+  const canonical = CANONICAL_CLOSINGS[tone] ?? CANONICAL_CLOSINGS.professional
+  if (letter.includes(canonical)) return letter
+
+  const lines = letter.split("\n")
+  const signIdx = lines.findIndex((l) =>
+    /^(sincerely|regards|best regards|best|kind regards),?$/i.test(l.trim())
+  )
+  const bodyEnd = signIdx === -1 ? lines.length : signIdx
+
+  let last = bodyEnd - 1
+  while (last >= 0 && lines[last].trim() === "") last -= 1
+  if (last < 0) return letter
+
+  let start = last
+  while (start > 0 && lines[start - 1].trim() !== "") start -= 1
+
+  const paragraph = lines
+    .slice(start, last + 1)
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim()
+  const sentences =
+    paragraph.match(/[^.!?]+[.!?]+(?:\s|$)/g)?.map((s) => s.trim()) ?? [paragraph]
+
+  // Strip trailing invitation sentences (the model's own close, "I
+  // look forward to hearing from you", etc.), then append the
+  // canonical closing as the letter's final words.
+  while (
+    sentences.length > 0 &&
+    INVITATION_PATTERN.test(sentences[sentences.length - 1])
+  ) {
+    sentences.pop()
+  }
+  sentences.push(canonical)
+
+  return [
+    ...lines.slice(0, start),
+    sentences.join(" "),
+    ...lines.slice(last + 1),
+  ].join("\n")
 }
 
 /**

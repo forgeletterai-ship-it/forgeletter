@@ -3,6 +3,7 @@ import { MODELS, runAgent } from "../run-agent"
 import { detectBannedPhrases, scrubDashes } from "../utils"
 import type { AgentRunLog, FinalEdit, Tone } from "../types"
 import type { CallMeta } from "./resume-analyst"
+import { CANONICAL_CLOSINGS } from "./writer"
 
 /**
  * Final Editor — "The Copy Editor"
@@ -39,7 +40,7 @@ YOUR JOB:
 2. Replace vague claims with concrete ones IF the surrounding context already supports it. If not, tighten or delete the sentence — NEVER invent a new specific.
 3. Fix awkward phrasing or grammar without changing tone.
 4. Ensure the opening is a concrete hook (achievement, observation, or specific connection) — not boilerplate.
-5. Ensure the close proposes a concrete next step — not "I look forward to hearing from you".
+5. PRESERVE THE CANONICAL CLOSING VERBATIM. The final invitation sentence(s) of the letter are fixed product copy (provided in the user message). Never rewrite, paraphrase, shorten, or delete them — count them toward the length band as-is.
 6. Remove every dash used for effect: em-dashes (—), en-dashes (–), and any hyphen surrounded by spaces ( - ). Replace with a comma, a period, parentheses, or restructure the sentence. The gold standard never uses a dash for effect — it reads as AI-written. Keep word-internal hyphens ("data-driven") and numeric ranges ("5-10").
 7. ENFORCE THE LENGTH BAND given to you in the user message. Trim or expand using existing material only.
 8. Preserve structure, paragraph count, tone, and voice within ±10%.
@@ -83,6 +84,7 @@ export async function runFinalEditor(args: {
     user: [
       `Target body length: ${band} words (excluding "Dear …" and sign-off).`,
       `Tone: ${tone}.`,
+      `CANONICAL CLOSING (preserve verbatim — see rule 5): "${CANONICAL_CLOSINGS[tone] ?? CANONICAL_CLOSINGS.professional}"`,
       "",
       "Edit this letter:",
       "",
