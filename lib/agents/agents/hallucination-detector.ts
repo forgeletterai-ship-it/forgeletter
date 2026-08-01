@@ -149,7 +149,10 @@ export async function runHallucinationDetector(args: {
   for (const w of args.profile?.wins ?? []) {
     winTextById.set(
       w.id,
-      `${w.what} ${w.number} ${w.whyItMattered} ${w.entryLabel}`.toLowerCase()
+      // Per-win skills/tools are part of the win's own record (profile
+      // v3), so tools recorded on the win legitimately pass the
+      // tool-in-story check for that win.
+      `${w.what} ${w.number} ${w.whyItMattered} ${w.entryLabel} ${w.skills ?? ""} ${w.tools ?? ""}`.toLowerCase()
     )
     if (w.entryType === "qualifications") qualificationWinIds.add(w.id)
   }
@@ -398,7 +401,14 @@ function renderWinsForVerifier(p: ProfileAnalysis): string {
   for (const w of p.wins) {
     const num = w.number ? ` [${w.number}]` : ""
     const why = w.whyItMattered ? ` — impact: ${w.whyItMattered}` : ""
-    lines.push(`  · winId=${w.id} ${w.what}${num}${why}  ⟵ ${w.entryLabel}`)
+    const caps = [
+      w.skills?.trim() ? `skills used: ${w.skills.trim()}` : "",
+      w.tools?.trim() ? `tools used: ${w.tools.trim()}` : "",
+    ]
+      .filter(Boolean)
+      .join("; ")
+    const capNote = caps ? ` (${caps} — claims that these were used in THIS win are grounded)` : ""
+    lines.push(`  · winId=${w.id} ${w.what}${num}${why}${capNote}  ⟵ ${w.entryLabel}`)
   }
   return lines.join("\n")
 }

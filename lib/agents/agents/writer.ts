@@ -81,7 +81,8 @@ HARD RULES — break any and the letter is rejected:
 - Body length: 260-330 words (NOT counting "Dear …" and sign-off). Concise tone: 200-260 words. NEVER exceed 330.
 - GREETING: if the job posting names a hiring manager or recruiter, address them by name ("Dear Alex Rivera,"). Otherwise use exactly "Dear Hiring Manager,". Never "Dear Hiring Team", never "To Whom It May Concern".
 - CANDIDATE IDENTITY: each win shows the candidate's own role and employer (the "⟵ label"). Write from THAT seat. If the candidate was the CFO, they OWN the decision; never describe them presenting to, reporting to, or persuading the holder of their own title, and never recast their seniority into a different role to fit the job.
-- TOOL-IN-STORY RULE: a tool, language, or platform may be named INSIDE a specific project or win sentence ONLY if that win's own text names it. The Skills/Tools list proves familiarity, not usage in any particular project. At most ONE sentence in the whole letter may cite the list as a plain capability statement ("I work in SQL and Excel daily."). "I used SQL to build the expense model" is a DISQUALIFYING FABRICATION when the win never mentions SQL.
+- TOOL-IN-STORY RULE: a tool, language, or platform may be named INSIDE a specific project or win sentence ONLY if that win's own record lists it (its text or its "skills used"/"tools used" fields). "I used SQL to build the expense model" is a DISQUALIFYING FABRICATION when that win never mentions SQL.
+- QUALIFICATIONS PLACEMENT: the Qualifications & portfolio block may appear ONLY in the closing paragraph, as one short sentence connecting it to this application ("My CFA and the portfolio at … support exactly this kind of work."). Never open with it, never scatter it through the body, and omit it entirely if it doesn't genuinely support the role.
 - Open with a specific achievement, observation, or hook tied to this role. NEVER "I am writing to express", "I hope this email finds you well", "To whom it may concern", "Please find attached".
 - Never use clichés: team player, hit the ground running, synergy, go-getter, results-oriented, detail-oriented, passionate about, rockstar, ninja, in today's fast-paced world, perfect candidate.
 - NO DASHES FOR EFFECT. Never use an em-dash (—), an en-dash (–), or a hyphen surrounded by spaces ( - ) as a rhetorical pause or aside. The gold-standard letters never do; a dash for effect is one of the strongest "written by AI" tells. Use a comma, a period, parentheses, or restructure the sentence. Word-internal hyphens ("data-driven", "first-class") and numeric ranges written with a hyphen ("5-10") are fine.
@@ -309,13 +310,23 @@ function renderProfileBlock(p: ProfileAnalysis): string {
     lines.push(
       `Skills & tools (capability list ONLY — see TOOL-IN-STORY RULE; NOT evidence any of these were used in any specific win): ${p.skills.join(", ")}`
     )
-  if (p.qualifications) lines.push(`Qualifications: ${p.qualifications}`)
+  if (p.qualifications)
+    lines.push(
+      `Qualifications & portfolio (CLOSING PARAGRAPH ONLY — one short sentence connecting them to this application; never earlier in the letter): ${p.qualifications}`
+    )
   lines.push("")
   lines.push(`Wins (use ONLY these — never invent):`)
   for (const w of p.wins) {
     const num = w.number ? ` [${w.number}]` : ""
     const why = w.whyItMattered ? ` — ${w.whyItMattered}` : ""
-    lines.push(`  · [${w.id}] (${w.strength}) ${w.what}${num}${why}  ⟵ ${w.entryLabel}`)
+    const caps = [
+      w.skills?.trim() ? `skills used: ${w.skills.trim()}` : "",
+      w.tools?.trim() ? `tools used: ${w.tools.trim()}` : "",
+    ]
+      .filter(Boolean)
+      .join("; ")
+    const capNote = caps ? ` (${caps} — you MAY name these inside this win's sentences)` : ""
+    lines.push(`  · [${w.id}] (${w.strength}) ${w.what}${num}${why}${capNote}  ⟵ ${w.entryLabel}`)
   }
   return lines.join("\n")
 }

@@ -10,6 +10,10 @@ type Achievement = {
   what: string
   number: string
   whyItMattered: string
+  /** Optional — competencies/methods used in THIS win. */
+  skills: string
+  /** Optional — named products/software used in THIS win. */
+  tools: string
 }
 
 type ProfileBlock = {
@@ -30,8 +34,6 @@ type ProfileBlock = {
 type ProfileDraft = {
   headline: string
   seniority: string
-  skills: string
-  tools: string
   qualifications: string
   notes: string
   portfolioLink: string
@@ -238,7 +240,14 @@ const JOURNEY_GUIDE = [
 
 let idCounter = 0
 const uid = () => `profile_${++idCounter}_${Date.now()}`
-const makeAchievement = (): Achievement => ({ id: uid(), what: "", number: "", whyItMattered: "" })
+const makeAchievement = (): Achievement => ({
+  id: uid(),
+  what: "",
+  number: "",
+  whyItMattered: "",
+  skills: "",
+  tools: "",
+})
 
 function makeBlock(type: BlockType): ProfileBlock {
   return {
@@ -267,14 +276,23 @@ function createDefaultDraft(initialProfile?: UserProfile): ProfileDraft {
     // promise.
     headline: initialProfile?.professional_headline || "",
     seniority: "mid",
-    skills: initialProfile?.strengths || "",
-    tools: initialProfile?.tools || "",
     qualifications: initialProfile?.qualifications ?? "",
     notes: initialProfile?.notes ?? "",
     portfolioLink: initialProfile?.portfolio_link ?? "",
     // Saved structured blocks are loaded here so the user sees what
     // they previously entered instead of starting empty each visit.
-    blocks: (initialProfile?.experience_blocks ?? []) as ProfileBlock[],
+    // Achievement rows may predate the per-win skills/tools fields —
+    // normalize so the inputs are always controlled.
+    blocks: ((initialProfile?.experience_blocks ?? []) as ProfileBlock[]).map(
+      (block) => ({
+        ...block,
+        achievements: (block.achievements ?? []).map((a) => ({
+          ...a,
+          skills: a.skills ?? "",
+          tools: a.tools ?? "",
+        })),
+      })
+    ),
   }
 }
 
@@ -301,11 +319,19 @@ function serializeExperience(profile: ProfileDraft) {
         block.size ? `Size: ${block.size}` : "",
       ].filter(Boolean)
       const achievements = block.achievements
-        .map((achievement) =>
-          [achievement.what, achievement.number, achievement.whyItMattered]
+        .map((achievement) => {
+          const core = [achievement.what, achievement.number, achievement.whyItMattered]
             .filter(Boolean)
             .join(" | ")
-        )
+          if (!core) return ""
+          const extras = [
+            achievement.skills?.trim() ? `Skills: ${achievement.skills.trim()}` : "",
+            achievement.tools?.trim() ? `Tools: ${achievement.tools.trim()}` : "",
+          ]
+            .filter(Boolean)
+            .join(" · ")
+          return extras ? `${core} (${extras})` : core
+        })
         .filter(Boolean)
         .map((achievement) => `- ${achievement}`)
 
@@ -342,8 +368,12 @@ function buildPayload(profile: ProfileDraft, initialProfile: UserProfile): UserP
     // compatibility with anything that still reads it, but the source
     // of truth is now experience_blocks below.
     key_achievements: serializeExperience(profile),
-    strengths: profile.skills,
-    tools: profile.tools,
+    // Profile-level skills/tools fields are retired (owner decision):
+    // capabilities now live ON each win, where they were actually
+    // used. Blank these columns going forward so the engine's only
+    // capability source is per-win.
+    strengths: "",
+    tools: "",
     experience_blocks: profile.blocks,
     qualifications: profile.qualifications,
     notes: profile.notes,
@@ -367,36 +397,68 @@ function AchievementRow({
   const { color, textColor, achFields, achPlaceholders } = config
 
   return (
-    <div className="ach-row">
-      <div className="ach-badge" style={{ background: color, color: textColor }}>
-        {index + 1}
+    <div className="ach-item">
+      <div className="ach-row">
+        <div className="ach-badge" style={{ background: color, color: textColor }}>
+          {index + 1}
+        </div>
+
+        {achFields.map((label, fieldIndex) => {
+          const fieldName: keyof Achievement =
+            fieldIndex === 0 ? "what" : fieldIndex === 1 ? "number" : "whyItMattered"
+          return (
+            <div key={label} className="ach-field">
+              <div className="ach-field-label">{label}</div>
+              <input
+                className="ach-input"
+                type="text"
+                value={(achievement[fieldName] as string) || ""}
+                placeholder={achPlaceholders[fieldIndex]}
+                onChange={(event) => onUpdate(fieldName, event.target.value)}
+              />
+            </div>
+          )
+        })}
+
+        <button
+          className="ach-remove"
+          type="button"
+          onClick={onRemove}
+          title="Remove"
+        >
+          x
+        </button>
       </div>
 
-      {achFields.map((label, fieldIndex) => {
-        const fieldName: keyof Achievement =
-          fieldIndex === 0 ? "what" : fieldIndex === 1 ? "number" : "whyItMattered"
-        return (
-          <div key={label} className="ach-field">
-            <div className="ach-field-label">{label}</div>
-            <input
-              className="ach-input"
-              type="text"
-              value={(achievement[fieldName] as string) || ""}
-              placeholder={achPlaceholders[fieldIndex]}
-              onChange={(event) => onUpdate(fieldName, event.target.value)}
-            />
+      {/* Per-win capabilities: the AI may only name a skill or tool
+          inside this story if it is recorded here — that's what makes
+          "I used SQL to build X" impossible to fabricate. */}
+      <div className="ach-row-extras">
+        <div className="ach-field">
+          <div className="ach-field-label">
+            Skills used <span className="ach-field-opt">(optional)</span>
           </div>
-        )
-      })}
-
-      <button
-        className="ach-remove"
-        type="button"
-        onClick={onRemove}
-        title="Remove"
-      >
-        x
-      </button>
+          <input
+            className="ach-input"
+            type="text"
+            value={achievement.skills || ""}
+            placeholder="e.g. cost modelling, stakeholder management"
+            onChange={(event) => onUpdate("skills", event.target.value)}
+          />
+        </div>
+        <div className="ach-field">
+          <div className="ach-field-label">
+            Tools used <span className="ach-field-opt">(optional)</span>
+          </div>
+          <input
+            className="ach-input"
+            type="text"
+            value={achievement.tools || ""}
+            placeholder="e.g. Excel, SQL, JIRA"
+            onChange={(event) => onUpdate("tools", event.target.value)}
+          />
+        </div>
+      </div>
     </div>
   )
 }
@@ -754,8 +816,6 @@ export function ProfileClient({
   const requiredFields: { label: string; filled: boolean }[] = [
     { label: "Professional headline", filled: isFilled(profile.headline) },
     { label: "Seniority level", filled: profile.seniority.trim().length > 0 },
-    { label: "Skills", filled: isFilled(profile.skills) },
-    { label: "Tools & software", filled: isFilled(profile.tools) },
     { label: "Qualifications", filled: isFilled(profile.qualifications) },
   ]
   const missingRequiredFields = requiredFields
@@ -1187,6 +1247,14 @@ export function ProfileClient({
                 <span>The number</span>
                 <span className="pp-tip-sep">-</span>
                 <span>Why it mattered</span>
+                <span className="pp-tip-sep">-</span>
+                <span>Skills &amp; tools you used</span>
+              </div>
+              <div className="pp-tip-note">
+                Add the skills and tools you used in each win - the AI only
+                mentions a tool inside a story when you&apos;ve recorded it
+                there, and recruiters&apos; ATS software scans for exactly
+                those names.
               </div>
             </div>
 
@@ -1215,45 +1283,19 @@ export function ProfileClient({
 
             <div className="pp-divider" />
 
+            {/* Profile-level Skills / Tools fields are retired: skills
+                and tools now live ON each win row above, so a
+                capability can only be claimed inside the story where
+                it was actually used. */}
             <div className="pp-bottom-grid">
-              <div>
-                <div className="pp-field">
-                  <label className="pp-label" htmlFor="profile-skills">
-                    Skills{" "}
-                    <span className="pp-label-hint">
-                      - competencies & methods, not products
-                    </span>
-                  </label>
-                  <textarea
-                    className="pp-input pp-textarea"
-                    id="profile-skills"
-                    rows={2}
-                    value={profile.skills}
-                    onChange={(event) => setField("skills", event.target.value)}
-                    placeholder="e.g. A/B testing, lifecycle marketing, stakeholder management"
-                  />
-                </div>
-                <div className="pp-field">
-                  <label className="pp-label" htmlFor="profile-tools">
-                    Tools & software{" "}
-                    <span className="pp-label-hint">
-                      - named products recruiters and ATS screen for
-                    </span>
-                  </label>
-                  <textarea
-                    className="pp-input pp-textarea"
-                    id="profile-tools"
-                    rows={2}
-                    value={profile.tools}
-                    onChange={(event) => setField("tools", event.target.value)}
-                    placeholder="e.g. HubSpot, Marketo, SQL, Looker, dbt"
-                  />
-                </div>
-              </div>
               <div>
                 <div className="pp-field pp-qualified-field">
                   <label className="pp-label" htmlFor="profile-qualifications">
-                    Qualifications & portfolio link
+                    Qualifications & portfolio link{" "}
+                    <span className="pp-label-hint">
+                      - used only in the letter&apos;s closing paragraph, as
+                      support for the application
+                    </span>
                   </label>
                   <input
                     className="pp-input"
@@ -1266,6 +1308,8 @@ export function ProfileClient({
                     placeholder="e.g. MBA, CFA - then https://..."
                   />
                 </div>
+              </div>
+              <div>
                 <div className="pp-field">
                   <label className="pp-label" htmlFor="profile-notes">
                     Anything else?{" "}

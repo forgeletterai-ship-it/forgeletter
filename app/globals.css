@@ -13606,13 +13606,54 @@ button.tone-chip:hover {
   font-weight: 700;
 }
 
+.ach-item {
+  border-bottom: 1px solid var(--pp-border-light);
+}
+
 .ach-row {
   display: grid;
   grid-template-columns: 26px 1fr 1fr 1fr 22px;
   align-items: center;
   gap: 8px;
-  padding: 10px 16px;
-  border-bottom: 1px solid var(--pp-border-light);
+  padding: 10px 16px 6px;
+}
+
+/* Per-win capabilities row: aligned under the three primary fields
+   (indented past the badge column, stopping before the remove
+   column) so the five inputs never crowd one line. */
+.ach-row-extras {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 0 46px 12px 50px;
+}
+
+@media (max-width: 720px) {
+  .ach-row {
+    grid-template-columns: 26px 1fr 22px;
+    grid-auto-rows: auto;
+  }
+  .ach-row .ach-field {
+    grid-column: 2;
+  }
+  .ach-row-extras {
+    grid-template-columns: 1fr;
+    padding: 0 16px 12px 50px;
+  }
+}
+
+.ach-field-opt {
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+  opacity: 0.65;
+}
+
+.pp-tip-note {
+  margin-top: 8px;
+  font-size: 12px;
+  line-height: 1.55;
+  color: rgba(31, 58, 57, 0.7);
 }
 
 .ach-badge {

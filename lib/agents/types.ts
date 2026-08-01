@@ -87,6 +87,12 @@ export interface ProfileWin {
   entryType: "employer" | "internship" | "university" | "qualifications"
   /** "strong" if `number` is non-empty, otherwise "weak". */
   strength: "strong" | "weak"
+  /** Optional — competencies/methods the user recorded ON this win.
+   *  Part of the win's own text: the Writer may name them inside this
+   *  story, and the verifier's tool-in-story check passes them. */
+  skills?: string
+  /** Optional — named products/software the user recorded ON this win. */
+  tools?: string
 }
 
 export interface ProfileAnalysis {

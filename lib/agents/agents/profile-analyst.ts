@@ -111,6 +111,10 @@ export async function runProfileAnalyst(
         entryId: block.id,
         entryType,
         strength: number ? "strong" : "weak",
+        // Per-win capabilities (profile v3): recorded ON the win, so
+        // naming them inside this story is grounded by construction.
+        skills: (a.skills || "").trim(),
+        tools: (a.tools || "").trim(),
       }
       ;(number ? strong : weak).push(win)
     }
@@ -137,8 +141,16 @@ export async function runProfileAnalyst(
     })
   }
 
+  // Capability roster = union of every win's skills/tools (profile
+  // v3) plus legacy profile-level fields for pre-migration rows.
+  // Powers the ATS keyword surface; the Writer's tool-in-story rule
+  // still restricts WHERE each item may appear.
   const skills = dedupeSkills(
-    [args.profile.strengths || "", args.profile.tools || ""]
+    [
+      ...wins.flatMap((w) => [w.skills || "", w.tools || ""]),
+      args.profile.strengths || "",
+      args.profile.tools || "",
+    ]
       .filter(Boolean)
       .join(", ")
   )
@@ -222,6 +234,12 @@ function buildUserPrompt(
 }
 
 function collectQualificationsText(profile: PipelineProfile): string {
+  // Profile v3: skills/tools live on each win, not here. This block is
+  // qualifications + portfolio + notes only — and the Writer is
+  // instructed to use it ONLY in the closing paragraph. Legacy
+  // profile-level strengths/tools are still folded in when present
+  // (old rows saved before the migration) so their letters keep a
+  // grounded home for capability statements.
   const bits: string[] = []
   if (profile.qualifications) bits.push(profile.qualifications.trim())
   if (profile.strengths) bits.push(`Skills: ${profile.strengths.trim()}`)
