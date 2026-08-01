@@ -36,8 +36,6 @@ describe("ExperienceMultiSelect — persistence-disabled state", () => {
       screen.getByRole("link", { name: /Open profile/i })
     ).toBeInTheDocument()
 
-    // Forced "Qualifications & portfolio" row is still there
-    expect(screen.getByText("Qualifications & portfolio")).toBeInTheDocument()
   })
 
   it("shows the default 'no saved experiences yet' message when persistenceAvailable defaults to true", async () => {

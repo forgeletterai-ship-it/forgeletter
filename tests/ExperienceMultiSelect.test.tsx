@@ -10,10 +10,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { render, screen, fireEvent, cleanup, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
-import {
-  ExperienceMultiSelect,
-  QUALIFICATIONS_ROW_ID,
-} from "@/components/ExperienceMultiSelect"
+import { ExperienceMultiSelect } from "@/components/ExperienceMultiSelect"
 import type { ExperienceBlock } from "@/lib/experience-types"
 
 afterEach(() => cleanup())
@@ -67,33 +64,11 @@ describe("ExperienceMultiSelect", () => {
     expect(within(listbox).getByText("Internship")).toBeInTheDocument()
     expect(within(listbox).getByText("Academic")).toBeInTheDocument()
 
-    // Pinned forced-on row
-    expect(within(listbox).getByText("Qualifications & portfolio")).toBeInTheDocument()
-    expect(within(listbox).getByText("Always")).toBeInTheDocument()
-  })
-
-  it("Qualifications row is forced-on and cannot be unchecked", async () => {
-    const onChange = vi.fn()
-    render(
-      <ExperienceMultiSelect
-        blocks={sampleBlocks}
-        selectedIds={["emp-1", "int-1", "uni-1"]}
-        onChange={onChange}
-      />
-    )
-
-    await userEvent.click(screen.getByRole("button"))
-
-    const qualRow = screen.getByText("Qualifications & portfolio").closest('[role="option"]')!
-    expect(qualRow).toHaveAttribute("aria-checked", "true")
-    expect(qualRow).toHaveAttribute("aria-disabled", "true")
-
-    // Clicking it must not call onChange — the row is non-interactive
-    fireEvent.click(qualRow)
-    // The QUALIFICATIONS_ROW_ID is never included in the user-facing
-    // selectedIds — it's always implicit.
-    expect(onChange).not.toHaveBeenCalledWith(expect.arrayContaining([QUALIFICATIONS_ROW_ID]))
-    expect(onChange).not.toHaveBeenCalled()
+    // No pinned qualifications row — the picker lists only choosable
+    // experiences (qualifications are always included behind the
+    // scenes).
+    expect(within(listbox).queryByText(/Qualifications/)).not.toBeInTheDocument()
+    expect(within(listbox).queryByText("Always")).not.toBeInTheDocument()
   })
 
   it("clicking an unchecked option calls onChange with that id added", async () => {
@@ -114,7 +89,6 @@ describe("ExperienceMultiSelect", () => {
     expect(onChange).toHaveBeenCalledTimes(1)
     const [next] = onChange.mock.calls[0]
     expect(next).toEqual(expect.arrayContaining(["emp-1", "int-1"]))
-    expect(next).not.toContain(QUALIFICATIONS_ROW_ID)
   })
 
   it("clicking a checked option calls onChange with that id removed", async () => {
@@ -185,9 +159,6 @@ describe("ExperienceMultiSelect", () => {
     expect(screen.getByText("No saved experiences yet")).toBeInTheDocument()
     const link = screen.getByRole("link", { name: /Add experiences on your profile/i })
     expect(link).toHaveAttribute("href", "/dashboard/profile")
-
-    // Qualifications row should still be present and forced-on
-    expect(screen.getByText("Qualifications & portfolio")).toBeInTheDocument()
   })
 
   it("closes on Escape", async () => {

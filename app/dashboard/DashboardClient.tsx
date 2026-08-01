@@ -3,10 +3,7 @@
 import Link from "next/link"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { AccountStateBanner } from "@/components/AccountStateBanner"
-import {
-  ExperienceMultiSelect,
-  QUALIFICATIONS_ROW_ID,
-} from "@/components/ExperienceMultiSelect"
+import { ExperienceMultiSelect } from "@/components/ExperienceMultiSelect"
 import { TemplatePickerModal } from "@/components/TemplatePickerModal"
 import type { ApplicationBrief, UserProfile, UserSettings } from "@/lib/app-data"
 import {
@@ -1471,8 +1468,8 @@ function GenerationModal({
             </ul>
 
             <p className="generation-modal__hint">
-              Sit tight — the 12-agent pipeline writes, fact-checks, and quality-gates
-              your letter. Typical run: 30–90 seconds.
+              Sit tight — the 12-agent pipeline writes, fact-checks, and
+              quality-gates your letter.
             </p>
 
             <button

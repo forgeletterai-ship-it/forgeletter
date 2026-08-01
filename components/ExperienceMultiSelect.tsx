@@ -15,12 +15,11 @@ import {
   experienceBlockLabel,
 } from "@/lib/experience-types"
 
-/**
- * Sentinel id used to mark the "Qualifications & achievements" row.
- * The row is always-on and cannot be unchecked — it always appears
- * pinned at the bottom of the open panel.
- */
-export const QUALIFICATIONS_ROW_ID = "__qualifications_always__"
+// NOTE: qualifications & portfolio are ALWAYS included in generation
+// behind the scenes (alwaysIncludeQualifications in the pipeline).
+// They used to appear here as a pinned "Always" row — removed per
+// owner decision: the picker lists only the experiences the user can
+// actually choose.
 
 interface Props {
   blocks: ExperienceBlock[]
@@ -44,7 +43,6 @@ interface Row {
   id: string
   label: string
   kind: string
-  forcedOn: boolean
 }
 
 export function ExperienceMultiSelect({
@@ -64,34 +62,25 @@ export function ExperienceMultiSelect({
   const fallbackLabelId = useId()
   const headingId = labelId ?? fallbackLabelId
 
-  const rows: Row[] = useMemo(() => {
-    const blockRows: Row[] = blocks.map((b) => ({
-      id: b.id,
-      label: experienceBlockLabel(b),
-      kind: experienceBlockKind(b),
-      forcedOn: false,
-    }))
-    blockRows.push({
-      id: QUALIFICATIONS_ROW_ID,
-      label: "Qualifications & portfolio",
-      kind: "Always",
-      forcedOn: true,
-    })
-    return blockRows
-  }, [blocks])
+  const rows: Row[] = useMemo(
+    () =>
+      blocks.map((b) => ({
+        id: b.id,
+        label: experienceBlockLabel(b),
+        kind: experienceBlockKind(b),
+      })),
+    [blocks]
+  )
 
   const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds])
 
   const selectedBlockIds = useMemo(
-    () =>
-      rows.filter((r) => !r.forcedOn && selectedSet.has(r.id)).map((r) => r.id),
+    () => rows.filter((r) => selectedSet.has(r.id)).map((r) => r.id),
     [rows, selectedSet]
   )
 
   const selectedLabels = useMemo(() => {
-    return rows
-      .filter((r) => !r.forcedOn && selectedSet.has(r.id))
-      .map((r) => r.label)
+    return rows.filter((r) => selectedSet.has(r.id)).map((r) => r.label)
   }, [rows, selectedSet])
 
   // ---------- Click outside + Escape ----------
@@ -121,14 +110,12 @@ export function ExperienceMultiSelect({
 
   const toggle = useCallback(
     (rowId: string) => {
-      const row = rows.find((r) => r.id === rowId)
-      if (!row || row.forcedOn) return
       const next = new Set(selectedBlockIds)
       if (next.has(rowId)) next.delete(rowId)
       else next.add(rowId)
       onChange(Array.from(next))
     },
-    [rows, selectedBlockIds, onChange]
+    [selectedBlockIds, onChange]
   )
 
   // ---------- Keyboard inside the panel ----------
@@ -150,7 +137,7 @@ export function ExperienceMultiSelect({
         setFocusedIndex(last)
       } else if (event.key === " " || event.key === "Enter") {
         const target = rows[focusedIndex]
-        if (target && !target.forcedOn) {
+        if (target) {
           event.preventDefault()
           toggle(target.id)
         }
@@ -257,49 +244,24 @@ export function ExperienceMultiSelect({
                   ? "Add experiences on your profile →"
                   : "Open profile →"}
               </Link>
-              <div
-                className="exp-ms-row exp-ms-row--forced"
-                role="option"
-                aria-selected="true"
-                aria-checked="true"
-                data-option-index={0}
-                tabIndex={0}
-              >
-                <span className="exp-ms-check exp-ms-check--forced" aria-hidden="true">
-                  <svg width="10" height="10" viewBox="0 0 12 12">
-                    <path
-                      d="M2 6.5l2.5 2.5L10 3.5"
-                      stroke="currentColor"
-                      strokeWidth="1.8"
-                      fill="none"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </span>
-                <span className="exp-ms-row-label">Qualifications &amp; portfolio</span>
-                <span className="exp-ms-row-kind exp-ms-row-kind--forced">Always</span>
-              </div>
             </div>
           ) : (
             rows.map((row, index) => {
-              const checked = row.forcedOn ? true : selectedSet.has(row.id)
-              const isForcedRow = row.forcedOn
+              const checked = selectedSet.has(row.id)
               return (
                 <div
                   key={row.id}
-                  className={`exp-ms-row${isForcedRow ? " exp-ms-row--forced" : ""}${checked && !isForcedRow ? " is-checked" : ""}`}
+                  className={`exp-ms-row${checked ? " is-checked" : ""}`}
                   role="option"
                   aria-selected={checked}
                   aria-checked={checked}
-                  aria-disabled={isForcedRow ? true : undefined}
                   data-option-index={index}
                   tabIndex={index === focusedIndex ? 0 : -1}
-                  onClick={() => !isForcedRow && toggle(row.id)}
+                  onClick={() => toggle(row.id)}
                   onFocus={() => setFocusedIndex(index)}
                 >
                   <span
-                    className={`exp-ms-check${checked ? " is-checked" : ""}${isForcedRow ? " exp-ms-check--forced" : ""}`}
+                    className={`exp-ms-check${checked ? " is-checked" : ""}`}
                     aria-hidden="true"
                   >
                     {checked ? (
@@ -316,11 +278,7 @@ export function ExperienceMultiSelect({
                     ) : null}
                   </span>
                   <span className="exp-ms-row-label">{row.label}</span>
-                  <span
-                    className={`exp-ms-row-kind${isForcedRow ? " exp-ms-row-kind--forced" : ""}`}
-                  >
-                    {row.kind}
-                  </span>
+                  <span className="exp-ms-row-kind">{row.kind}</span>
                 </div>
               )
             })
