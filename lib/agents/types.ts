@@ -11,6 +11,9 @@ export type Tone = "professional" | "confident" | "warm" | "concise"
 // ─────────────────────────────────────────────────────────────────
 
 export interface PipelineProfile {
+  /** The account's real name (users.name) — used for the signature.
+   *  Never inferred; a letter must not ship with a guessed name. */
+  name?: string
   /** One-line headline e.g. "Senior Product Designer · 8 yrs · Fintech". */
   professionalHeadline?: string
   /** Free-form qualifications + certifications block (always included). */
@@ -133,6 +136,9 @@ export interface JobAnalysis {
   cultureSignals?: string[]
   /** Recommended tone — added per blueprint, optional during migration. */
   recommendedTone?: Tone
+  /** Hiring manager / recruiter name when the posting names one —
+   *  drives "Dear <name>," vs the "Dear Hiring Manager," fallback. */
+  hiringManagerName?: string
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -189,7 +195,7 @@ export interface WriterOutput {
   closingCta: string
   toneUsed: Tone
   /** Word count of the letter body (excluding signature). Added per
-   *  blueprint for the 300-380 band check. Optional during migration. */
+   *  blueprint for the 260-330 band check. Optional during migration. */
   wordCount?: number
 }
 

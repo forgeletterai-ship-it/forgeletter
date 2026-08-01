@@ -72,6 +72,10 @@ const JobAnalysisSchema = z.object({
   cultureSignals: flexibleStringArray(),
   /** Tone inferred from the JD's own vocabulary. */
   recommendedTone: z.enum(["professional", "confident", "warm", "concise"]),
+  /** Hiring manager / recruiter name IF the posting names one; else
+   *  empty string. Drives the greeting ("Dear <name>," vs
+   *  "Dear Hiring Manager,"). */
+  hiringManagerName: z.preprocess((v) => (v == null ? "" : v), z.string()),
 })
 
 const SYSTEM = `You are a senior hiring manager decoding a job description for a downstream cover-letter pipeline.
@@ -88,6 +92,7 @@ CRITICAL RULES — break any and the output is rejected:
 - "companyValues" — explicit value words (ownership, customer-obsessed, scrappy, integrity, etc.). Empty if none surface.
 - "hiringManagerPriorities" — return EXACTLY the TOP 5, ranked by primacy + frequency. Look at: which requirements appear first, which terms repeat, which sentences carry intent verbs ("you will own…", "you will drive…"). Phrase each as a short noun phrase ("data-driven decision making", "stakeholder communication", "ownership of revenue numbers"). Return exactly 5 entries. If the JD genuinely only signals 3 or 4 priorities, repeat the most-emphasised one or pad with the next-most-emphasised — the downstream HM Critic uses "addressed N of 5" as the Relevance score, so a stable denominator matters.
 - "cultureSignals" — vocabulary tells beyond explicit values. Tone words ("scrappy", "fast-paced", "rigorous"), pronoun choices ("we move fast", "you'll lead"), and any clues about working style. Empty array if the JD is purely transactional.
+- "hiringManagerName" — ONLY if the posting explicitly names the hiring manager, recruiter, or "report to" person (e.g. "reach out to Maria Chen", "reporting to Alex Rivera, Head of Data"). Return the person's name exactly as written. Return "" if no individual is named — NEVER guess or use a generic title.
 - "recommendedTone" — choose ONE of professional / confident / warm / concise based on the JD's own vocabulary:
     • professional — formal, corporate, conservative vocabulary (banks, law, healthcare)
     • confident — bold, ownership-heavy, results-oriented (high-growth tech, sales leadership)
@@ -111,6 +116,7 @@ const FALLBACK_JOB_ANALYST: JobAnalysisFull = {
   hiringManagerPriorities: [],
   cultureSignals: [],
   recommendedTone: "professional",
+  hiringManagerName: "",
 }
 
 export interface JobAnalystResult {

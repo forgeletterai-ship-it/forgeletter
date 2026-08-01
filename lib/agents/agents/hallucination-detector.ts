@@ -49,6 +49,11 @@ For each sentence that makes a concrete claim (number, scale, named tool, named 
 2. If no winId supports it, the claim is UNMAPPED.
 3. If the claim contradicts a win or invents a specific (employer, number, language not on the candidate's profile), it is FABRICATED.
 
+COMPOSITION RULES — recombining true atoms into a false story is fabrication:
+- TOOL-IN-STORY: a claim that a tool/skill was used IN a specific project or win ("I used SQL to validate the expense data") is FABRICATED unless that win's OWN text names the tool. The skills list only supports plain familiarity statements ("I work in SQL").
+- INVENTED NARRATIVE: career stories, workflows, scenes, or collaborations assembled from skill keywords but present in NO win ("across my growth and lifecycle campaigns…" when no win describes campaigns) are FABRICATED, even if every noun appears somewhere in the inputs.
+- IDENTITY INVERSION: the candidate's role/employer is shown on each win. A sentence that recasts them (a CFO "presenting a case to the CFO", a founder "reporting to leadership") CONTRADICTS the profile and is FABRICATED.
+
 Output:
 - "risk":
   - "none" — every concrete claim maps to a winId, no fabrications
@@ -127,16 +132,55 @@ export async function runHallucinationDetector(args: {
         : null,
   }))
 
-  // Deterministic reconciliation: never trust the model-emitted risk
-  // enum below what its own evidence lists prove. A response of
-  // risk:"none" alongside a non-empty fabricatedFacts list would
-  // otherwise ship flagged content — the certification must be
-  // derived from the evidence, not the summary field.
-  const unmapped = result.data.unmappedClaims ?? []
+  // Deterministic TOOL-IN-STORY reconciliation. The screenshot-proven
+  // failure mode: every atom is grounded (SQL is on the skills list,
+  // the 45% win is real) but the composed sentence ("I used SQL to
+  // validate the expense data") is fiction. The model verifier can
+  // miss this, so it is enforced in code: a claim mapped to a win
+  // whose own text does NOT name the tool the sentence cites is
+  // demoted to unmapped — which the auto-cleaner then strips. The
+  // qualifications virtual win is exempt (its text IS the skills and
+  // tools list, so plain capability sentences legitimately map there).
+  const skillTokens = (args.profile?.skills ?? [])
+    .map((s) => s.trim().toLowerCase())
+    .filter((s) => s.length >= 2)
+  const winTextById = new Map<string, string>()
+  const qualificationWinIds = new Set<string>()
+  for (const w of args.profile?.wins ?? []) {
+    winTextById.set(
+      w.id,
+      `${w.what} ${w.number} ${w.whyItMattered} ${w.entryLabel}`.toLowerCase()
+    )
+    if (w.entryType === "qualifications") qualificationWinIds.add(w.id)
+  }
+  const compositionUnmapped: string[] = []
+  const reconciledClaimMap = cleanedClaimMap.map((c) => {
+    if (!c.winId || qualificationWinIds.has(c.winId)) return c
+    const winText = winTextById.get(c.winId) ?? ""
+    const sentence = c.sentence.toLowerCase()
+    const offendingTool = skillTokens.find(
+      (tok) => tokenAppears(sentence, tok) && !tokenAppears(winText, tok)
+    )
+    if (offendingTool) {
+      compositionUnmapped.push(c.sentence)
+      return { sentence: c.sentence, winId: null }
+    }
+    return c
+  })
+
+  // Never trust the model-emitted risk enum below what its own
+  // evidence lists prove. A response of risk:"none" alongside a
+  // non-empty fabricatedFacts list would otherwise ship flagged
+  // content — the certification must be derived from the evidence,
+  // not the summary field.
+  const unmapped = [
+    ...(result.data.unmappedClaims ?? []),
+    ...compositionUnmapped,
+  ]
   const evidenceRisk: HallucinationCheckFull["risk"] =
     result.data.fabricatedFacts.length > 0
       ? "high"
-      : unmapped.length > 0 || cleanedClaimMap.some((c) => c.winId === null)
+      : unmapped.length > 0 || reconciledClaimMap.some((c) => c.winId === null)
         ? "medium"
         : result.data.unverifiedClaims.length > 0
           ? "low"
@@ -147,7 +191,7 @@ export async function runHallucinationDetector(args: {
     risk,
     unverifiedClaims: result.data.unverifiedClaims,
     fabricatedFacts: result.data.fabricatedFacts,
-    claimMap: cleanedClaimMap,
+    claimMap: reconciledClaimMap,
     unmappedClaims: unmapped,
   }
 
@@ -322,6 +366,13 @@ function restoreAbbreviations(text: string, placeholder: string): string {
   return text.split(placeholder).join(".")
 }
 
+/** Word-boundary containment for skill/tool tokens ("excel" must not
+ *  match inside "excellent"; multi-word tokens match as phrases). */
+function tokenAppears(haystack: string, token: string): boolean {
+  const escaped = token.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+  return new RegExp(`(^|[^a-z0-9])${escaped}([^a-z0-9]|$)`).test(haystack)
+}
+
 const RISK_ORDER: HallucinationCheck["risk"][] = ["none", "low", "medium", "high"]
 
 /** Return the stricter (higher) of two risk levels. */
@@ -335,7 +386,10 @@ function maxRisk(
 function renderWinsForVerifier(p: ProfileAnalysis): string {
   const lines: string[] = []
   lines.push(`Candidate: ${p.candidateName} · ${p.seniority} · ${p.industries.join(", ") || "—"}`)
-  if (p.skills.length) lines.push(`Skills (verifiable): ${p.skills.join(", ")}`)
+  if (p.skills.length)
+    lines.push(
+      `Skills & tools (familiarity ONLY — supports "I work in X" statements, NEVER that X was used in a specific win unless that win's own text names it): ${p.skills.join(", ")}`
+    )
   if (p.qualifications) lines.push(`Qualifications (verifiable): ${p.qualifications}`)
   lines.push("")
   lines.push(

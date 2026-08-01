@@ -285,6 +285,7 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
   const newGenerationId = randomUUID()
   const pipelineInput: PipelineInput = {
     profile: {
+      name: user.name ?? undefined,
       professionalHeadline: savedProfile.professional_headline,
       qualifications: savedProfile.qualifications || row.resume_text || "",
       strengths: savedProfile.strengths,

@@ -150,6 +150,8 @@ export default async function DashboardPage({
       plan={plan}
       profile={profile}
       settings={settings}
+      userName={user?.name ?? null}
+      userEmail={user?.email ?? null}
       setupError={briefsError || profileError || usageError}
       initialLatestLetter={latestLetter}
       experiencePersistenceAvailable={capabilities.userProfileExperienceBlocks}
