@@ -21,7 +21,7 @@ import type { CallMeta } from "./resume-analyst"
  * read.
  *
  * Blueprint requirements:
- *   - Body length: 300-380 words (hard band; banned-phrase retry).
+ *   - Body length: 260-330 words (hard band; banned-phrase retry).
  *   - Banned cliché phrases enforced — re-run with stricter prompt
  *     on any hit (max 1 retry inside the writer itself).
  *   - Uses ONLY wins from the ProfileAnalysis (when provided) —
@@ -78,7 +78,10 @@ Five non-negotiable principles run through every gold letter:
 
 ═══════════════════════════════════════════════════════════════════
 HARD RULES — break any and the letter is rejected:
-- Body length: 300-380 words (NOT counting "Dear …" and sign-off). Concise tone: 220-300 words.
+- Body length: 260-330 words (NOT counting "Dear …" and sign-off). Concise tone: 200-260 words. NEVER exceed 330.
+- GREETING: if the job posting names a hiring manager or recruiter, address them by name ("Dear Alex Rivera,"). Otherwise use exactly "Dear Hiring Manager,". Never "Dear Hiring Team", never "To Whom It May Concern".
+- CANDIDATE IDENTITY: each win shows the candidate's own role and employer (the "⟵ label"). Write from THAT seat. If the candidate was the CFO, they OWN the decision; never describe them presenting to, reporting to, or persuading the holder of their own title, and never recast their seniority into a different role to fit the job.
+- TOOL-IN-STORY RULE: a tool, language, or platform may be named INSIDE a specific project or win sentence ONLY if that win's own text names it. The Skills/Tools list proves familiarity, not usage in any particular project. At most ONE sentence in the whole letter may cite the list as a plain capability statement ("I work in SQL and Excel daily."). "I used SQL to build the expense model" is a DISQUALIFYING FABRICATION when the win never mentions SQL.
 - Open with a specific achievement, observation, or hook tied to this role. NEVER "I am writing to express", "I hope this email finds you well", "To whom it may concern", "Please find attached".
 - Never use clichés: team player, hit the ground running, synergy, go-getter, results-oriented, detail-oriented, passionate about, rockstar, ninja, in today's fast-paced world, perfect candidate.
 - NO DASHES FOR EFFECT. Never use an em-dash (—), an en-dash (–), or a hyphen surrounded by spaces ( - ) as a rhetorical pause or aside. The gold-standard letters never do; a dash for effect is one of the strongest "written by AI" tells. Use a comma, a period, parentheses, or restructure the sentence. Word-internal hyphens ("data-driven", "first-class") and numeric ranges written with a hyphen ("5-10") are fine.
@@ -90,11 +93,11 @@ HARD RULES — break any and the letter is rejected:
 - Use SPECIFICS from the candidate inputs — numbers, scale, named projects, named tools.
 - Mirror JD language where natural, not stuffed.
 - Close with a concrete next step — NEVER "I look forward to hearing from you."
-- Structure: 3-4 paragraphs. Each paragraph does one job (hook / proof / fit / close).
+- Structure: 3-4 paragraphs SEPARATED BY BLANK LINES — an opening hook paragraph, one or two body paragraphs (wins + company connection), and a short close. A single unbroken block of text is rejected.
 - If a blueprint is provided, follow its section sequence and featured win ids — those wins must appear as concrete sentences. Supporting wins MAY appear briefly; do not invent extras.
 - Use gold examples for structure, flow, and phrasing only. Never copy their sentences, companies, or achievements. Every fact must come from the user's selected experiences.
 
-Output: ONLY the letter itself. Start with "Dear [name or Hiring Team]," and end with "Sincerely,\\n[Candidate name]". No preamble, no meta-commentary.`
+Output: ONLY the letter itself. Start with the greeting per the GREETING rule. End with "Sincerely," followed on the next line by the candidate's actual name from the Candidate line — if the name shown is the generic "Candidate", end with "Sincerely," and NOTHING after it. NEVER output a bracketed placeholder. No preamble, no meta-commentary.`
 
 const STRICTER_SYSTEM = `${BASE_SYSTEM}
 
@@ -182,7 +185,7 @@ export async function runWriterAgent(args: {
     // Never trim hook (first body sentence) or close (last body
     // sentence) — those carry structural weight.
     const finalWordCount = countBodyWords(letter)
-    const upperBand = args.tone === "concise" ? 300 : 380
+    const upperBand = args.tone === "concise" ? 260 : 330
     if (finalWordCount > upperBand) {
       const jdKeywords: string[] = [
         ...(args.job.atsKeywords ?? []),
@@ -198,6 +201,13 @@ export async function runWriterAgent(args: {
   // retry, trim, and the deterministic fallback) so the letter that
   // flows downstream to ATS / HM Critic / Quality Gate is already clean.
   letter = scrubDashes(letter)
+
+  // Paragraph enforcement — owner spec: the letter is ALWAYS delivered
+  // in paragraphs. If the model produced a single unbroken block (the
+  // wall-of-text failure customers actually saw), re-flow the body
+  // into three paragraphs at sentence boundaries. Deterministic, so
+  // the guarantee holds on every path.
+  letter = ensureParagraphs(letter)
 
   const data: WriterOutput = {
     letter,
@@ -246,7 +256,7 @@ function buildUserPrompt(
 ): string {
   const parts: string[] = []
   parts.push(`Tone: ${args.tone} — ${TONE_GUIDANCE[args.tone]}`)
-  parts.push(`Target body length: ${args.tone === "concise" ? "220-300" : "300-380"} words.`)
+  parts.push(`Target body length: ${args.tone === "concise" ? "200-260" : "260-330"} words. Hard maximum 330.`)
 
   // Candidate block — prefer profile (win ids) over legacy resume.
   if (args.profile) {
@@ -295,7 +305,10 @@ function buildUserPrompt(
 function renderProfileBlock(p: ProfileAnalysis): string {
   const lines: string[] = []
   lines.push(`Candidate: ${p.candidateName} · ${p.seniority} · ${p.industries.join(", ") || "—"}`)
-  if (p.skills.length) lines.push(`Skills: ${p.skills.join(", ")}`)
+  if (p.skills.length)
+    lines.push(
+      `Skills & tools (capability list ONLY — see TOOL-IN-STORY RULE; NOT evidence any of these were used in any specific win): ${p.skills.join(", ")}`
+    )
   if (p.qualifications) lines.push(`Qualifications: ${p.qualifications}`)
   lines.push("")
   lines.push(`Wins (use ONLY these — never invent):`)
@@ -310,6 +323,11 @@ function renderProfileBlock(p: ProfileAnalysis): string {
 function renderJobBlock(j: JobAnalysis): string {
   const lines: string[] = []
   lines.push(`Role: ${j.jobTitle} at ${j.companyName} · ${j.industry}`)
+  lines.push(
+    j.hiringManagerName?.trim()
+      ? `Hiring manager (address the greeting to them BY NAME): ${j.hiringManagerName.trim()}`
+      : `Hiring manager: not named in the posting — greeting must be exactly "Dear Hiring Manager,".`
+  )
   lines.push(`Must-have: ${j.mustHaveSkills.join(", ")}`)
   if (j.niceToHaveSkills.length) lines.push(`Nice-to-have: ${j.niceToHaveSkills.join(", ")}`)
   if (j.atsKeywords?.length) {
@@ -433,7 +451,7 @@ export function buildGroundedLetter(args: {
   const close = `I would welcome the opportunity to discuss the ${role}${args.job.companyName ? ` role at ${args.job.companyName}` : " role"}.`
 
   return [
-    "Dear Hiring Team,",
+    "Dear Hiring Manager,",
     "",
     hook,
     "",
@@ -444,9 +462,11 @@ export function buildGroundedLetter(args: {
     close,
     "",
     "Sincerely,",
-    name,
+    // Never emit a placeholder name — an unknown candidate signs with
+    // "Sincerely," alone.
+    ...(name && name !== "Candidate" ? [name] : []),
   ]
-    .filter((line) => line !== "" || true) // keep paragraph spacing
+    .filter((line, i, arr) => !(line === "" && arr[i - 1] === ""))
     .join("\n")
 }
 
@@ -570,9 +590,54 @@ function countBodyWords(letter: string): number {
   return words ? words.length : 0
 }
 
+/**
+ * Guarantee the delivered letter has visible paragraph structure. If
+ * the body between greeting and sign-off contains fewer than two
+ * blank-line breaks, re-flow it into three paragraphs split at
+ * sentence boundaries (thirds by sentence count). Letters that
+ * already have paragraphs pass through untouched.
+ */
+export function ensureParagraphs(letter: string): string {
+  const lines = letter.split("\n")
+  const greetIdx = lines.findIndex((l) => l.trim().toLowerCase().startsWith("dear "))
+  const signIdx = lines.findIndex((l) =>
+    /^(sincerely|regards|best regards|best|kind regards),?$/i.test(l.trim())
+  )
+  const bodyStart = greetIdx === -1 ? 0 : greetIdx + 1
+  const bodyEnd = signIdx === -1 ? lines.length : signIdx
+  const bodyLines = lines.slice(bodyStart, bodyEnd)
+
+  // Count only SEPARATING blank lines — strip the padding around the
+  // greeting/sign-off first, or a single block framed by blank lines
+  // counts as "already paragraphed".
+  const inner = [...bodyLines]
+  while (inner.length > 0 && inner[0].trim() === "") inner.shift()
+  while (inner.length > 0 && inner[inner.length - 1].trim() === "") inner.pop()
+  const breaks = inner.filter((l) => l.trim() === "").length
+  const bodyText = inner.join(" ").replace(/\s+/g, " ").trim()
+  if (breaks >= 2 || bodyText.length === 0) return letter
+
+  const sentences = bodyText.match(/[^.!?]+[.!?]+(?:\s|$)/g)?.map((s) => s.trim()) ?? []
+  if (sentences.length < 3) return letter
+
+  const third = Math.ceil(sentences.length / 3)
+  const paragraphs = [
+    sentences.slice(0, third).join(" "),
+    sentences.slice(third, third * 2).join(" "),
+    sentences.slice(third * 2).join(" "),
+  ].filter(Boolean)
+
+  return [
+    ...(greetIdx !== -1 ? [lines[greetIdx], ""] : []),
+    paragraphs.join("\n\n"),
+    ...(signIdx !== -1 ? ["", ...lines.slice(signIdx)] : []),
+  ].join("\n")
+}
+
 function inBand(wordCount: number, tone: Tone): boolean {
-  if (tone === "concise") return wordCount >= 220 && wordCount <= 300
-  return wordCount >= 300 && wordCount <= 380
+  // Owner spec: never more than 330 words.
+  if (tone === "concise") return wordCount >= 200 && wordCount <= 260
+  return wordCount >= 260 && wordCount <= 330
 }
 
 function findBannedPhrases(letter: string): string[] {

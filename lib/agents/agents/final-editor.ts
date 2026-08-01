@@ -9,11 +9,11 @@ import type { CallMeta } from "./resume-analyst"
  *
  * Persona: a senior magazine copy editor making surgical edits, not
  * a rewriter. Belt-and-braces enforcer of the blueprint's hard
- * rules: 300-380 word band, banned-phrase scrub, concrete-only
+ * rules: 260-330 word band, banned-phrase scrub, concrete-only
  * specifics.
  *
  * Blueprint requirements:
- *   - Length guardian for the 300-380 band (220-300 for concise tone).
+ *   - Length guardian for the 260-330 band (200-260 for concise tone).
  *   - Banned-phrase scrub — deterministic post-check.
  *   - Never invents new specifics — deletes a sentence rather than
  *     fabricate.
@@ -62,12 +62,12 @@ export interface FinalEditorResult {
 
 export async function runFinalEditor(args: {
   letter: string
-  /** Tone — gives the editor the right length band (300-380 vs 220-300). */
+  /** Tone — gives the editor the right length band (260-330 vs 200-260). */
   tone?: Tone
   cycleNumber?: number
 }): Promise<FinalEditorResult> {
   const tone: Tone = args.tone ?? "professional"
-  const band = tone === "concise" ? "220-300" : "300-380"
+  const band = tone === "concise" ? "200-260" : "260-330"
 
   const fallbackData: FinalEditFull = {
     letter: args.letter,
@@ -112,7 +112,7 @@ export async function runFinalEditor(args: {
   // The deliberate exception is when the original was ALSO out-of-band
   // and the editor pulled it back inside — that's the editor doing
   // its job; we keep that result.
-  const [bandLo, bandHi] = tone === "concise" ? [220, 300] : [300, 380]
+  const [bandLo, bandHi] = tone === "concise" ? [200, 260] : [260, 330]
   const editedInBand = editedWordCount >= bandLo && editedWordCount <= bandHi
   const originalInBand =
     originalWordCount >= bandLo && originalWordCount <= bandHi

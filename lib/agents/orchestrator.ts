@@ -45,11 +45,11 @@ import type {
  *   2. ProfileAnalyst + JobAnalyst (parallel).
  *   3. ExampleRetrieval (gold-base waterfall, every paid tier).
  *   4. MatchAnalyst (every paid tier, gold-blueprint extractor).
- *   5. Writer (300-380 words, blueprint-driven).
+ *   5. Writer (260-330 words, blueprint-driven).
  *   6. ATS (deterministic Starter / Haiku Pro+Ultra).
  *   7. HMCritic (Ultra only, BARS framework).
  *   8. HallucinationCheck pre-edit (every tier, win-mapping).
- *   9. FinalEditor (every tier, 300-380 band guardian).
+ *   9. FinalEditor (every tier, 260-330 band guardian).
  *  10. HallucinationCheck post-edit (Ultra only — the "×2 on Ultra"
  *      rule).
  *  11. QualityGate (every tier, manipulation-proof).
@@ -749,14 +749,14 @@ async function runBlueprintPipeline(
     // arrive here far under the 300-word band with a passing score
     // attached to a longer draft that no longer exists. A visibly
     // short letter must never ship labeled "passed" — deliver it as
-    // best-effort with an honest reason. (280 rather than 300 leaves
-    // slack for legitimate small trims.)
-    const underBand = finalWordCount < 280
+    // best-effort with an honest reason. (240 rather than 260 leaves
+    // slack for legitimate small trims below the owner's 260–330 band.)
+    const underBand = finalWordCount < 240
     const passed = bestScore >= config.qualityThreshold && !underBand
     const failureReason = passed
       ? undefined
       : underBand
-        ? `Letter is ${finalWordCount} words after grounding enforcement removed unverifiable claims (band is 300–380). The draft is fully grounded — consider adding more wins to your profile and regenerating.`
+        ? `Letter is ${finalWordCount} words after grounding enforcement removed unverifiable claims (band is 260–330). The draft is fully grounded — consider adding more wins to your profile and regenerating.`
         : `Score ${Math.round(bestScore)} below threshold ${config.qualityThreshold}`
 
     await emit(

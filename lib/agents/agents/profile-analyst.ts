@@ -172,7 +172,12 @@ export async function runProfileAnalyst(
 
   return {
     data: {
-      candidateName: result.data.candidateName || "Candidate",
+      // The account's real name (threaded from the users row) always
+      // wins over the Haiku inference — a customer letter must never
+      // be signed with a guessed name or a "[Candidate name]"
+      // placeholder derived from the headline.
+      candidateName:
+        args.profile.name?.trim() || result.data.candidateName || "Candidate",
       seniority: result.data.seniority,
       industries: dedupeIndustries(result.data.industries),
       wins,

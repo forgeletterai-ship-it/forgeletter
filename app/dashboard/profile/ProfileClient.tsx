@@ -744,12 +744,19 @@ export function ProfileClient({
   // Save-gate: the core text fields that must be filled before the
   // profile can be saved. Experiences (blocks) and notes stay optional
   // so a user can save their snapshot now and add work history later.
+  // "N/A"-style entries don't count as filled — a real profile shipped
+  // with Qualifications: "N/A" and the engine dutifully treated it as
+  // grounded content.
+  const isFilled = (value: string) => {
+    const v = value.trim()
+    return v.length > 0 && !/^(n\/?a|none|no|x+|[-–—.]+)$/i.test(v)
+  }
   const requiredFields: { label: string; filled: boolean }[] = [
-    { label: "Professional headline", filled: profile.headline.trim().length > 0 },
+    { label: "Professional headline", filled: isFilled(profile.headline) },
     { label: "Seniority level", filled: profile.seniority.trim().length > 0 },
-    { label: "Skills", filled: profile.skills.trim().length > 0 },
-    { label: "Tools & software", filled: profile.tools.trim().length > 0 },
-    { label: "Qualifications", filled: profile.qualifications.trim().length > 0 },
+    { label: "Skills", filled: isFilled(profile.skills) },
+    { label: "Tools & software", filled: isFilled(profile.tools) },
+    { label: "Qualifications", filled: isFilled(profile.qualifications) },
   ]
   const missingRequiredFields = requiredFields
     .filter((field) => !field.filled)

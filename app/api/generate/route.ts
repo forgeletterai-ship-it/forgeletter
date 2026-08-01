@@ -340,6 +340,7 @@ export async function POST(req: NextRequest) {
 
         const pipelineInput: PipelineInput = {
           profile: {
+            name: user.name ?? undefined,
             professionalHeadline: savedProfile.professional_headline,
             qualifications: savedProfile.qualifications || resumeText,
             strengths: savedProfile.strengths,
