@@ -1196,15 +1196,18 @@ export function DashboardClient({
                 : "Fill in your brief below and click generate. The 12-agent pipeline takes 30–90 seconds."}
             </p>
           </div>
-          {latestLetter ? (
+          {/* Single-exit editing: while editing, the ONLY way out is
+              the Save/Cancel pair under the textarea — a header
+              "Done editing" button was a second, ambiguous save path. */}
+          {latestLetter && !isEditing ? (
             <div className="cover-letter-actions">
               <button
                 className="cover-small-button"
                 type="button"
-                onClick={() => setIsEditing((v) => !v)}
+                onClick={() => setIsEditing(true)}
               >
                 <Icon name="edit" />
-                {isEditing ? "Done editing" : "Edit"}
+                Edit
               </button>
             </div>
           ) : null}
@@ -1230,9 +1233,12 @@ export function DashboardClient({
                   resize: "vertical",
                 }}
               />
+              {/* Save is the PRIMARY action (prominent style); Cancel
+                  is the quiet escape. The reversed emphasis previously
+                  made Cancel look like the main button. */}
               <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
                 <button
-                  className="cover-output-button"
+                  className="cover-small-button"
                   type="button"
                   onClick={saveLetterEdits}
                   disabled={saveLetterStatus === "saving"}
@@ -1244,7 +1250,7 @@ export function DashboardClient({
                       : "Save changes"}
                 </button>
                 <button
-                  className="cover-small-button"
+                  className="cover-output-button"
                   type="button"
                   onClick={() => {
                     setEditedLetter(latestLetter.finalCoverLetter)
