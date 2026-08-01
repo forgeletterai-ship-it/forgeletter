@@ -14,6 +14,13 @@ export type ExperienceBlockType = "employer" | "internship" | "university"
  *  - what:           the action / impact statement
  *  - number:         the quantification (e.g. "30%", "$2M ARR", "12 → 40 SDRs")
  *  - whyItMattered:  context that makes the number persuasive
+ *  - skills:         optional — competencies/methods used IN THIS win
+ *  - tools:          optional — named products/software used IN THIS win
+ *
+ * skills/tools live ON the win (not at profile level) by design: the
+ * engine may only name a tool inside a story when the win itself
+ * records it, which makes "I used SQL to build X" structurally
+ * impossible to fabricate.
  *
  * Legacy data in JSONB still uses col0 / col1 / col2; the
  * normalizeAchievement() helper below converts either shape into
@@ -24,6 +31,8 @@ export type ExperienceAchievement = {
   what: string
   number: string
   whyItMattered: string
+  skills?: string
+  tools?: string
 }
 
 /** Backwards-compat normalizer: reads both the new (what/number/
@@ -51,7 +60,14 @@ export function normalizeAchievement(raw: unknown): ExperienceAchievement | null
       : typeof a.col2 === "string"
         ? a.col2
         : ""
-  return { id, what, number, whyItMattered }
+  return {
+    id,
+    what,
+    number,
+    whyItMattered,
+    skills: typeof a.skills === "string" ? a.skills : "",
+    tools: typeof a.tools === "string" ? a.tools : "",
+  }
 }
 
 export type ExperienceBlock = {

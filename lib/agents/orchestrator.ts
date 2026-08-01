@@ -11,7 +11,7 @@ import { runMatchAnalyst } from "./agents/match-analyst"
 import { runProfileAnalyst } from "./agents/profile-analyst"
 import { runQualityGate } from "./agents/quality-gate"
 import { runRewriteAgent } from "./agents/rewrite"
-import { buildGroundedLetter, runWriterAgent } from "./agents/writer"
+import { buildGroundedLetter, ensureParagraphs, runWriterAgent } from "./agents/writer"
 import { getTierConfig } from "./tiers"
 import { scrubDashes } from "./utils"
 import type {
@@ -774,12 +774,15 @@ async function runBlueprintPipeline(
 
     return {
       generationId: input.generationId,
-      // Final dash scrub on the delivered letter — bulletproofs the
-      // "no dash for effect" guarantee regardless of which path produced
-      // bestLetter (clean writer draft, rewrite, or deterministic
-      // fallback). Word/coverage stats above are unaffected by dash→comma
-      // substitution, so they remain valid against this string.
-      finalLetter: scrubDashes(bestLetter),
+      // Final dash scrub + paragraph enforcement on the DELIVERED
+      // letter. Both must run here, at the last exit, because
+      // downstream stages can undo the Writer's formatting: the
+      // hallucination auto-cleaner rebuilds the body as
+      // sentences.join(" ") — which is exactly how customers ended up
+      // with one giant wall-of-text paragraph. ensureParagraphs only
+      // inserts blank lines at sentence boundaries, so the word/
+      // coverage stats above remain valid against this string.
+      finalLetter: ensureParagraphs(scrubDashes(bestLetter)),
       finalScore: Math.round(bestScore),
       hallucinationRisk: bestHallucination?.risk ?? "none",
       atsScore: bestATS?.score,
@@ -942,7 +945,11 @@ function collectResumeTextForVerifier(profile: PipelineProfile): string {
       .join(" · ")
     if (head) bits.push(head)
     for (const a of block.achievements) {
-      bits.push([a.what, a.number, a.whyItMattered].filter(Boolean).join(" — "))
+      bits.push(
+        [a.what, a.number, a.whyItMattered, a.skills, a.tools]
+          .filter(Boolean)
+          .join(" — ")
+      )
     }
   }
   return bits.join("\n")
@@ -956,7 +963,14 @@ function synthProfileForScan(profile: PipelineProfile): ProfileAnalysis {
     industries: [],
     wins: [],
     qualifications: profile.qualifications ?? "",
-    skills: [profile.strengths ?? "", profile.tools ?? ""]
+    skills: [
+      profile.strengths ?? "",
+      profile.tools ?? "",
+      // Profile v3: capabilities live on each win row.
+      ...profile.experienceBlocks.flatMap((b) =>
+        b.achievements.flatMap((a) => [a.skills ?? "", a.tools ?? ""])
+      ),
+    ]
       .join(", ")
       .split(/[,;\n]/)
       .map((s) => s.trim())

@@ -66,7 +66,18 @@ function serializeBlock(block: ExperienceBlock): string {
   if (block.size) meta.push(`Org size: ${block.size}`)
 
   const achievementLines = block.achievements
-    .map((a) => [a.what, a.number, a.whyItMattered].filter(Boolean).join(" | "))
+    .map((a) => {
+      const core = [a.what, a.number, a.whyItMattered].filter(Boolean).join(" | ")
+      if (!core) return ""
+      // Per-win capabilities (profile v3) travel with the win.
+      const extras = [
+        a.skills?.trim() ? `Skills used: ${a.skills.trim()}` : "",
+        a.tools?.trim() ? `Tools used: ${a.tools.trim()}` : "",
+      ]
+        .filter(Boolean)
+        .join(" · ")
+      return extras ? `${core} (${extras})` : core
+    })
     .filter(Boolean)
     .map((line) => `  - ${line}`)
 

@@ -266,6 +266,27 @@ function toneForApi(t: ToneName): "professional" | "warm" | "confident" {
   return "confident"
 }
 
+/** Paragraphs for display: blank-line splits, then single-newline
+ *  splits (skipping the greeting/sign-off short lines), then a
+ *  sentence-based re-flow for legacy single-block letters. */
+function splitIntoParagraphs(body: string): string[] {
+  const byBlank = body.split(/\n{2,}/).map((p) => p.trim()).filter(Boolean)
+  if (byBlank.length > 1) return byBlank
+
+  const byLine = body.split(/\n/).map((p) => p.trim()).filter(Boolean)
+  if (byLine.length > 1) return byLine
+
+  const text = byBlank[0] ?? ""
+  const sentences = text.match(/[^.!?]+[.!?]+(?:\s|$)/g)?.map((s) => s.trim()) ?? []
+  if (sentences.length < 4) return byBlank
+  const third = Math.ceil(sentences.length / 3)
+  return [
+    sentences.slice(0, third).join(" "),
+    sentences.slice(third, third * 2).join(" "),
+    sentences.slice(third * 2).join(" "),
+  ].filter(Boolean)
+}
+
 function formatDate(iso: string | null | undefined): string {
   if (!iso) {
     return new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
@@ -769,7 +790,12 @@ export function DashboardClient({
   // ---- Render helpers for letter panel ----
 
   const letterBody = latestLetter?.finalCoverLetter ?? ""
-  const paragraphs = letterBody.split(/\n{2,}/).map((p) => p.trim()).filter(Boolean)
+  // Blank-line paragraphs first; if the stored letter is a legacy
+  // single block (generated before paragraph enforcement), fall back
+  // to single-newline splits, and as a last resort re-flow long
+  // sentence runs so the reader NEVER sees a wall of text — at any
+  // viewport size.
+  const paragraphs = splitIntoParagraphs(letterBody)
 
   const atsDisplay = latestLetter?.atsScore ?? null
   const keywordsMatchedCount = latestLetter?.atsCoveredKeywords?.length ?? null

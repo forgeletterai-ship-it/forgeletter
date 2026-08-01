@@ -73,7 +73,7 @@ export function ExperienceMultiSelect({
     }))
     blockRows.push({
       id: QUALIFICATIONS_ROW_ID,
-      label: "Qualifications, skills & tools",
+      label: "Qualifications & portfolio",
       kind: "Always",
       forcedOn: true,
     })
@@ -244,7 +244,7 @@ export function ExperienceMultiSelect({
                     Your database needs the experience-persistence migration
                     (docs/supabase-experience-blocks.sql) to remember saved
                     experiences. Until then, generation still works from your
-                    qualifications and skills.
+                    qualifications.
                   </p>
                 </>
               )}
@@ -277,7 +277,7 @@ export function ExperienceMultiSelect({
                     />
                   </svg>
                 </span>
-                <span className="exp-ms-row-label">Qualifications, skills &amp; tools</span>
+                <span className="exp-ms-row-label">Qualifications &amp; portfolio</span>
                 <span className="exp-ms-row-kind exp-ms-row-kind--forced">Always</span>
               </div>
             </div>
