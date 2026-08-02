@@ -108,9 +108,6 @@ body{background:#FAF6EE;font-family:var(--sans);color:var(--txt);display:flex;al
 .cbx{width:20px;height:20px;border-radius:5px;border:2px solid #bcb4a4;background:#fff;display:flex;align-items:center;justify-content:center;flex:0 0 20px;transition:all .18s}
 .cbx svg{opacity:0;transform:scale(.5);transition:all .18s}.opt.on .cbx{background:var(--teal);border-color:var(--teal)}.opt.on .cbx svg{opacity:1;transform:none}
 .opt .nm{font-weight:600;color:var(--ink);font-size:14px;flex:1}.opt .kd{font-size:12px;color:var(--mute)}
-.pinned{display:flex;align-items:center;gap:11px;padding:10px;border-top:1px solid #ece5d7;margin-top:2px}
-.pinned .cbx2{width:20px;height:20px;border-radius:5px;background:var(--teal);border:2px solid var(--teal);display:flex;align-items:center;justify-content:center;flex:0 0 20px}
-.pinned .nm{font-weight:600;color:var(--ink);font-size:13.5px;flex:1}.always{font-size:11px;font-weight:700;letter-spacing:.6px;color:#fff;background:var(--teal);border-radius:13px;padding:4px 12px}
 .selwrap{position:relative}
 .selwrap .field.sel{cursor:pointer;justify-content:space-between}
 .selwrap .field.sel.open{border-color:var(--gold);box-shadow:0 0 0 3px rgba(199,155,60,.18)}
@@ -123,6 +120,9 @@ body{background:#FAF6EE;font-family:var(--sans);color:var(--txt);display:flex;al
 .selmenu .sopt-i.on{background:#FAF6EC;color:var(--teal);font-weight:600}
 .winrow.hidden-row{display:none}
 .winrow.reveal-anim{animation:winRowIn .5s cubic-bezier(.4,0,.2,1) both}
+.winextras{padding-left:38px;margin-top:-4px}
+.win-group.hidden-row{display:none}
+.win-group.reveal-anim{animation:winRowIn .5s cubic-bezier(.4,0,.2,1) both}
 @keyframes winRowIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
 .addwin{cursor:pointer;transition:color .15s}
 .addwin.press{transform:scale(.97)}
@@ -132,7 +132,7 @@ body{background:#FAF6EE;font-family:var(--sans);color:var(--txt);display:flex;al
 .score{font-size:12.5px;color:#6f6757;margin-top:4px}
 .editbtn{background:var(--teal);color:var(--goldl);font-weight:700;font-size:13px;padding:8px 16px;border-radius:18px;display:flex;gap:6px;align-items:center}
 .paper{background:var(--paper);border:1px solid #ece6d8;border-radius:10px;padding:18px 22px;margin-top:12px;height:530px;overflow:hidden}
-.paper .dt{font-size:11.5px;color:#6b6256}.paper p{font-family:var(--serif);font-size:12px;color:#352f27;line-height:1.5;margin-top:9px}
+.paper p{font-family:var(--serif);font-size:12.5px;color:#352f27;line-height:1.55;margin-top:11px}
 .lt-actions{display:flex;gap:12px;margin-top:14px}
 .btn-ghost{flex:1;height:46px;border:1px solid var(--gold);border-radius:10px;display:flex;align-items:center;justify-content:center;gap:8px;color:var(--gold);font-weight:600;font-size:14px;background:#fffdf8}
 .btn-solid{flex:1;height:46px;background:var(--teal);border-radius:10px;display:flex;align-items:center;justify-content:center;gap:8px;color:var(--goldl);font-weight:700;font-size:14px}
@@ -145,7 +145,7 @@ body{background:#FAF6EE;font-family:var(--sans);color:var(--txt);display:flex;al
 <body><div class="stage-wrap"><div class="stage" id="stage">
 <div class="goldline"></div>
 <div class="caption" id="caption"><div class="cap-num" id="capNum">01</div><div class="cap-title cap-fade" id="capTitle">Build your profile once</div><div class="cap-sub cap-fade" id="capSub">Fill it in once - ForgeLetter reuses it for every letter.</div><div class="dots" id="dots"><i class="on"></i><i></i><i></i><i></i></div></div>
-<div class="window" id="window"><div class="titlebar"><div class="addr"><span class="dot"></span>forgeletter.app/workspace</div></div><div class="viewport">
+<div class="window" id="window"><div class="titlebar"><div class="addr"><span class="dot"></span>forgeletter.com/dashboard</div></div><div class="viewport">
 
 <!-- SCENE 0: PROFILE -->
 <div class="scene" id="sc-profile"><div class="scene-inner" id="profInner">
@@ -166,6 +166,8 @@ body{background:#FAF6EE;font-family:var(--sans);color:var(--txt);display:flex;al
       <div class="sopt"><b>Leadership</b><span>13-18 yrs</span></div>
       <div class="sopt"><b>C-suite</b><span>18+ yrs</span></div>
     </div>
+    <div class="qlabel" style="margin-top:14px">Qualifications &amp; portfolio link <span class="muted">- used only in the letter's closing paragraph, as support</span></div>
+    <div class="field"><input id="p-qual" readonly data-ph="e.g. MBA, CFA - then https://..."></div>
     <div class="pfooter"><span class="pf-note" id="pfNote">Fill in your snapshot to continue.</span><div class="nextbtn" id="nextBtn">Next: Experience &amp; Wins</div></div>
   </div>
   <div class="pcard locked" id="lockCard">
@@ -176,7 +178,7 @@ body{background:#FAF6EE;font-family:var(--sans);color:var(--txt);display:flex;al
 
 <!-- SCENE 1: EXPERIENCE -->
 <div class="scene" id="sc-exp"><div class="scene-inner" id="expInner">
-  <div style="position:relative"><div class="exp-step">Step 2 of 2</div><div class="exp-head">Experience &amp; Wins</div><div class="exp-sub">Your work history, education, and the wins from each. Add a number to every achievement.</div></div>
+  <div style="position:relative"><div class="exp-step">Step 2 of 2</div><div class="exp-head">Experience &amp; Wins</div><div class="exp-sub">Your work history, education, and the wins from each. Add a number to every achievement - plus the skills &amp; tools you used inside each win.</div></div>
   <div class="callout"><b>What makes an achievement land</b><i>"Grew the audience from 0 to 84K in 8 months with no paid spend - the team asked who was running it."</i></div>
   <div class="togs"><div class="tog"><span class="b" style="background:var(--emp)"></span>Employer</div><div class="tog"><span class="b" style="background:var(--intn)"></span>Internship</div><div class="tog"><span class="b" style="background:var(--uni)"></span>University</div></div>
   <div class="sec emp" id="secEmp">
@@ -193,11 +195,21 @@ body{background:#FAF6EE;font-family:var(--sans);color:var(--txt);display:flex;al
       <div><span class="flabel">The number</span><div class="field"><input id="f-num" data-ph="e.g. 34%, EUR2M"></div></div>
       <div><span class="flabel">Why it mattered</span><div class="field"><input id="f-why" data-ph="Business impact"></div></div>
     </div>
-    <div class="row winrow hidden-row" id="empWin2" style="grid-template-columns:1.2fr 1fr 1fr">
-      <div class="wbadge">2</div>
-      <div><span class="flabel">What did you achieve?</span><div class="field"><input id="f-ach2" data-ph="The result"></div></div>
-      <div><span class="flabel">The number</span><div class="field"><input id="f-num2" data-ph="e.g. 34%, EUR2M"></div></div>
-      <div><span class="flabel">Why it mattered</span><div class="field"><input id="f-why2" data-ph="Business impact"></div></div>
+    <div class="row winextras" style="grid-template-columns:1fr 1fr">
+      <div><span class="flabel">Skills used <span style="color:var(--mute);font-weight:400">(optional)</span></span><div class="field"><input id="f-skills" data-ph="e.g. cost modelling, stakeholder management"></div></div>
+      <div><span class="flabel">Tools used <span style="color:var(--mute);font-weight:400">(optional)</span></span><div class="field"><input id="f-tools" data-ph="e.g. Excel, SQL, JIRA"></div></div>
+    </div>
+    <div class="win-group hidden-row" id="empWin2">
+      <div class="row winrow" style="grid-template-columns:1.2fr 1fr 1fr">
+        <div class="wbadge">2</div>
+        <div><span class="flabel">What did you achieve?</span><div class="field"><input id="f-ach2" data-ph="The result"></div></div>
+        <div><span class="flabel">The number</span><div class="field"><input id="f-num2" data-ph="e.g. 34%, EUR2M"></div></div>
+        <div><span class="flabel">Why it mattered</span><div class="field"><input id="f-why2" data-ph="Business impact"></div></div>
+      </div>
+      <div class="row winextras" style="grid-template-columns:1fr 1fr">
+        <div><span class="flabel">Skills used <span style="color:var(--mute);font-weight:400">(optional)</span></span><div class="field"><input id="f-skills2" data-ph="e.g. cost modelling, stakeholder management"></div></div>
+        <div><span class="flabel">Tools used <span style="color:var(--mute);font-weight:400">(optional)</span></span><div class="field"><input id="f-tools2" data-ph="e.g. Excel, SQL, JIRA"></div></div>
+      </div>
     </div>
     <div class="addwin" id="empAddWin">+ Add win</div><div class="wincount" id="empWinCount">1 win</div>
   </div>
@@ -216,6 +228,10 @@ body{background:#FAF6EE;font-family:var(--sans);color:var(--txt);display:flex;al
       <div><span class="flabel">The number</span><div class="field"><input id="f-inum" data-ph="e.g. 200+ users"></div></div>
       <div><span class="flabel">What happened</span><div class="field"><input id="f-ihap" data-ph="e.g. Became a permanent feature"></div></div>
     </div>
+    <div class="row winextras" style="grid-template-columns:1fr 1fr">
+      <div><span class="flabel">Skills used <span style="color:var(--mute);font-weight:400">(optional)</span></span><div class="field"><input id="f-iskills" data-ph="e.g. financial reporting"></div></div>
+      <div><span class="flabel">Tools used <span style="color:var(--mute);font-weight:400">(optional)</span></span><div class="field"><input id="f-itools" data-ph="e.g. Power BI, Excel"></div></div>
+    </div>
     <div class="addwin">+ Add another</div><div class="wincount">1 added</div>
   </div>
   <div class="sec uni" id="secUni">
@@ -229,6 +245,10 @@ body{background:#FAF6EE;font-family:var(--sans);color:var(--txt);display:flex;al
       <div><span class="flabel">Project or achievement</span><div class="field"><input id="f-uproj" data-ph="e.g. Led the Marketing Society"></div></div>
       <div><span class="flabel">Scale or number</span><div class="field"><input id="f-uscale" data-ph="e.g. 300 members"></div></div>
       <div><span class="flabel">Recognition</span><div class="field"><input id="f-urec" data-ph="e.g. Largest in faculty"></div></div>
+    </div>
+    <div class="row winextras" style="grid-template-columns:1fr 1fr">
+      <div><span class="flabel">Skills used <span style="color:var(--mute);font-weight:400">(optional)</span></span><div class="field"><input id="f-uskills" data-ph="e.g. public speaking, leadership"></div></div>
+      <div><span class="flabel">Tools used <span style="color:var(--mute);font-weight:400">(optional)</span></span><div class="field"><input id="f-utools" data-ph="e.g. Canva, Notion"></div></div>
     </div>
     <div class="addwin">+ Add project or award</div><div class="wincount">1 added</div>
   </div>
@@ -245,7 +265,7 @@ body{background:#FAF6EE;font-family:var(--sans);color:var(--txt);display:flex;al
     <div class="tone on"><div class="chk">✓</div><div class="ic">✈</div><h4>Direct</h4><p>Sharp, confident, and outcome-focused.</p></div>
   </div>
   <div class="row" style="grid-template-columns:1fr 1fr">
-    <div><span class="eyebrow">Target role</span><div class="field" style="margin-top:6px">Senior Business Consultant</div></div>
+    <div><span class="eyebrow">Target role</span><div class="field" style="margin-top:6px">Senior Growth Manager</div></div>
     <div><span class="eyebrow">Company</span><div class="field" style="margin-top:6px">Northpeak</div></div>
   </div>
   <span class="eyebrow">Experiences to include</span>
@@ -254,8 +274,7 @@ body{background:#FAF6EE;font-family:var(--sans);color:var(--txt);display:flex;al
     <div class="dd-list" id="ddList">
       <div class="opt" data-k="Brightfold Labs"><span class="cbx"><svg width="12" height="12"><path d="M2 6l3 3 5-6" fill="none" stroke="#fff" stroke-width="2"/></svg></span><span class="nm">Brightfold Labs</span><span class="kd">Employer</span></div>
       <div class="opt" data-k="Harbor Finance"><span class="cbx"><svg width="12" height="12"><path d="M2 6l3 3 5-6" fill="none" stroke="#fff" stroke-width="2"/></svg></span><span class="nm">Harbor Finance</span><span class="kd">Internship</span></div>
-      <div class="opt" data-k="Westbridge University"><span class="cbx"><svg width="12" height="12"><path d="M2 6l3 3 5-6" fill="none" stroke="#fff" stroke-width="2"/></svg></span><span class="nm">Westbridge University</span><span class="kd">Academic</span></div>
-      <div class="pinned"><span class="cbx2"><svg width="12" height="12"><path d="M2 6l3 3 5-6" fill="none" stroke="#fff" stroke-width="2"/></svg></span><span class="nm">Qualifications &amp; achievements</span><span class="always">ALWAYS</span></div>
+      <div class="opt" data-k="Westbridge University"><span class="cbx"><svg width="12" height="12"><path d="M2 6l3 3 5-6" fill="none" stroke="#fff" stroke-width="2"/></svg></span><span class="nm">Westbridge University</span><span class="kd">University</span></div>
     </div>
   </div>
   <div class="genbtn" id="genBtn">✦ Save brief &amp; generate letter</div>
@@ -264,14 +283,13 @@ body{background:#FAF6EE;font-family:var(--sans);color:var(--txt);display:flex;al
 <!-- SCENE 3: LETTER -->
 <div class="scene" id="sc-letter"><div class="scene-inner">
   <div class="lt-top"><div><div class="h-serif" style="font-size:20px">📄 GENERATED COVER LETTER</div><div class="score">Score 94/100 - best draft delivered. Edit freely and save your changes.</div></div><div class="editbtn">✎ Edit</div></div>
-  <div class="paper"><div class="dt">May 20, 2026</div><div class="dt" style="margin-top:9px">Hiring Manager<br>Northpeak</div>
-    <p>Dear Northpeak Hiring Team,</p>
-    <p>When I rebuilt the onboarding flow for 11,000 monthly active users, weekly retention rose from 34% to 58% in nine months - the result of diagnosing the full activation arc and iterating on the sequence until behaviour measurably shifted, while maintaining a single design system across four product surfaces.</p>
-    <p>That retention lift had a business dimension worth naming. A 24-point increase, sustained over nine months, translates into reduced churn risk and expanded activation among the cohort most likely to convert - the kind of outcome I frame for leadership and executive stakeholders, not just reviewers.</p>
-    <p>Northpeak's recent expansion into consultancy-led growth is precisely the surface where my background lands. I have spent the last five years pairing quantitative diagnosis with the kind of stakeholder narrative that gets a board to fund the next bet, not just sign off on the last one - work that maps directly to the Senior Business Consultant remit.</p>
-    <p>Beyond the activation arc, my time at Brightfold Labs included rebuilding the lifecycle marketing stack, mentoring two junior PMs, and writing the internal playbook that the customer success team still uses for high-value account reviews. I treat documentation as a strategic asset, not an afterthought.</p>
-    <p>I would welcome the chance to walk your team through the case study - the decisions, the restructure, and the alignment behind them. I am available this week or next, and happy to tailor the conversation to the specific accounts you have in flight.</p>
-    <p>Warm regards,<br>Alex Carter</p>
+  <div class="paper">
+    <p style="margin-top:0">Dear Hiring Manager,</p>
+    <p>Rebuilding Brightfold Labs' onboarding flow and lifting retention 24% is the clearest proof of how I approach growth: diagnose the full activation arc, then iterate until behaviour measurably shifts. That change cut churn risk on the cohort most likely to convert - exactly the kind of compounding result the Senior Growth Manager role at Northpeak exists to deliver.</p>
+    <p>Using Amplitude and Figma, I mapped every step of that funnel with funnel analysis and a retention strategy the team still runs today. In the same period, the lifecycle email program I launched raised activation 38%, feeding a pipeline that kept compounding quarter after quarter. My internship at Harbor Finance grounded the numbers side early - dashboards built in Power BI that 200+ colleagues used daily and that became a permanent fixture.</p>
+    <p>My MBA and Google Analytics certification round out the record above. I would be glad to arrange a conversation at your convenience to explore how I can contribute to your team.</p>
+    <p style="margin-top:14px">Sincerely,</p>
+    <p>Alex Carter</p>
   </div>
   <div class="lt-actions"><div class="btn-ghost">⧉ Copy to clipboard</div><div class="btn-solid" id="dlBtn">⤓ Download PDF</div></div>
 </div></div>
@@ -284,7 +302,7 @@ body{background:#FAF6EE;font-family:var(--sans);color:var(--txt);display:flex;al
 const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s),sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const stage=$('#stage'),cursor=$('#cursor');
 let _lastFitW=0,_lastFitH=0;function fit(){const wrap=document.querySelector('.stage-wrap');const w=(wrap&&wrap.clientWidth)||innerWidth||1280;const h=(wrap&&wrap.clientHeight)||innerHeight||720;if(w===_lastFitW&&h===_lastFitH)return;_lastFitW=w;_lastFitH=h;const sc=Math.min(w/1280,h/720);stage.style.transform=`scale(${sc})`}addEventListener('resize',fit);addEventListener('load',fit);requestAnimationFrame(fit);if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fit);try{new ResizeObserver(fit).observe(document.body);new ResizeObserver(fit).observe(document.documentElement);new ResizeObserver(fit).observe(document.querySelector('.stage-wrap'))}catch(e){}[50,150,300,600,1200,2000,3500,5500].forEach(ms=>setTimeout(fit,ms));setInterval(fit,500);fit();
-$$('#sc-exp input,#p-desc').forEach(i=>{if(i.dataset.ph)i.setAttribute('placeholder',i.dataset.ph);i.readOnly=true});
+$$('#sc-exp input,#p-desc,#p-qual').forEach(i=>{if(i.dataset.ph)i.setAttribute('placeholder',i.dataset.ph);i.readOnly=true});
 function moveTo(el,dx=0,dy=0){const s=stage.getBoundingClientRect(),r=el.getBoundingClientRect(),sc=s.width/1280;cursor.style.transform=`translate(${(r.left-s.left)/sc+r.width/sc/2+dx}px,${(r.top-s.top)/sc+r.height/sc/2+dy}px)`}
 async function click(){cursor.classList.remove('click');void cursor.offsetWidth;cursor.classList.add('click');await sleep(170)}
 async function type(sel,text,cps=46){const inp=$(sel),fld=inp.closest('.field');const baseX=-fld.offsetWidth/2+18,maxOff=fld.offsetWidth-46;cursor.style.transition='transform .55s cubic-bezier(.4,0,.2,1), opacity .35s';cursor.style.opacity='1';moveTo(fld,baseX);await sleep(580);fld.classList.add('focus');inp.focus({preventScroll:true});await sleep(120);cursor.style.transition='transform .07s linear, opacity .35s';for(let i=1;i<=text.length;i++){inp.value=text.slice(0,i);const off=Math.min(i*7.2,maxOff);moveTo(fld,baseX+off);await sleep(cps+Math.random()*24)}cursor.style.transition='transform .55s cubic-bezier(.4,0,.2,1), opacity .35s';await sleep(220);fld.classList.remove('focus')}
@@ -299,7 +317,7 @@ async function run(){
   if(running)return;running=true;
   fit();
   // reset
-  $$('#sc-exp input').forEach(i=>i.value='');$('#p-desc').value='';
+  $$('#sc-exp input').forEach(i=>i.value='');$('#p-desc').value='';$('#p-qual').value='';
   $$('.selwrap .field.sel').forEach(b=>{b.classList.remove('open');const v=b.querySelector('.dd-val');if(v){v.textContent='Select...';v.classList.add('ph')}});$$('.selmenu').forEach(m=>m.classList.remove('open'));$$('.sopt-i').forEach(o=>o.classList.remove('on','hover'));
   $('#empWin2').classList.add('hidden-row');$('#empWin2').classList.remove('reveal-anim');$('#empWinCount').textContent='1 win';
   $$('.opt').forEach(o=>o.classList.remove('on'));$('#ddList').classList.remove('open');$('#ddBar').classList.remove('open','filled');$('#ddLabel').textContent='Select experiences to include';
@@ -315,17 +333,19 @@ async function run(){
   // STEP 1 - profile
   await type('#p-desc','Growth marketer with 5 years in SaaS and lifecycle marketing',38);
   moveTo($('#p-mid'));await sleep(880);await click();$('#p-mid').classList.add('sel');await sleep(450);
+  await type('#p-qual','MBA, Google Analytics certified',40);
   $('#pfNote').textContent='Career snapshot is ready. Continue to add your evidence and wins.';
   const nb=$('#nextBtn');moveTo(nb);await sleep(880);await click();nb.classList.add('press');await sleep(160);nb.classList.remove('press');
   $('#st2').classList.add('on');$('#lockCard').classList.remove('locked');$('#lockCard').classList.add('unlocked');await sleep(700);
 
   // STEP 2 - experience (with smooth scrolling)
-  await setCap('02','Add your evidence & Wins','Add employer, academic and internship - then type the details.',1);
+  await setCap('02','Add your evidence & Wins','Every win takes a number - plus the skills & tools you used inside it.',1);
   scene('sc-exp');$('#expInner').style.transform='';await sleep(1300);
-  await type('#f-comp','Brightfold Labs');await type('#f-title','Product Designer');
+  await type('#f-comp','Brightfold Labs');await type('#f-title','Growth Marketer');
   await pickSel('#dd-etype-bar','#dd-etype-list','Full time');
   await pickSel('#dd-esec-bar','#dd-esec-list','Software & SaaS');
   await type('#f-ach','Rebuilt the onboarding flow');await type('#f-num','+24% retention');await type('#f-why','Cut churn risk');
+  await type('#f-skills','Funnel analysis, retention strategy',30);await type('#f-tools','Amplitude, Figma',34);
   const addBtn=$('#empAddWin');moveTo(addBtn);await sleep(700);await click();addBtn.classList.add('press');await sleep(160);addBtn.classList.remove('press');
   const win2=$('#empWin2');win2.classList.remove('hidden-row');win2.classList.add('reveal-anim');$('#empWinCount').textContent='2 wins';await sleep(520);
   await type('#f-ach2','Launched lifecycle email program');await type('#f-num2','+38% activation');await type('#f-why2','Compounding pipeline');
@@ -334,12 +354,13 @@ async function run(){
   await pickSel('#dd-isec-bar','#dd-isec-list','Finance & Banking');
   await pickSel('#dd-isize-bar','#dd-isize-list','1001-5000 (Enterprise)');
   await type('#f-ido','Built dashboards');await type('#f-inum','200+ users');await type('#f-ihap','Made permanent');
+  await type('#f-itools','Power BI',34);
   scrollExpTo($('#secUni'));await sleep(1320);
   await type('#f-uname','Westbridge University');await type('#f-udeg','BSc Computer Science');
   await type('#f-uproj','Led the design society');await type('#f-uscale','300 members');await type('#f-urec','Top of faculty');await sleep(750);
 
   // STEP 3 - draft + dropdown
-  await setCap('03','Pick the experience that fits','Choose saved experiences to include - qualifications are always added.',2);
+  await setCap('03','Pick the experience that fits','Choose which saved wins this letter draws from - your qualifications support the closing automatically.',2);
   scene('sc-draft');await sleep(1350);
   const bar=$('#ddBar'),list=$('#ddList');moveTo(bar);await sleep(880);await click();bar.classList.add('open');list.classList.add('open');await sleep(450);
   const chosen=[];for(const k of ['Brightfold Labs','Harbor Finance']){const o=[...$$('.opt')].find(o=>o.dataset.k===k);moveTo(o.querySelector('.cbx'));await sleep(840);await click();o.classList.add('on');chosen.push(k);$('#ddLabel').textContent=chosen.join(', ');bar.classList.add('filled');await sleep(280)}
