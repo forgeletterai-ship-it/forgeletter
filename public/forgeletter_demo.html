@@ -358,6 +358,7 @@ async function run(){
   const addBtn=$('#empAddWin');moveTo(addBtn);await sleep(700);await click();addBtn.classList.add('press');await sleep(160);addBtn.classList.remove('press');
   const win2=$('#empWin2');win2.classList.remove('hidden-row');win2.classList.add('reveal-anim');$('#empWinCount').textContent='2 wins';await sleep(520);
   await type('#f-ach2','Launched lifecycle email program');await type('#f-num2','+38% activation');await type('#f-why2','Compounding pipeline');
+  await type('#f-skills2','Email segmentation, A/B testing',32);
   scrollExpTo($('#secIntn'));await sleep(1320);
   await type('#f-icomp','Harbor Finance');await type('#f-irole','Finance Intern');await type('#f-idur','3 months');
   await pickSel('#dd-isec-bar','#dd-isec-list','Finance & Banking');
