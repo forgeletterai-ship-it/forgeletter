@@ -12,7 +12,6 @@ export const metadata: Metadata = {
 const POPULAR_LINKS = [
   { href: "/", label: "Home", description: "Back to the landing page" },
   { href: "/#pricing", label: "Pricing", description: "Plans and what's included" },
-  { href: "/blog", label: "Resources", description: "Cover-letter and job-search guides" },
   { href: "/auth/signup", label: "Start free", description: "Create your account in a minute" },
   { href: "/contact", label: "Contact", description: "Reach the ForgeLetter team" },
 ] as const
@@ -35,8 +34,8 @@ export default function NotFound() {
               <Link className="button" href="/">
                 Back to home
               </Link>
-              <Link className="button-secondary" href="/blog">
-                Browse resources
+              <Link className="button-secondary" href="/contact">
+                Contact us
               </Link>
             </div>
 

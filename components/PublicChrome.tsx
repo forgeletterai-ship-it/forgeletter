@@ -7,7 +7,7 @@ const productLinks = [
   { href: "/#how-it-works", label: "How It Works" },
   { href: "/#pricing", label: "Pricing" },
   { href: "/#faq", label: "FAQ" },
-  { href: "/blog", label: "Resources" },
+  { href: "/#roadmap", label: "Roadmap" },
 ]
 
 export async function PublicNav() {
@@ -72,11 +72,11 @@ export function PublicFooter() {
             ]}
           />
           <FooterColumn
-            title="Resources"
+            title="Account"
             links={[
-              { href: "/blog", label: "Blog & guides" },
               { href: "/auth/signup", label: "Create an account" },
               { href: "/auth/login", label: "Sign in" },
+              { href: "/dashboard", label: "Dashboard" },
             ]}
           />
           <FooterColumn

@@ -1,13 +1,11 @@
 import type { MetadataRoute } from "next"
-import { resourceArticles } from "@/lib/resources"
 import { getSiteUrl } from "@/lib/site-url"
 
 /**
  * /sitemap.xml — every publicly indexable URL on the site.
  *
  * Auto-generated at build time from:
- *   - Top-level public routes (landing, contact, blog index, guides)
- *   - All blog post slugs (lib/resources.ts is the source of truth)
+ *   - Top-level public routes (landing, contact)
  *   - All 7 legal pages
  *
  * Deliberately excludes /api, /dashboard, /auth — those live in
@@ -23,16 +21,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   const topLevel: MetadataRoute.Sitemap = [
     { url: `${siteUrl}/`, lastModified: today, changeFrequency: "weekly", priority: 1.0 },
-    { url: `${siteUrl}/blog`, lastModified: today, changeFrequency: "weekly", priority: 0.8 },
     { url: `${siteUrl}/contact`, lastModified: today, changeFrequency: "monthly", priority: 0.5 },
   ]
-
-  const blog: MetadataRoute.Sitemap = resourceArticles.map((article) => ({
-    url: `${siteUrl}/blog/${article.slug}`,
-    lastModified: today,
-    changeFrequency: "monthly",
-    priority: 0.6,
-  }))
 
   const legalSlugs = [
     "terms",
@@ -50,5 +40,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.3,
   }))
 
-  return [...topLevel, ...blog, ...legal]
+  return [...topLevel, ...legal]
 }

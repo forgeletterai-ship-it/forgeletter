@@ -4,9 +4,8 @@ import type { NextRequest } from "next/server"
 export const runtime = "edge"
 
 /**
- * Dynamic Open Graph image generator for blog posts and other public
- * pages. Called by blog/[slug]/page.tsx's generateMetadata as the
- * og:image URL.
+ * Dynamic Open Graph image generator for public pages. Used as the
+ * site-wide og:image URL in app/layout.tsx.
  *
  * Renders a 1200x630 PNG with the title and category, styled to
  * match the ForgeLetter brand. Vercel caches the result at the edge
