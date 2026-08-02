@@ -46,7 +46,7 @@ const TONE_OPTIONS = [
   { key: "concise", label: "Concise" },
 ] as const
 
-/** Free tone rewrites per letter — mirrors the API's per-tier caps. */
+/** Included tone rewrites per letter — mirrors the API's per-tier caps. */
 const TONE_REWRITE_FREE_CAP: Record<string, number> = {
   free: 0,
   starter: 0,
@@ -359,7 +359,7 @@ export function LetterDetailClient({
             <h2 style={{ margin: 0, fontSize: 17 }}>Rewrite in a different tone</h2>
             <span style={{ fontSize: 12.5, color: "var(--muted)" }}>
               {toneFreeCap > 0
-                ? `${Math.min(toneRewriteCount, toneFreeCap)} of ${toneFreeCap} free ${toneFreeCap === 1 ? "rewrite" : "rewrites"} used for this letter`
+                ? `${Math.min(toneRewriteCount, toneFreeCap)} of ${toneFreeCap} included ${toneFreeCap === 1 ? "rewrite" : "rewrites"} used for this letter`
                 : "Tone rewrites on Starter use a letter slot from your monthly allowance"}
             </span>
           </div>

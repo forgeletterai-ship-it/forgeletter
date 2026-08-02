@@ -59,7 +59,7 @@ export default function TermsPage() {
         },
         {
           title: "10. Subscription, fees and billing — general",
-          body: "Paid plans are billed in advance through Stripe. Prices and the billing currency are shown at checkout. Where required by Bulgarian or EU law, VAT or equivalent indirect taxes will be added or included; consumers outside the EU may be liable for local taxes. Payment-card details are handled by Stripe under PCI-DSS Level 1; we do not see or store full card numbers. Subscriptions begin on the date of first successful payment unless a free-trial period is offered, in which case billing starts at trial end.",
+          body: "Paid plans are billed in advance through Stripe. Prices and the billing currency are shown at checkout. Where required by Bulgarian or EU law, VAT or equivalent indirect taxes will be added or included; consumers outside the EU may be liable for local taxes. Payment-card details are handled by Stripe under PCI-DSS Level 1; we do not see or store full card numbers. Subscriptions begin on the date of first successful payment.",
         },
         {
           title: "10a. Monthly subscription",

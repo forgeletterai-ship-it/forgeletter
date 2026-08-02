@@ -172,7 +172,7 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     return NextResponse.json(
       {
         error:
-          "Starter doesn't include free tone rewrites. Upgrade to Pro for 1 / Ultra for 3, or confirm to use one of your monthly letter slots.",
+          "Starter doesn't include tone rewrites. Upgrade to Pro for 1 / Ultra for 3, or confirm to use one of your monthly letter slots.",
         needsLetterSlotConfirmation: true,
         tier,
         freeCap,
@@ -247,7 +247,7 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
         return NextResponse.json(
           {
             error:
-              "You've used every letter and free tone rewrite for this period. Upgrade your plan or wait for your allowance to reset.",
+              "You've used every letter and included tone rewrite for this period. Upgrade your plan or wait for your allowance to reset.",
           },
           { status: 402 }
         )
