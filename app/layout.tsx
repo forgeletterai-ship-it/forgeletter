@@ -46,7 +46,7 @@ export const metadata: Metadata = {
   publisher: SITE_NAME,
   // NOTE: no `alternates.canonical` here. Next merges metadata
   // per-field, so a root canonical of "/" would cascade to every page
-  // that doesn't override it — telling crawlers that /blog, /contact,
+  // that doesn't override it — telling crawlers that /contact
   // and all legal pages are duplicates of the homepage. Each page
   // declares its own canonical instead (homepage in app/page.tsx).
   // Social previews — LinkedIn, Slack, iMessage, Discord all pull
