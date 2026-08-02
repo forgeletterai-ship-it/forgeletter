@@ -2904,6 +2904,48 @@ button.tone-chip:hover {
   text-transform: uppercase;
 }
 
+.roadmap-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 180px;
+  padding: 26px 22px;
+  border: 1.5px dashed rgba(199, 154, 54, 0.4);
+  border-radius: 14px;
+  background: rgba(255, 253, 248, 0.55);
+  text-align: center;
+}
+
+.roadmap-empty__mark {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--roadmap-tint);
+  color: var(--roadmap-accent);
+}
+
+.roadmap-empty__mark svg {
+  width: 21px;
+  height: 21px;
+}
+
+.roadmap-empty p {
+  margin: 0;
+  max-width: 240px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.roadmap-empty p b {
+  color: #171d1d;
+  font-weight: 800;
+}
+
 .roadmap-foot {
   display: flex;
   align-items: center;

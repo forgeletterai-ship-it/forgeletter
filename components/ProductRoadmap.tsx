@@ -11,15 +11,10 @@
  */
 
 type IconName =
-  | "gauge"
-  | "fileCheck"
-  | "shieldCheck"
-  | "compass"
   | "layers"
   | "globe"
   | "upload"
   | "scan"
-  | "listChecks"
   | "chat"
   | "puzzle"
   | "users"
@@ -44,28 +39,7 @@ const COLUMNS: RoadmapColumn[] = [
     title: "Now",
     sub: "In progress",
     chip: "In progress",
-    items: [
-      {
-        icon: "gauge",
-        title: "Letter quality engine",
-        body: "Continuous tuning of the 12-agent pipeline so every letter stays sharp, specific, and fully grounded in your profile.",
-      },
-      {
-        icon: "fileCheck",
-        title: "Pixel-perfect PDF previews",
-        body: "Template previews that match the downloaded PDF exactly — what you see is what you send.",
-      },
-      {
-        icon: "shieldCheck",
-        title: "Evidence-based profiles",
-        body: "Skills and tools recorded on each win, so a capability can only appear inside the story that proves it.",
-      },
-      {
-        icon: "compass",
-        title: "Guided onboarding",
-        body: "A walkthrough that shows exactly how to build a profile that produces standout letters.",
-      },
-    ],
+    items: [],
   },
   {
     key: "next",
@@ -77,11 +51,6 @@ const COLUMNS: RoadmapColumn[] = [
         icon: "layers",
         title: "More premium templates",
         body: "New PDF designs to choose from, every one rendered with the same exact preview.",
-      },
-      {
-        icon: "globe",
-        title: "Multi-language letters",
-        body: "Generate your letter in the language of the job ad, with the same grounding rules.",
       },
       {
         icon: "upload",
@@ -102,9 +71,9 @@ const COLUMNS: RoadmapColumn[] = [
     chip: "Future",
     items: [
       {
-        icon: "listChecks",
-        title: "Application tracker",
-        body: "Track every letter, application, and outcome in one organised place.",
+        icon: "globe",
+        title: "Multi-language letters",
+        body: "Generate your letter in the language of the job ad, with the same grounding rules.",
       },
       {
         icon: "chat",
@@ -127,32 +96,6 @@ const COLUMNS: RoadmapColumn[] = [
 
 function RoadmapIcon({ name }: { name: IconName }) {
   const paths: Record<IconName, React.ReactNode> = {
-    gauge: (
-      <>
-        <path d="M12 15l3.5-5.5" />
-        <path d="M4.6 17.5a9 9 0 1 1 14.8 0" />
-        <circle cx="12" cy="15" r="1.6" />
-      </>
-    ),
-    fileCheck: (
-      <>
-        <path d="M14 2.5H6.5a2 2 0 0 0-2 2v15a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V8z" />
-        <path d="M14 2.5V8h5.5" />
-        <path d="M9 14.5l2.2 2.2 4-4.4" />
-      </>
-    ),
-    shieldCheck: (
-      <>
-        <path d="M12 2.8l7.5 3v5.4c0 4.9-3.2 8.4-7.5 10-4.3-1.6-7.5-5.1-7.5-10V5.8z" />
-        <path d="M8.8 12l2.3 2.3 4.1-4.6" />
-      </>
-    ),
-    compass: (
-      <>
-        <circle cx="12" cy="12" r="9.2" />
-        <path d="M15.5 8.5l-2.2 5-4.8 2 2.2-5z" />
-      </>
-    ),
     layers: (
       <>
         <path d="M12 3l9 4.8-9 4.8-9-4.8z" />
@@ -182,16 +125,6 @@ function RoadmapIcon({ name }: { name: IconName }) {
         <path d="M8 20.5H5.5a2 2 0 0 1-2-2V16" />
         <circle cx="11.4" cy="11.4" r="3.4" />
         <path d="M13.9 13.9l2.6 2.6" />
-      </>
-    ),
-    listChecks: (
-      <>
-        <path d="M4 6.5l1.5 1.5 2.8-3" />
-        <path d="M4 13l1.5 1.5 2.8-3" />
-        <path d="M4 19.5L5.5 21l2.8-3" />
-        <path d="M12.5 6.5H20" />
-        <path d="M12.5 13H20" />
-        <path d="M12.5 19.5H20" />
       </>
     ),
     chat: (
@@ -272,18 +205,33 @@ export function ProductRoadmap() {
               </span>
             </div>
             <div className="roadmap-cards">
-              {col.items.map((item) => (
-                <article className="roadmap-card" key={item.title}>
-                  <span className="roadmap-card__icon">
-                    <RoadmapIcon name={item.icon} />
+              {col.items.length === 0 ? (
+                <div className="roadmap-empty">
+                  <span className="roadmap-empty__mark" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="9.2" />
+                      <path d="M8.6 12.2l2.3 2.3 4.5-5" />
+                    </svg>
                   </span>
-                  <div className="roadmap-card__body">
-                    <h3>{item.title}</h3>
-                    <p>{item.body}</p>
-                    <span className="roadmap-chip">{col.chip}</span>
-                  </div>
-                </article>
-              ))}
+                  <p>
+                    Nothing in flight right now — the next builds move in from
+                    the <b>Next</b> column.
+                  </p>
+                </div>
+              ) : (
+                col.items.map((item) => (
+                  <article className="roadmap-card" key={item.title}>
+                    <span className="roadmap-card__icon">
+                      <RoadmapIcon name={item.icon} />
+                    </span>
+                    <div className="roadmap-card__body">
+                      <h3>{item.title}</h3>
+                      <p>{item.body}</p>
+                      <span className="roadmap-chip">{col.chip}</span>
+                    </div>
+                  </article>
+                ))
+              )}
             </div>
           </div>
         ))}
