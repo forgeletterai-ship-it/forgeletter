@@ -333,11 +333,17 @@ async function run(){
   $('#p-mid').classList.remove('sel');$('#lockCard').classList.add('locked');$('#lockCard').classList.remove('unlocked');$('#pfNote').textContent='Fill in your snapshot to continue.';
   $('#profInner').style.transform='';$('#expInner').style.transform='';$('#st2').classList.remove('on');
   $$('.scene').forEach(s=>{s.classList.remove('active');s.style.zIndex=''});
-  show($('#outro'),false);show($('#window'),false);show($('#caption'),false);cursor.style.opacity=0;await sleep(150);
+  show($('#caption'),false);cursor.style.opacity=0;await sleep(150);
 
   show($('#window'),true);
   await setCap('01','Build your profile once','Fill it in once - ForgeLetter reuses it for every letter.',0);
-  show($('#caption'),true);scene('sc-profile');await sleep(1300);cursor.style.opacity=1;
+  show($('#caption'),true);scene('sc-profile');
+  // Loop boundary: the outro from the previous cycle is still covering
+  // the stage (opaque, z-index above the window). Let the reset and the
+  // profile scene's fade-in fully finish BEHIND it, then dissolve the
+  // outro to reveal a ready first scene - never a flash of leftover UI.
+  if($('#outro').classList.contains('show')){await sleep(1600);show($('#outro'),false);await sleep(950)}
+  await sleep(1300);cursor.style.opacity=1;
 
   // STEP 1 - profile
   await type('#p-desc','Growth marketer with 5 years in SaaS and lifecycle marketing',38);
@@ -386,7 +392,9 @@ async function run(){
 
   show($('#caption'),false);cursor.style.opacity=0;await sleep(700);
   show($('#outro'),true);await sleep(5000);
-  running=false;setTimeout(()=>{if(!running){show($('#outro'),false);run()}},900);
+  // Restart WITHOUT hiding the outro first - run() rebuilds the first
+  // scene behind it and dissolves it once everything is ready.
+  running=false;setTimeout(()=>{if(!running)run()},900);
 }
 window.addEventListener('load',()=>setTimeout(run,400));
 </script></body></html>
