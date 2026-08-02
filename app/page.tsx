@@ -6,7 +6,7 @@ import { ExampleShowcase } from "@/components/ExampleShowcase"
 import { HowItWorksDemo } from "@/components/HowItWorksDemo"
 import { PricingCards } from "@/components/PricingCards"
 import { PublicFooter, PublicNav } from "@/components/PublicChrome"
-import { ResourceSlider } from "@/components/ResourceSlider"
+import { ProductRoadmap } from "@/components/ProductRoadmap"
 
 // Canonical lives here, NOT in the root layout — a root-level
 // canonical of "/" would cascade to every page without its own.
@@ -437,19 +437,19 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section className="resources-luxury section" id="resources">
+        <section className="resources-luxury section" id="roadmap">
           <div className="container">
             <div className="resources-luxury__head">
-              <span className="resources-luxury__kicker">Tips & tricks</span>
+              <span className="resources-luxury__kicker">Roadmap</span>
               <h2>
-                A flexible library that grows with your <span className="headline-teal">workflow</span>.
+                Where ForgeLetter is <span className="headline-teal">heading</span> next.
               </h2>
               <p>
-                Practical guides, templates, and insights curated to help you
-                move faster and make stronger applications.
+                A living roadmap with one priority: making every letter you
+                send stronger. Quality first, then speed, then reach.
               </p>
             </div>
-            <ResourceSlider />
+            <ProductRoadmap />
           </div>
         </section>
 
