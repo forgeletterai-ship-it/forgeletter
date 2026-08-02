@@ -28,7 +28,7 @@ import Image from "next/image"
  * Accessibility: prefers-reduced-motion shows a static fallback panel.
  */
 
-const DEMO_SRC = "/forgeletter_demo.html?v=19"
+const DEMO_SRC = "/forgeletter_demo.html?v=22"
 const FALLBACK_IMAGE = "/hero-image-transparent.png"
 
 interface Props {
