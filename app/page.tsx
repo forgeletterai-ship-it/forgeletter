@@ -185,7 +185,7 @@ export default function HomePage() {
               </p>
               <div className="hero-actions">
                 <Link className="button hero-primary-button" href="/auth/signup">
-                  Start free
+                  Get started
                   <span className="hero-button-arrow" aria-hidden="true">-&gt;</span>
                 </Link>
                 {/* The anchor target is the ForgeLetter-vs-alternatives
@@ -461,8 +461,8 @@ export default function HomePage() {
                 Clear plans, secured by <span className="headline-teal">Stripe</span>.
               </h2>
               <p>
-                Pick the plan that fits your job search. Signup is free; you
-                only pay when you choose a plan to start generating letters.
+                Pick the plan that fits your job search. You only pay for the
+                plan you choose — generating letters starts the moment you do.
               </p>
             </div>
 
@@ -520,7 +520,7 @@ export default function HomePage() {
               posting to send-ready letter.
             </p>
             <Link className="button" href="/auth/signup">
-              Create your free account -&gt;
+              Create your account -&gt;
             </Link>
           </div>
         </section>

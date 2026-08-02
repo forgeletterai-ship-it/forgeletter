@@ -39,7 +39,7 @@ export async function PublicNav() {
                 Login
               </Link>
               <Link className="button" href="/auth/signup">
-                Start free
+                Get started
               </Link>
             </>
           )}
@@ -67,7 +67,7 @@ export function PublicFooter() {
             links={[
               { href: "/#how-it-works", label: "How It Works" },
               { href: "/#pricing", label: "Pricing" },
-              { href: "/auth/signup", label: "Start free" },
+              { href: "/auth/signup", label: "Get started" },
               { href: "/contact", label: "Contact" },
             ]}
           />

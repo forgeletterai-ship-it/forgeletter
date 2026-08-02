@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 const POPULAR_LINKS = [
   { href: "/", label: "Home", description: "Back to the landing page" },
   { href: "/#pricing", label: "Pricing", description: "Plans and what's included" },
-  { href: "/auth/signup", label: "Start free", description: "Create your account in a minute" },
+  { href: "/auth/signup", label: "Get started", description: "Create your account in a minute" },
   { href: "/contact", label: "Contact", description: "Reach the ForgeLetter team" },
 ] as const
 

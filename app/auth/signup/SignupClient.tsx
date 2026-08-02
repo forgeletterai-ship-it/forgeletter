@@ -119,11 +119,11 @@ export default function SignupClient({
         <div>
           <span className="eyebrow">
             <span className="eyebrow-dot" />
-            Free workspace
+            Your workspace
           </span>
           <h1>Start writing cover letters that actually get responses.</h1>
           <p>
-            Create your free account. No credit card required.
+            Create your account. No credit card required to sign up.
           </p>
         </div>
         <p>Write stronger applications with a focused, premium workflow.</p>
