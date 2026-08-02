@@ -21,7 +21,8 @@ import {
 
 registerPdfFonts()
 
-const PAGE_H = 842
+// A4 in points: 595.28 x 841.89.
+const PAGE_H = 841.89
 const LEFT_W = 218
 
 const styles = StyleSheet.create({
@@ -34,6 +35,11 @@ const styles = StyleSheet.create({
     paddingBottom: 48,
     paddingLeft: 0,
     paddingRight: 0,
+    // wrap={false} makes react-pdf auto-size the page to its content,
+    // collapsing the A4 height. minHeight restores the full A4 page
+    // while still letting an unusually long edited letter grow instead
+    // of clipping.
+    minHeight: PAGE_H,
   },
   // Left decorations column — absolute, repeats every page via `fixed`.
   // backgroundColor explicitly set to cream so the cream colour is

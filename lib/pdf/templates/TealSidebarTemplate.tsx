@@ -21,7 +21,7 @@ import {
 registerPdfFonts()
 
 // A4 in points: 595.28 x 841.89.
-const PAGE_H = 842
+const PAGE_H = 841.89
 const SIDEBAR_W = 215
 
 const styles = StyleSheet.create({
@@ -34,6 +34,11 @@ const styles = StyleSheet.create({
     paddingBottom: 44,
     paddingLeft: 0,
     paddingRight: 0,
+    // wrap={false} makes react-pdf auto-size the page to its content,
+    // collapsing the A4 height. minHeight restores the full A4 page
+    // while still letting an unusually long edited letter grow instead
+    // of clipping.
+    minHeight: PAGE_H,
   },
   // The sidebar overlays the left side, taken out of flow.
   // `fixed` makes it repeat on every page.

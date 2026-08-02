@@ -176,7 +176,7 @@ export function TemplatePickerModal({
         <header style={{ marginBottom: 18 }}>
           <h2 style={titleStyle}>Choose your PDF template</h2>
           <p style={subStyle}>
-            Pick a design, add a photo if you'd like one, and we'll render your letter directly onto it.
+            Pick a design — the previews below are exact renders of the PDF you'll download. Add a photo if you'd like one.
           </p>
         </header>
 
@@ -187,15 +187,21 @@ export function TemplatePickerModal({
             selected={template === "teal_sidebar"}
             onClick={() => setTemplate("teal_sidebar")}
           >
-            <TealThumb />
+            <TemplatePreview
+              src="/template-previews/teal-sidebar.png"
+              alt="Teal Sidebar template — exact render of the PDF"
+            />
           </TemplateCard>
           <TemplateCard
             label="Cream Editorial"
-            description="Warm cream with organic teal blobs and a cursive signature."
+            description="Warm cream with organic teal blobs and an elegant serif name."
             selected={template === "cream_floral"}
             onClick={() => setTemplate("cream_floral")}
           >
-            <CreamThumb />
+            <TemplatePreview
+              src="/template-previews/cream-editorial.png"
+              alt="Cream Editorial template — exact render of the PDF"
+            />
           </TemplateCard>
         </div>
 
@@ -416,160 +422,25 @@ function TemplateCard({
   )
 }
 
-function TealThumb() {
-  // CSS preview of Template 01 — dark teal sidebar with photo + waves at bottom
+function TemplatePreview({ src, alt }: { src: string; alt: string }) {
+  // Real render of the actual PDF template, regenerated with
+  // `npm run previews:render` whenever a template changes — so the
+  // preview always matches the downloaded PDF exactly.
   return (
-    <div style={{ width: "100%", height: "100%", display: "flex" }}>
-      <div
-        style={{
-          width: "37%",
-          background: "#163C3A",
-          position: "relative",
-          overflow: "hidden",
-        }}
-      >
-        <div
-          style={{
-            position: "absolute",
-            top: "12%",
-            left: "50%",
-            transform: "translateX(-50%)",
-            width: 38,
-            height: 38,
-            borderRadius: "50%",
-            background: "#E6DDD0",
-            border: "2px solid #C4A030",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            top: "38%",
-            left: 4,
-            right: 4,
-            color: "#C4A030",
-            fontWeight: 800,
-            fontSize: 9,
-            textAlign: "center",
-            letterSpacing: 1,
-          }}
-        >
-          YOUR NAME
-        </div>
-        <div
-          style={{
-            position: "absolute",
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: 32,
-            background:
-              "linear-gradient(180deg, transparent 0%, #F5EDE0 20%, #8FBAB0 55%, #C4A030 85%)",
-            clipPath: "polygon(0 30%, 100% 50%, 100% 100%, 0 100%)",
-          }}
-        />
-      </div>
-      <div style={{ flex: 1, background: "white", padding: "10px 6px" }}>
-        {[0.7, 0.95, 0.9, 0.85, 0.5, 0.92, 0.8, 0.75, 0.4].map((w, i) => (
-          <div
-            key={i}
-            style={{
-              height: 3,
-              background: "#D4C7B5",
-              marginBottom: 4,
-              width: `${w * 100}%`,
-              borderRadius: 1,
-            }}
-          />
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function CreamThumb() {
-  // CSS preview of Template 02 — cream background with organic blobs left, letter right
-  return (
-    <div
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={src}
+      alt={alt}
+      loading="lazy"
       style={{
+        position: "absolute",
+        inset: 0,
         width: "100%",
         height: "100%",
-        display: "flex",
-        background: "#F5EDE0",
+        objectFit: "cover",
+        display: "block",
       }}
-    >
-      <div style={{ width: "37%", position: "relative", padding: "10px 0" }}>
-        {/* Sage blob behind */}
-        <div
-          style={{
-            position: "absolute",
-            top: 8,
-            left: 14,
-            width: 50,
-            height: 38,
-            borderRadius: "60% 40% 50% 50%",
-            background: "#8FBAB0",
-            opacity: 0.55,
-          }}
-        />
-        {/* Teal blob */}
-        <div
-          style={{
-            position: "absolute",
-            top: 16,
-            left: 8,
-            width: 48,
-            height: 42,
-            borderRadius: "55% 45% 40% 60%",
-            background: "#163C3A",
-          }}
-        />
-        {/* Photo circle */}
-        <div
-          style={{
-            position: "absolute",
-            top: 22,
-            left: 18,
-            width: 28,
-            height: 28,
-            borderRadius: "50%",
-            background: "#E6DDD0",
-            border: "2px solid #C4A030",
-          }}
-        />
-        {/* Name */}
-        <div
-          style={{
-            position: "absolute",
-            top: 75,
-            left: 6,
-            right: 6,
-            textAlign: "center",
-            fontFamily: "Georgia, serif",
-            fontStyle: "italic",
-            color: "#163C3A",
-            fontSize: 11,
-          }}
-        >
-          Your Name
-        </div>
-      </div>
-      <div style={{ flex: 1, padding: "10px 8px 10px 4px" }}>
-        {[0.85, 0.92, 0.78, 0.95, 0.88, 0.7, 0.91, 0.6, 0.83].map((w, i) => (
-          <div
-            key={i}
-            style={{
-              height: 3,
-              background: "#9D9085",
-              marginBottom: 4,
-              width: `${w * 100}%`,
-              borderRadius: 1,
-              opacity: 0.55,
-            }}
-          />
-        ))}
-      </div>
-    </div>
+    />
   )
 }
 
