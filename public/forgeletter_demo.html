@@ -9,8 +9,8 @@
 :root{--cream:#FEFBF6;--cream2:#F4EFE5;--card:#FAF6EE;--paper:#FFFFFF;--teal:#105250;--teal2:#0c403e;--gold:#C79B3C;--goldl:#E0C47C;--ink:#2A1A0E;--txt:#3A342C;--mute:#9b9384;--ph:#b9b1a3;--line:#E7E0D2;--emp:#C79B3C;--intn:#1f8a7a;--uni:#7163a8;--serif:'Spectral',Georgia,serif;--sans:'Inter',-apple-system,'Segoe UI',sans-serif}
 *{margin:0;padding:0;box-sizing:border-box}html,body{height:100%}
 body{background:#FAF6EE;font-family:var(--sans);color:var(--txt);display:flex;align-items:center;justify-content:center;overflow:hidden}
-.stage-wrap{width:100vw;height:100vh;display:flex;align-items:center;justify-content:center}
-.stage{position:relative;width:1280px;height:720px;flex:0 0 1280px;background:#FAF6EE;overflow:hidden;transform-origin:center}
+.stage-wrap{width:100vw;height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.stage{position:relative;width:1280px;height:720px;flex:0 0 1280px;background:#FAF6EE;overflow:hidden;transform-origin:center;contain:paint}
 .stage::before{content:"";position:absolute;inset:0;background-image:repeating-linear-gradient(135deg,rgba(176,162,138,.05) 0 1px,transparent 1px 22px);pointer-events:none}
 .goldline{position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,#C79B3C,#E0C47C);z-index:60}
 .center-layer{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;z-index:40;opacity:0;background:#FAF6EE;transition:opacity .9s ease;pointer-events:none}
@@ -33,9 +33,11 @@ body{background:#FAF6EE;font-family:var(--sans);color:var(--txt);display:flex;al
 .addr{height:24px;flex:0 0 300px;background:var(--cream2);border-radius:12px;display:flex;align-items:center;gap:8px;padding:0 12px;font-size:12px;color:var(--mute)}
 .addr .dot{width:9px;height:9px;border:1.5px solid var(--mute);border-radius:50%}
 .viewport{position:relative;height:calc(100% - 46px);overflow:hidden}
-/* seamless cross-dissolve between scenes (opaque so no wash) */
-.scene{position:absolute;inset:0;padding:22px 26px;background:var(--card);opacity:0;transform:translateX(28px);transition:opacity 1.5s ease,transform 1.5s cubic-bezier(.32,0,.18,1);overflow:hidden}
-.scene.active{opacity:1;transform:none;z-index:2}
+/* seamless cross-dissolve between scenes (opaque so no wash).
+   visibility flips to hidden AFTER the fade so an inactive scene can
+   never leave a stale painted layer behind (ghost "duplicate frame"). */
+.scene{position:absolute;inset:0;padding:22px 26px;background:var(--card);opacity:0;visibility:hidden;transform:translateX(28px);transition:opacity 1.5s ease,transform 1.5s cubic-bezier(.32,0,.18,1),visibility 0s linear 1.5s}
+.scene.active{opacity:1;visibility:visible;transform:none;z-index:2;transition:opacity 1.5s ease,transform 1.5s cubic-bezier(.32,0,.18,1),visibility 0s}
 .scene-inner{transition:transform 1.25s cubic-bezier(.45,.05,.2,1)}
 .eyebrow{font-size:11px;font-weight:700;letter-spacing:1.2px;color:var(--gold);text-transform:uppercase}
 .flabel{font-size:11.5px;color:#7a715f;font-weight:600;margin-bottom:5px;display:block}
@@ -127,15 +129,19 @@ body{background:#FAF6EE;font-family:var(--sans);color:var(--txt);display:flex;al
 .addwin{cursor:pointer;transition:color .15s}
 .addwin.press{transform:scale(.97)}
 .genbtn{margin-top:12px;height:50px;background:linear-gradient(180deg,#13615d,#0e4a48);border-radius:11px;display:flex;align-items:center;justify-content:center;gap:9px;color:var(--goldl);font-weight:700;font-size:15px;box-shadow:0 12px 24px -8px rgba(16,82,80,.5);transition:transform .12s}.genbtn.press{transform:scale(.98)}
-/* letter */
+/* letter — mirrors the real dashboard "Generated cover letter" panel */
 .lt-top{display:flex;align-items:flex-start;justify-content:space-between}
-.score{font-size:12.5px;color:#6f6757;margin-top:4px}
-.editbtn{background:var(--teal);color:var(--goldl);font-weight:700;font-size:13px;padding:8px 16px;border-radius:18px;display:flex;gap:6px;align-items:center}
-.paper{background:var(--paper);border:1px solid #ece6d8;border-radius:10px;padding:18px 22px;margin-top:12px;height:530px;overflow:hidden}
-.paper p{font-family:var(--serif);font-size:12.5px;color:#352f27;line-height:1.55;margin-top:11px}
-.lt-actions{display:flex;gap:12px;margin-top:14px}
-.btn-ghost{flex:1;height:46px;border:1px solid var(--gold);border-radius:10px;display:flex;align-items:center;justify-content:center;gap:8px;color:var(--gold);font-weight:600;font-size:14px;background:#fffdf8}
-.btn-solid{flex:1;height:46px;background:var(--teal);border-radius:10px;display:flex;align-items:center;justify-content:center;gap:8px;color:var(--goldl);font-weight:700;font-size:14px}
+.lt-title{display:flex;align-items:center;gap:10px}
+.lt-title .fic{color:var(--gold);display:flex}
+.lt-title h3{font-size:20px;letter-spacing:-.03em;color:var(--ink);font-weight:800}
+.score{font-size:12.5px;color:#6f6757;margin-top:6px}
+.editbtn{min-height:38px;display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(197,132,42,.38);border-radius:999px;padding:0 18px;color:var(--ink);font-weight:800;font-size:13px;background:linear-gradient(180deg,rgba(255,255,255,.88),rgba(255,247,235,.94));box-shadow:0 12px 26px rgba(137,86,21,.09)}
+.editbtn .eic{color:#eb7f22}
+.paper{background:linear-gradient(180deg,rgba(255,254,249,.92),rgba(255,251,243,.92));border:1px solid rgba(199,154,54,.4);border-radius:10px;padding:18px 22px;margin-top:12px;height:506px;overflow:hidden}
+.paper p{font-size:12.5px;color:#33291d;line-height:1.55;margin-top:11px;max-width:790px}
+.lt-actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.btn-ghost{min-height:50px;border:1px solid rgba(213,145,49,.36);border-radius:8px;display:flex;align-items:center;justify-content:center;gap:10px;color:var(--gold);font-weight:700;font-size:15px;font-family:Georgia,'Times New Roman',serif;background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(255,247,234,.96));box-shadow:0 12px 26px rgba(154,96,22,.08)}
+.btn-solid{min-height:50px;border:1px solid rgba(7,133,143,.62);border-radius:8px;display:flex;align-items:center;justify-content:center;gap:10px;color:#0b6a72;font-weight:700;font-size:15px;font-family:Georgia,'Times New Roman',serif;background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(248,254,254,.94))}
 .cursor{position:absolute;left:0;top:0;width:26px;height:26px;z-index:55;pointer-events:none;opacity:0;transition:transform .4s cubic-bezier(.4,0,.2,1),opacity .45s;will-change:transform}
 .cursor svg{filter:drop-shadow(0 2px 3px rgba(0,0,0,.35))}
 .cursor .ring{position:absolute;left:-12px;top:-12px;width:36px;height:36px;border:3px solid rgba(16,82,80,.55);border-radius:50%;opacity:0;transform:scale(.3)}
@@ -166,8 +172,6 @@ body{background:#FAF6EE;font-family:var(--sans);color:var(--txt);display:flex;al
       <div class="sopt"><b>Leadership</b><span>13-18 yrs</span></div>
       <div class="sopt"><b>C-suite</b><span>18+ yrs</span></div>
     </div>
-    <div class="qlabel" style="margin-top:14px">Qualifications &amp; portfolio link <span class="muted">- used only in the letter's closing paragraph, as support</span></div>
-    <div class="field"><input id="p-qual" readonly data-ph="e.g. MBA, CFA - then https://..."></div>
     <div class="pfooter"><span class="pf-note" id="pfNote">Fill in your snapshot to continue.</span><div class="nextbtn" id="nextBtn">Next: Experience &amp; Wins</div></div>
   </div>
   <div class="pcard locked" id="lockCard">
@@ -183,11 +187,12 @@ body{background:#FAF6EE;font-family:var(--sans);color:var(--txt);display:flex;al
   <div class="togs"><div class="tog"><span class="b" style="background:var(--emp)"></span>Employer</div><div class="tog"><span class="b" style="background:var(--intn)"></span>Internship</div><div class="tog"><span class="b" style="background:var(--uni)"></span>University</div></div>
   <div class="sec emp" id="secEmp">
     <div class="sec-h"><span class="bul"></span>Employer</div>
-    <div class="row" style="grid-template-columns:1.5fr 1fr .9fr .9fr">
+    <div class="row" style="grid-template-columns:1.3fr 1fr .8fr .9fr .9fr">
       <div><span class="flabel">Company name</span><div class="field"><input id="f-comp" data-ph="e.g. Acme Corp"></div></div>
       <div><span class="flabel">Your title</span><div class="field"><input id="f-title" data-ph="Job title"></div></div>
       <div><span class="flabel">Type</span><div class="selwrap"><div class="field sel" id="dd-etype-bar"><span class="dd-val ph">Select...</span><svg width="10" height="6"><path d="M0 0l5 5 5-5" fill="none" stroke="#555" stroke-width="1.4"/></svg></div><div class="selmenu" id="dd-etype-list"><div class="sopt-i" data-v="Full time">Full time</div><div class="sopt-i" data-v="Part time">Part time</div><div class="sopt-i" data-v="Contract">Contract</div></div></div></div>
       <div><span class="flabel">Sector</span><div class="selwrap"><div class="field sel" id="dd-esec-bar"><span class="dd-val ph">Select...</span><svg width="10" height="6"><path d="M0 0l5 5 5-5" fill="none" stroke="#555" stroke-width="1.4"/></svg></div><div class="selmenu" id="dd-esec-list"><div class="sopt-i" data-v="Software & SaaS">Software &amp; SaaS</div><div class="sopt-i" data-v="Finance & Banking">Finance &amp; Banking</div><div class="sopt-i" data-v="Consulting">Consulting</div><div class="sopt-i" data-v="Healthcare">Healthcare</div><div class="sopt-i" data-v="Retail & E-commerce">Retail &amp; E-commerce</div><div class="sopt-i" data-v="Media & Entertainment">Media &amp; Entertainment</div><div class="sopt-i" data-v="Manufacturing">Manufacturing</div><div class="sopt-i" data-v="Energy & Utilities">Energy &amp; Utilities</div><div class="sopt-i" data-v="Real Estate">Real Estate</div><div class="sopt-i" data-v="Education">Education</div><div class="sopt-i" data-v="Government & Public Sector">Government &amp; Public Sector</div><div class="sopt-i" data-v="Non-profit">Non-profit</div><div class="sopt-i" data-v="Hospitality & Travel">Hospitality &amp; Travel</div><div class="sopt-i" data-v="Transportation & Logistics">Transportation &amp; Logistics</div><div class="sopt-i" data-v="Legal Services">Legal Services</div><div class="sopt-i" data-v="Marketing & Advertising">Marketing &amp; Advertising</div><div class="sopt-i" data-v="Telecommunications">Telecommunications</div><div class="sopt-i" data-v="Aerospace & Defense">Aerospace &amp; Defense</div><div class="sopt-i" data-v="Automotive">Automotive</div><div class="sopt-i" data-v="Pharmaceuticals">Pharmaceuticals</div></div></div></div>
+      <div><span class="flabel">Size <span style="color:var(--mute);font-weight:400">(optional)</span></span><div class="selwrap"><div class="field sel" id="dd-esize-bar"><span class="dd-val ph">Select...</span><svg width="10" height="6"><path d="M0 0l5 5 5-5" fill="none" stroke="#555" stroke-width="1.4"/></svg></div><div class="selmenu" id="dd-esize-list"><div class="sopt-i" data-v="1-10 (Startup)">1-10 (Startup)</div><div class="sopt-i" data-v="11-50 (Small)">11-50 (Small)</div><div class="sopt-i" data-v="51-200 (Mid-small)">51-200 (Mid-small)</div><div class="sopt-i" data-v="201-500 (Mid-size)">201-500 (Mid-size)</div><div class="sopt-i" data-v="501-1000 (Large)">501-1000 (Large)</div><div class="sopt-i" data-v="1001-5000 (Enterprise)">1001-5000 (Enterprise)</div><div class="sopt-i" data-v="5000+ (Mega)">5000+ (Mega)</div><div class="sopt-i" data-v="Not sure">Not sure</div></div></div></div>
     </div>
     <div class="row winrow" style="grid-template-columns:1.2fr 1fr 1fr">
       <div class="wbadge">1</div>
@@ -252,6 +257,10 @@ body{background:#FAF6EE;font-family:var(--sans);color:var(--txt);display:flex;al
     </div>
     <div class="addwin">+ Add project or award</div><div class="wincount">1 added</div>
   </div>
+  <div class="sec" id="secQual" style="background:#FCF8F0">
+    <div class="sec-h"><span class="bul" style="background:var(--gold)"></span>Qualifications &amp; portfolio link <span style="font-weight:400;color:var(--mute);font-size:11.5px">- used only in the letter's closing paragraph, as support</span></div>
+    <div class="field"><input id="p-qual" data-ph="e.g. MBA, CFA - then https://..."></div>
+  </div>
 </div></div>
 
 <!-- SCENE 2: DRAFT -->
@@ -282,7 +291,7 @@ body{background:#FAF6EE;font-family:var(--sans);color:var(--txt);display:flex;al
 
 <!-- SCENE 3: LETTER -->
 <div class="scene" id="sc-letter"><div class="scene-inner">
-  <div class="lt-top"><div><div class="h-serif" style="font-size:20px">📄 GENERATED COVER LETTER</div><div class="score">Score 94/100 - best draft delivered. Edit freely and save your changes.</div></div><div class="editbtn">✎ Edit</div></div>
+  <div class="lt-top"><div><div class="lt-title"><span class="fic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h6"/></svg></span><h3>Generated cover letter</h3></div><div class="score">Score 94/100 - passed quality gate. Edit freely and save your changes.</div></div><div class="editbtn"><span class="eic">✎</span>Edit</div></div>
   <div class="paper">
     <p style="margin-top:0">Dear Hiring Manager,</p>
     <p>Rebuilding Brightfold Labs' onboarding flow and lifting retention 24% is the clearest proof of how I approach growth: diagnose the full activation arc, then iterate until behaviour measurably shifts. That change cut churn risk on the cohort most likely to convert - exactly the kind of compounding result the Senior Growth Manager role at Northpeak exists to deliver.</p>
@@ -302,7 +311,7 @@ body{background:#FAF6EE;font-family:var(--sans);color:var(--txt);display:flex;al
 const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s),sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const stage=$('#stage'),cursor=$('#cursor');
 let _lastFitW=0,_lastFitH=0;function fit(){const wrap=document.querySelector('.stage-wrap');const w=(wrap&&wrap.clientWidth)||innerWidth||1280;const h=(wrap&&wrap.clientHeight)||innerHeight||720;if(w===_lastFitW&&h===_lastFitH)return;_lastFitW=w;_lastFitH=h;const sc=Math.min(w/1280,h/720);stage.style.transform=`scale(${sc})`}addEventListener('resize',fit);addEventListener('load',fit);requestAnimationFrame(fit);if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fit);try{new ResizeObserver(fit).observe(document.body);new ResizeObserver(fit).observe(document.documentElement);new ResizeObserver(fit).observe(document.querySelector('.stage-wrap'))}catch(e){}[50,150,300,600,1200,2000,3500,5500].forEach(ms=>setTimeout(fit,ms));setInterval(fit,500);fit();
-$$('#sc-exp input,#p-desc,#p-qual').forEach(i=>{if(i.dataset.ph)i.setAttribute('placeholder',i.dataset.ph);i.readOnly=true});
+$$('#sc-exp input,#p-desc').forEach(i=>{if(i.dataset.ph)i.setAttribute('placeholder',i.dataset.ph);i.readOnly=true});
 function moveTo(el,dx=0,dy=0){const s=stage.getBoundingClientRect(),r=el.getBoundingClientRect(),sc=s.width/1280;cursor.style.transform=`translate(${(r.left-s.left)/sc+r.width/sc/2+dx}px,${(r.top-s.top)/sc+r.height/sc/2+dy}px)`}
 async function click(){cursor.classList.remove('click');void cursor.offsetWidth;cursor.classList.add('click');await sleep(170)}
 async function type(sel,text,cps=46){const inp=$(sel),fld=inp.closest('.field');const baseX=-fld.offsetWidth/2+18,maxOff=fld.offsetWidth-46;cursor.style.transition='transform .55s cubic-bezier(.4,0,.2,1), opacity .35s';cursor.style.opacity='1';moveTo(fld,baseX);await sleep(580);fld.classList.add('focus');inp.focus({preventScroll:true});await sleep(120);cursor.style.transition='transform .07s linear, opacity .35s';for(let i=1;i<=text.length;i++){inp.value=text.slice(0,i);const off=Math.min(i*7.2,maxOff);moveTo(fld,baseX+off);await sleep(cps+Math.random()*24)}cursor.style.transition='transform .55s cubic-bezier(.4,0,.2,1), opacity .35s';await sleep(220);fld.classList.remove('focus')}
@@ -317,7 +326,7 @@ async function run(){
   if(running)return;running=true;
   fit();
   // reset
-  $$('#sc-exp input').forEach(i=>i.value='');$('#p-desc').value='';$('#p-qual').value='';
+  $$('#sc-exp input').forEach(i=>i.value='');$('#p-desc').value='';
   $$('.selwrap .field.sel').forEach(b=>{b.classList.remove('open');const v=b.querySelector('.dd-val');if(v){v.textContent='Select...';v.classList.add('ph')}});$$('.selmenu').forEach(m=>m.classList.remove('open'));$$('.sopt-i').forEach(o=>o.classList.remove('on','hover'));
   $('#empWin2').classList.add('hidden-row');$('#empWin2').classList.remove('reveal-anim');$('#empWinCount').textContent='1 win';
   $$('.opt').forEach(o=>o.classList.remove('on'));$('#ddList').classList.remove('open');$('#ddBar').classList.remove('open','filled');$('#ddLabel').textContent='Select experiences to include';
@@ -333,17 +342,17 @@ async function run(){
   // STEP 1 - profile
   await type('#p-desc','Growth marketer with 5 years in SaaS and lifecycle marketing',38);
   moveTo($('#p-mid'));await sleep(880);await click();$('#p-mid').classList.add('sel');await sleep(450);
-  await type('#p-qual','MBA, Google Analytics certified',40);
   $('#pfNote').textContent='Career snapshot is ready. Continue to add your evidence and wins.';
   const nb=$('#nextBtn');moveTo(nb);await sleep(880);await click();nb.classList.add('press');await sleep(160);nb.classList.remove('press');
   $('#st2').classList.add('on');$('#lockCard').classList.remove('locked');$('#lockCard').classList.add('unlocked');await sleep(700);
 
   // STEP 2 - experience (with smooth scrolling)
-  await setCap('02','Add your evidence & Wins','Every win takes a number - plus the skills & tools you used inside it.',1);
+  await setCap('02','Add your evidence & Wins','Wins take a number, plus the skills & tools you used. Qualifications support the closing.',1);
   scene('sc-exp');$('#expInner').style.transform='';await sleep(1300);
   await type('#f-comp','Brightfold Labs');await type('#f-title','Growth Marketer');
   await pickSel('#dd-etype-bar','#dd-etype-list','Full time');
   await pickSel('#dd-esec-bar','#dd-esec-list','Software & SaaS');
+  await pickSel('#dd-esize-bar','#dd-esize-list','51-200 (Mid-small)');
   await type('#f-ach','Rebuilt the onboarding flow');await type('#f-num','+24% retention');await type('#f-why','Cut churn risk');
   await type('#f-skills','Funnel analysis, retention strategy',30);await type('#f-tools','Amplitude, Figma',34);
   const addBtn=$('#empAddWin');moveTo(addBtn);await sleep(700);await click();addBtn.classList.add('press');await sleep(160);addBtn.classList.remove('press');
@@ -357,7 +366,9 @@ async function run(){
   await type('#f-itools','Power BI',34);
   scrollExpTo($('#secUni'));await sleep(1320);
   await type('#f-uname','Westbridge University');await type('#f-udeg','BSc Computer Science');
-  await type('#f-uproj','Led the design society');await type('#f-uscale','300 members');await type('#f-urec','Top of faculty');await sleep(750);
+  await type('#f-uproj','Led the design society');await type('#f-uscale','300 members');await type('#f-urec','Top of faculty');
+  scrollExpTo($('#secQual'));await sleep(1100);
+  await type('#p-qual','MBA, Google Analytics certified',36);await sleep(650);
 
   // STEP 3 - draft + dropdown
   await setCap('03','Pick the experience that fits','Choose which saved wins this letter draws from - your qualifications support the closing automatically.',2);
