@@ -21,7 +21,7 @@ import {
 registerPdfFonts()
 
 // A4 in points: 595.28 x 841.89.
-const PAGE_H = 842
+const PAGE_H = 841.89
 const SIDEBAR_W = 215
 
 const styles = StyleSheet.create({
@@ -34,6 +34,11 @@ const styles = StyleSheet.create({
     paddingBottom: 44,
     paddingLeft: 0,
     paddingRight: 0,
+    // wrap={false} makes react-pdf auto-size the page to its content,
+    // collapsing the A4 height. minHeight restores the full A4 page
+    // while still letting an unusually long edited letter grow instead
+    // of clipping.
+    minHeight: PAGE_H,
   },
   // The sidebar overlays the left side, taken out of flow.
   // `fixed` makes it repeat on every page.
@@ -52,12 +57,6 @@ const styles = StyleSheet.create({
   bodyColumn: {
     marginLeft: SIDEBAR_W + 32,
     marginRight: 42,
-  },
-  recipientBlock: {
-    fontSize: 10,
-    lineHeight: 1.4,
-    color: COLORS.ink,
-    marginBottom: 16,
   },
   greeting: {
     fontSize: 10.5,
@@ -79,11 +78,6 @@ const styles = StyleSheet.create({
     fontSize: 10.5,
     color: COLORS.ink,
     marginTop: 22,
-  },
-  enclosure: {
-    fontSize: 9.5,
-    color: COLORS.muted,
-    marginTop: 12,
   },
 })
 
@@ -403,16 +397,6 @@ export function TealSidebarTemplate(props: LetterTemplateProps) {
   const parsed = parseLetter(props.letterBody, props.candidateName)
   const initials = getInitials(props.candidateName)
 
-  const recipient: string[] = []
-  recipient.push("Hiring Manager")
-  if (props.companyName) recipient.push(props.companyName)
-  if (props.recipientAddress) {
-    for (const line of props.recipientAddress.split(/\n/)) {
-      const t = line.trim()
-      if (t) recipient.push(t)
-    }
-  }
-
   return (
     <Document
       author={props.candidateName}
@@ -456,14 +440,11 @@ export function TealSidebarTemplate(props: LetterTemplateProps) {
           <BottomWaves />
         </View>
 
-        {/* === Body column. wrap=false guarantees single-page output === */}
+        {/* === Body column. wrap=false guarantees single-page output ===
+            Owner rule: no date, no "Hiring Manager"/company recipient
+            block, no "Enclosure" convention — the letter starts at the
+            greeting. Customers who want a header add it via Edit. */}
         <View style={styles.bodyColumn} wrap={false}>
-          <View style={styles.recipientBlock}>
-            {recipient.map((line, i) => (
-              <Text key={i}>{line}</Text>
-            ))}
-          </View>
-
           <Text style={styles.greeting}>{parsed.greeting}</Text>
 
           {parsed.paragraphs.map((p, i) => (
@@ -474,7 +455,6 @@ export function TealSidebarTemplate(props: LetterTemplateProps) {
 
           <Text style={styles.signoff}>{parsed.signoff}</Text>
           <Text style={styles.signedName}>{parsed.signedName}</Text>
-          <Text style={styles.enclosure}>Enclosure</Text>
         </View>
       </Page>
     </Document>

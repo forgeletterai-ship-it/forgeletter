@@ -14,7 +14,6 @@ import { getPdfAssets } from "../assets"
 import { registerPdfFonts } from "../fonts"
 import {
   COLORS,
-  formatDate,
   getInitials,
   parseLetter,
   type LetterTemplateProps,
@@ -22,7 +21,8 @@ import {
 
 registerPdfFonts()
 
-const PAGE_H = 842
+// A4 in points: 595.28 x 841.89.
+const PAGE_H = 841.89
 const LEFT_W = 218
 
 const styles = StyleSheet.create({
@@ -35,6 +35,11 @@ const styles = StyleSheet.create({
     paddingBottom: 48,
     paddingLeft: 0,
     paddingRight: 0,
+    // wrap={false} makes react-pdf auto-size the page to its content,
+    // collapsing the A4 height. minHeight restores the full A4 page
+    // while still letting an unusually long edited letter grow instead
+    // of clipping.
+    minHeight: PAGE_H,
   },
   // Left decorations column — absolute, repeats every page via `fixed`.
   // backgroundColor explicitly set to cream so the cream colour is
@@ -63,18 +68,6 @@ const styles = StyleSheet.create({
     marginLeft: LEFT_W + 28,
     marginRight: 42,
   },
-  dateLine: {
-    fontSize: 10,
-    color: COLORS.ink,
-    marginBottom: 14,
-    fontWeight: "bold",
-  },
-  recipientBlock: {
-    fontSize: 10,
-    lineHeight: 1.4,
-    color: COLORS.ink,
-    marginBottom: 16,
-  },
   greeting: {
     fontSize: 10.5,
     color: COLORS.ink,
@@ -92,19 +85,12 @@ const styles = StyleSheet.create({
     color: COLORS.ink,
     marginTop: 14,
   },
-  signatureCursive: {
-    fontFamily: "DancingScript",
-    fontWeight: "bold",
-    fontSize: 28,
-    color: COLORS.gold,
-    marginTop: 6,
-    marginBottom: 2,
-  },
   signedNameSmall: {
-    fontSize: 9,
+    fontSize: 10,
     color: COLORS.gold,
     letterSpacing: 2,
     fontWeight: "bold",
+    marginTop: 6,
   },
 })
 
@@ -335,16 +321,6 @@ export function CreamEditorialTemplate(props: LetterTemplateProps) {
   const parsed = parseLetter(props.letterBody, props.candidateName)
   const initials = getInitials(props.candidateName)
 
-  const recipient: string[] = []
-  if (props.companyName) recipient.push(props.companyName)
-  if (props.recipientAddress) {
-    for (const line of props.recipientAddress.split(/\n/)) {
-      const t = line.trim()
-      if (t) recipient.push(t)
-    }
-  }
-  const hasRecipient = recipient.length > 0
-
   return (
     <Document
       author={props.candidateName}
@@ -387,18 +363,13 @@ export function CreamEditorialTemplate(props: LetterTemplateProps) {
         {/* Vertical gold divider between columns — also fixed */}
         <View fixed style={styles.divider} />
 
-        {/* === Body column. wrap=false guarantees single-page output === */}
+        {/* === Body column. wrap=false guarantees single-page output ===
+            Owner rule: no date line, no recipient block — the letter
+            starts at the greeting; customers add a header via Edit if
+            they want one. The cursive "signature" is gone too: the
+            script font has no Cyrillic glyphs, so non-Latin names
+            rendered as garbage. The typed name is the signature. */}
         <View style={styles.bodyColumn} wrap={false}>
-          <Text style={styles.dateLine}>Date: {formatDate(props.date)}</Text>
-
-          {hasRecipient ? (
-            <View style={styles.recipientBlock}>
-              {recipient.map((line, i) => (
-                <Text key={i}>{line}</Text>
-              ))}
-            </View>
-          ) : null}
-
           <Text style={styles.greeting}>{parsed.greeting}</Text>
 
           {parsed.paragraphs.map((p, i) => (
@@ -409,7 +380,6 @@ export function CreamEditorialTemplate(props: LetterTemplateProps) {
 
           <Text style={styles.signoff}>{parsed.signoff}</Text>
 
-          <Text style={styles.signatureCursive}>{parsed.signedName}</Text>
           <Text style={styles.signedNameSmall}>
             {(parsed.signedName || props.candidateName || "").toUpperCase()}
           </Text>

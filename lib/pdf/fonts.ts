@@ -60,3 +60,38 @@ export function registerPdfFonts() {
   // Disable hyphenation — looks bad in formal letter body.
   Font.registerHyphenationCallback((word) => [word])
 }
+
+interface ResettableFontSource {
+  data: unknown
+  loadResultPromise: unknown
+}
+
+/**
+ * Must be called before EVERY renderToBuffer call.
+ *
+ * react-pdf keeps loaded fontkit instances (and their glyph-run
+ * caches) alive across documents in a warm process. Those caches get
+ * mutated during layout, so the second document that lays out a word
+ * the first document already used — in a different weight — silently
+ * loses glyphs: rendering the Teal template then the Cream template
+ * in the same process produced a Cream PDF whose greeting read
+ * "g Manager," instead of "Dear Hiring Manager,".
+ *
+ * Nulling each source's data AND its cached load promise forces the
+ * next render to rebuild fontkit instances with clean caches. (The
+ * library's own Font.reset() nulls only `data`, leaving the resolved
+ * load promise behind — fonts then never reload and rendering
+ * crashes; that's why this helper exists.)
+ */
+export function resetPdfFontCaches() {
+  const families = Font.getRegisteredFonts() as unknown as Record<
+    string,
+    { sources: ResettableFontSource[] }
+  >
+  for (const family of Object.values(families)) {
+    for (const source of family.sources) {
+      source.data = null
+      source.loadResultPromise = null
+    }
+  }
+}

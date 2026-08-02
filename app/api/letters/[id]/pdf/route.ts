@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { renderToBuffer } from "@react-pdf/renderer"
+import { resetPdfFontCaches } from "@/lib/pdf/fonts"
 import { CreamEditorialTemplate } from "@/lib/pdf/templates/CreamEditorialTemplate"
 import { TealSidebarTemplate } from "@/lib/pdf/templates/TealSidebarTemplate"
 import type { LetterTemplateProps } from "@/lib/pdf/templates/shared"
@@ -61,6 +62,10 @@ async function buildPdf(
   template: TemplateChoice,
   args: LetterTemplateProps
 ): Promise<Buffer> {
+  // Warm serverless instances render many letters through one process;
+  // stale font caches from a previous render corrupt the next document
+  // (see resetPdfFontCaches docs).
+  resetPdfFontCaches()
   const element =
     template === "teal_sidebar"
       ? TealSidebarTemplate(args)

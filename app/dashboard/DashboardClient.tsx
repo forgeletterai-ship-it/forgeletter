@@ -1263,11 +1263,9 @@ export function DashboardClient({
             </div>
           ) : (
             <article className="cover-letter-paper">
-              <p>{formatDate(latestLetter.createdAt)}</p>
-              <p>
-                Hiring Manager<br />
-                {latestLetter.companyName || company || "—"}
-              </p>
+              {/* Owner rule: no date, no "Hiring Manager"/company
+                  header — the letter starts at its greeting. Customers
+                  who want a header add it via Edit. */}
               {paragraphs.map((p, i) => (
                 <p key={i}>{p}</p>
               ))}
