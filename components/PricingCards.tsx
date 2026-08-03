@@ -19,9 +19,9 @@ const plans = [
     rewrites: 0,
     monthlyCents: 999,
     features: [
-      "Both templates",
+      "Both PDF templates",
       "Photo upload",
-      "Basic history",
+      "PDF download & copy",
     ],
     agents: [
       "Profile Analyst",
@@ -46,8 +46,8 @@ const plans = [
     monthlyCents: 1999,
     features: [
       "ATS score",
-      "LinkedIn import",
       "1 tone rewrite included",
+      "Everything in Starter",
     ],
     agents: [
       "Profile Analyst",
@@ -75,7 +75,7 @@ const plans = [
     features: [
       "All 12 agents",
       "3 tone rewrites included",
-      "Full pipeline",
+      "Everything in Pro",
     ],
     agents: [
       "Input Cleaner",
@@ -139,6 +139,16 @@ function EnvelopeIcon() {
   )
 }
 
+function CheckIcon() {
+  return (
+    <span className="plux-check" aria-hidden="true">
+      <svg viewBox="0 0 10 10" fill="none">
+        <path d="M1.5 5.2 4 7.6 8.6 2.4" strokeWidth="1.6" strokeLinecap="round" />
+      </svg>
+    </span>
+  )
+}
+
 function PricingSecurityIcon({ type }: { type: (typeof securityItems)[number]["icon"] }) {
   if (type === "shield") {
     return (
@@ -182,7 +192,6 @@ function formatPrice(cents: number) {
   return (cents / 100).toFixed(2)
 }
 
-
 export function PricingCards({
   currentPlan,
   loadingPlan = "",
@@ -200,7 +209,7 @@ export function PricingCards({
 
   return (
     <>
-      <div className="pricing-arch-grid">
+      <div className="plux-grid">
         {plans.map((plan) => {
           const isHighlighted = "highlight" in plan && plan.highlight
           const period = periods[plan.key]
@@ -215,12 +224,7 @@ export function PricingCards({
           const currentBasePlan = getBasePlan(currentPlan)
           const currentPeriod = getBillingPeriod(currentPlan)
           const isCurrentPlan = currentBasePlan === plan.key && currentPeriod === period
-          // (No feature-string rewriting — the letters/period line is
-          // rendered from lettersForPeriod directly below.)
-          const features = plan.features
-          const actionClass = `pricing-arch-button${
-            isHighlighted ? " pricing-arch-button--gold" : ""
-          }${isCurrentPlan ? " pricing-arch-button--current" : ""}`
+          const actionClass = `plux-cta${isCurrentPlan ? " plux-cta--current" : ""}`
           const actionLabel = isCurrentPlan
             ? "Current plan"
             : loadingPlan === plan.key
@@ -229,100 +233,100 @@ export function PricingCards({
 
           return (
             <article
-              className={`pricing-arch-card pricing-arch-card--${plan.key}${
-                isHighlighted ? " pricing-arch-card--featured" : ""
-              }`}
+              className={`plux-card${isHighlighted ? " plux-card--dark plux-card--featured" : ""}`}
               key={plan.name}
             >
-              <div className="pricing-arch-card__inner">
-                {isHighlighted ? (
-                <div className="pricing-popular">
-                  <span aria-hidden="true">*</span>
-                  Most popular
+              <div className="plux-head">
+                <div>
+                  <div className="plux-name">{plan.name}</div>
+                  <div className="plux-rule" aria-hidden="true" />
                 </div>
-                ) : null}
-
-                <small>{plan.name}</small>
-
-                <div className="pricing-arch-price">
-                  <span>EUR</span>
-                  <strong>{formatPrice(price)}</strong>
-                  <em>{cadence}</em>
-                </div>
-
-                <p>{plan.body}</p>
-
-                <div className="pricing-plan-limit" aria-label={`${lettersForPeriod} letters per ${periodNoun}`}>
-                  <EnvelopeIcon />
-                  <span>{lettersForPeriod} letters / {periodNoun}</span>
-                </div>
-
-                <div className="pricing-period-toggle" role="group" aria-label={`${plan.name} billing period`}>
-                  <button
-                    className={period === "monthly" ? "is-active" : ""}
-                    type="button"
-                    aria-pressed={period === "monthly"}
-                    onClick={() => setPlanPeriod(plan.key, "monthly")}
-                  >
-                    Monthly
-                  </button>
-                  <button
-                    className={period === "annual" ? "is-active" : ""}
-                    type="button"
-                    aria-pressed={period === "annual"}
-                    onClick={() => setPlanPeriod(plan.key, "annual")}
-                  >
-                    Annual
-                    <span>-25%</span>
-                  </button>
-                </div>
-
-                <div className="pricing-arch-rule" aria-hidden="true">
-                  <span />
-                </div>
-
-                <div className="pricing-ai-label">Included features</div>
-
-                <ul className="pricing-arch-list">
-                  {features.map((feature) => (
-                    <li key={feature}>{feature}</li>
-                  ))}
-                </ul>
-
-                <div className="pricing-ai-label pricing-ai-label--agents">
-                  {plan.agents.length} AI agents
-                </div>
-
-                <ul className="pricing-agent-list" aria-label={`${plan.name} included AI agents`}>
-                  {plan.agents.map((agent) => (
-                    <li key={agent}>{agent}</li>
-                  ))}
-                </ul>
-
-                <div className="pricing-rewrite-note">
-                  <strong>
-                    {plan.rewrites === 0
-                      ? "No included tone rewrites"
-                      : `${plan.rewrites} included tone ${plan.rewrites === 1 ? "rewrite" : "rewrites"}`}
-                  </strong>
-                  <span>{plan.rewriteCopy}</span>
-                </div>
-
-                {onSelectPlan ? (
-                  <button
-                    className={actionClass}
-                    type="button"
-                    disabled={Boolean(loadingPlan) || isCurrentPlan}
-                    onClick={() => onSelectPlan(plan.key, period)}
-                  >
-                    {actionLabel}
-                  </button>
-                ) : (
-                  <Link className={actionClass} href={plan.href}>
-                    {actionLabel}
-                  </Link>
-                )}
+                {isHighlighted ? <div className="plux-popular">Most popular</div> : null}
               </div>
+
+              <div className="plux-price">
+                <span className="plux-price__cur">EUR</span>
+                <strong>{formatPrice(price)}</strong>
+                <em>
+                  {cadence}
+                  {period === "annual" ? " · billed annually, 25% off" : ""}
+                </em>
+              </div>
+
+              <p className="plux-tagline">{plan.body}</p>
+
+              <div
+                className="plux-pill"
+                aria-label={`${lettersForPeriod} letters per ${periodNoun}`}
+              >
+                <EnvelopeIcon />
+                <span>
+                  {lettersForPeriod} letters / {periodNoun}
+                </span>
+              </div>
+
+              <div
+                className="plux-toggle"
+                role="group"
+                aria-label={`${plan.name} billing period`}
+              >
+                <button
+                  className={period === "monthly" ? "is-active" : ""}
+                  type="button"
+                  aria-pressed={period === "monthly"}
+                  onClick={() => setPlanPeriod(plan.key, "monthly")}
+                >
+                  Monthly
+                </button>
+                <button
+                  className={period === "annual" ? "is-active" : ""}
+                  type="button"
+                  aria-pressed={period === "annual"}
+                  onClick={() => setPlanPeriod(plan.key, "annual")}
+                >
+                  Annual <span>-25%</span>
+                </button>
+              </div>
+
+              <div className="plux-features">
+                {plan.features.map((feature) => (
+                  <div className="plux-feature" key={feature}>
+                    <CheckIcon /> {feature}
+                  </div>
+                ))}
+              </div>
+
+              <div className="plux-section-label">{plan.agents.length} AI agents</div>
+
+              <ul className="plux-agents" aria-label={`${plan.name} included AI agents`}>
+                {plan.agents.map((agent) => (
+                  <li key={agent}>{agent}</li>
+                ))}
+              </ul>
+
+              <div className="plux-rewrite">
+                <strong>
+                  {plan.rewrites === 0
+                    ? "No included tone rewrites"
+                    : `${plan.rewrites} included tone ${plan.rewrites === 1 ? "rewrite" : "rewrites"}`}
+                </strong>
+                <span>{plan.rewriteCopy}</span>
+              </div>
+
+              {onSelectPlan ? (
+                <button
+                  className={actionClass}
+                  type="button"
+                  disabled={Boolean(loadingPlan) || isCurrentPlan}
+                  onClick={() => onSelectPlan(plan.key, period)}
+                >
+                  {actionLabel}
+                </button>
+              ) : (
+                <Link className={actionClass} href={plan.href}>
+                  {actionLabel}
+                </Link>
+              )}
             </article>
           )
         })}
