@@ -1,7 +1,18 @@
 import Link from "next/link"
-import { auth } from "@/auth"
+import { auth, signOut } from "@/auth"
 import { Brand } from "./Brand"
 import { CookiePreferencesLink } from "./CookiePreferencesLink"
+import { PublicAccountMenu } from "./PublicAccountMenu"
+
+function getInitials(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean)
+  if (!parts.length) return "FL"
+  return parts
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase()
+}
 
 const productLinks = [
   { href: "/#how-it-works", label: "How It Works" },
@@ -12,7 +23,16 @@ const productLinks = [
 
 export async function PublicNav() {
   const session = await auth()
-  const isLoggedIn = Boolean(session?.user)
+  const sessionUser = session?.user as
+    | { name?: string | null; email?: string | null }
+    | undefined
+  const isLoggedIn = Boolean(sessionUser)
+  const displayName = sessionUser?.name || sessionUser?.email || "ForgeLetter user"
+
+  async function logoutAction() {
+    "use server"
+    await signOut({ redirectTo: "/" })
+  }
 
   return (
     <header className="site-nav">
@@ -27,12 +47,11 @@ export async function PublicNav() {
         </nav>
         <div className="nav-actions">
           {isLoggedIn ? (
-            <>
-              <span className="status-pill active">Logged in</span>
-              <Link className="button" href="/dashboard">
-                Dashboard
-              </Link>
-            </>
+            <PublicAccountMenu
+              displayName={displayName}
+              initials={getInitials(displayName)}
+              logoutAction={logoutAction}
+            />
           ) : (
             <>
               <Link className="button-ghost" href="/auth/login">
@@ -67,7 +86,7 @@ export function PublicFooter() {
             links={[
               { href: "/#how-it-works", label: "How It Works" },
               { href: "/#pricing", label: "Pricing" },
-              { href: "/auth/signup", label: "Get started" },
+              { href: "/about", label: "About us" },
               { href: "/contact", label: "Contact" },
             ]}
           />
