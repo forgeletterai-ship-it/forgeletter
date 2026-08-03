@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import Image from "next/image"
 import Link from "next/link"
+import { auth } from "@/auth"
 import { AnimatedSeparator } from "@/components/AnimatedSeparator"
 import { ExampleShowcase } from "@/components/ExampleShowcase"
 import { HowItWorksDemo } from "@/components/HowItWorksDemo"
@@ -166,7 +167,10 @@ function HeroIcon({ type }: { type: "check" | "compass" | "shield" | "lock" | "p
   )
 }
 
-export default function HomePage() {
+export default async function HomePage() {
+  const session = await auth()
+  const isLoggedIn = Boolean(session?.user)
+
   return (
     <>
       <PublicNav />
@@ -184,16 +188,14 @@ export default function HomePage() {
                 at no extra cost.
               </p>
               <div className="hero-actions">
-                <Link className="button hero-primary-button" href="/auth/signup">
-                  Get started
-                  <span className="hero-button-arrow" aria-hidden="true">-&gt;</span>
-                </Link>
-                {/* The anchor target is the ForgeLetter-vs-alternatives
-                    comparison, so the label must say that — "Try the
-                    workspace" promised an interactive demo that isn't
-                    on this page. */}
-                <Link className="button-secondary hero-secondary-button" href="#workspace">
-                  See the difference
+                {/* Logged-in customers never get bounced back through
+                    signup — the primary CTA takes them straight to
+                    their workspace. */}
+                <Link
+                  className="button hero-primary-button"
+                  href={isLoggedIn ? "/dashboard" : "/auth/signup"}
+                >
+                  {isLoggedIn ? "Open your workspace" : "Get started"}
                   <span className="hero-button-arrow" aria-hidden="true">-&gt;</span>
                 </Link>
               </div>
@@ -519,8 +521,8 @@ export default function HomePage() {
               more specific cover letters — one focused workflow from job
               posting to send-ready letter.
             </p>
-            <Link className="button" href="/auth/signup">
-              Create your account -&gt;
+            <Link className="button" href={isLoggedIn ? "/dashboard" : "/auth/signup"}>
+              {isLoggedIn ? "Open your workspace" : "Create your account"} -&gt;
             </Link>
           </div>
         </section>
