@@ -11259,14 +11259,12 @@ button.tone-chip:hover {
 .proof-item {
   min-height: 82px;
   display: grid;
-  grid-template-columns: 40px minmax(0, 1fr);
   grid-template-rows: auto 1fr;
-  column-gap: 10px;
   row-gap: 10px;
   align-items: start;
   border: 1px solid rgba(199, 154, 54, 0.42);
   border-radius: var(--radius);
-  padding: 10px 12px;
+  padding: 12px 12px 10px;
   background:
     radial-gradient(circle at 52% 0, rgba(255, 255, 255, 0.78), transparent 46%),
     rgba(255, 253, 248, 0.72);
@@ -11276,29 +11274,6 @@ button.tone-chip:hover {
     inset 0 0 0 1px rgba(255, 255, 255, 0.38);
 }
 
-.proof-icon {
-  grid-column: 1;
-  grid-row: 1;
-  width: 40px;
-  height: 40px;
-  display: grid;
-  place-items: center;
-  margin: 0;
-  border: 1px solid rgba(248, 199, 106, 0.96);
-  border-radius: 9px;
-  color: #ffd98a;
-  background:
-    radial-gradient(circle at 35% 18%, rgba(255, 255, 255, 0.28), transparent 38%),
-    radial-gradient(circle at 70% 82%, rgba(248, 199, 106, 0.18), transparent 42%),
-    linear-gradient(180deg, #155a60, #07343e);
-  box-shadow:
-    0 11px 19px rgba(5, 45, 53, 0.24),
-    0 0 0 3px rgba(248, 199, 106, 0.11),
-    0 0 18px rgba(248, 199, 106, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.26);
-}
-
-.proof-icon svg,
 .mini-metric-icon svg {
   width: 23px;
   height: 23px;
@@ -11310,25 +11285,7 @@ button.tone-chip:hover {
   filter: drop-shadow(0 0 4px rgba(255, 217, 138, 0.2));
 }
 
-.proof-icon {
-  display: grid;
-  place-items: center;
-  color: #f8c76a;
-}
-
-.proof-icon svg {
-  width: 29px;
-  height: 29px;
-  stroke: #fff4cf;
-  stroke-width: 3.35;
-  filter:
-    drop-shadow(0 1px 0 rgba(68, 39, 7, 0.32))
-    drop-shadow(0 0 7px rgba(248, 199, 106, 0.45));
-}
-
 .proof-item strong {
-  grid-column: 2;
-  grid-row: 1;
   align-self: center;
   display: inline-block;
   position: relative;
@@ -11352,9 +11309,7 @@ button.tone-chip:hover {
   background: linear-gradient(90deg, #b8862d, #d6aa55, rgba(199, 154, 54, 0));
 }
 
-.proof-item span:not(.proof-icon) {
-  grid-column: 1 / -1;
-  grid-row: 2;
+.proof-item span {
   margin-top: 0;
   color: #263442;
   font-size: 10.5px;
@@ -11453,18 +11408,9 @@ button.tone-chip:hover {
 
   .proof-item {
     min-height: 82px;
-    padding: 10px 12px;
-    grid-template-columns: 40px minmax(0, 1fr);
-    column-gap: 10px;
+    padding: 12px 12px 10px;
   }
 
-  .proof-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 9px;
-  }
-
-  .proof-icon svg,
   .mini-metric-icon svg {
     width: 23px;
     height: 23px;
@@ -11474,7 +11420,7 @@ button.tone-chip:hover {
     font-size: 20px;
   }
 
-  .proof-item span:not(.proof-icon) {
+  .proof-item span {
     font-size: 10.5px;
   }
 }
@@ -11577,27 +11523,17 @@ button.tone-chip:hover {
   .proof-item {
     min-height: 104px;
     display: grid;
-    grid-template-columns: 46px 1fr;
     grid-template-rows: auto 1fr;
-    column-gap: 13px;
     row-gap: 14px;
     align-items: start;
     padding: 14px;
-  }
-
-  .proof-icon {
-    grid-row: 1;
-    margin: 0;
-    width: 46px;
-    height: 46px;
   }
 
   .proof-item strong {
     font-size: 22px;
   }
 
-  .proof-item span:not(.proof-icon) {
-    grid-column: 1 / -1;
+  .proof-item span {
     margin-top: 0;
     font-size: 13px;
   }

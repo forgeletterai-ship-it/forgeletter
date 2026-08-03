@@ -19,6 +19,7 @@ const productLinks = [
   { href: "/#pricing", label: "Pricing" },
   { href: "/#faq", label: "FAQ" },
   { href: "/#roadmap", label: "Roadmap" },
+  { href: "/about", label: "About Us" },
 ]
 
 export async function PublicNav() {
@@ -53,14 +54,11 @@ export async function PublicNav() {
               logoutAction={logoutAction}
             />
           ) : (
-            <>
-              <Link className="button-ghost" href="/auth/login">
-                Login
-              </Link>
-              <Link className="button" href="/auth/signup">
-                Get started
-              </Link>
-            </>
+            /* One auth entry point only — Login and Get started led to
+               the same flow, so the duplicate button is gone. */
+            <Link className="button" href="/auth/login">
+              Login
+            </Link>
           )}
         </div>
       </div>

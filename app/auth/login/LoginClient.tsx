@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { FormEvent, useEffect, useMemo, useState } from "react"
+import { FormEvent, useMemo, useState } from "react"
 import { signIn } from "next-auth/react"
 import { Brand } from "@/components/Brand"
 
@@ -54,32 +54,29 @@ export default function LoginClient({
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState(initialError)
+  const [termsAccepted, setTermsAccepted] = useState(false)
   const [loadingProvider, setLoadingProvider] = useState<
     "" | "google" | "facebook"
   >("")
   const [loadingCredentials, setLoadingCredentials] = useState(false)
-  const [autoStarted, setAutoStarted] = useState(false)
 
-  useEffect(() => {
-    if (autoStarted || loadingProvider || loadingCredentials) return
-    if (autoProvider === "google" && googleEnabled) {
-      setAutoStarted(true)
-      void handleSocialLogin("google")
-    }
-    if (autoProvider === "facebook" && facebookEnabled) {
-      setAutoStarted(true)
-      void handleSocialLogin("facebook")
-    }
-  }, [
-    autoProvider,
-    autoStarted,
-    facebookEnabled,
-    googleEnabled,
-    loadingCredentials,
-    loadingProvider,
-  ])
+  // NOTE: autoProvider deliberately no longer auto-fires the OAuth
+  // flow. A first-time "Continue with Google" CREATES an account, and
+  // account creation without explicit terms acceptance is a legal
+  // gap — the customer must tick the checkbox and click the button
+  // themselves.
+  void autoProvider
+
+  function requireTerms(): boolean {
+    if (termsAccepted) return true
+    setError(
+      "Please accept the Terms of Service and Privacy Policy to continue."
+    )
+    return false
+  }
 
   async function handleSocialLogin(provider: "google" | "facebook") {
+    if (!requireTerms()) return
     try {
       setError("")
       setLoadingProvider(provider)
@@ -87,7 +84,6 @@ export default function LoginClient({
     } catch {
       setError("Something went wrong. Please try again.")
       setLoadingProvider("")
-      setAutoStarted(false)
       router.replace("/auth/login")
     }
   }
@@ -143,6 +139,38 @@ export default function LoginClient({
           <p>Continue to your dashboard.</p>
 
           <div className="form-stack">
+            {/* Clickwrap on login too: a first-time "Continue with
+                Google" creates an account, so acceptance must be
+                recorded here as well — not only on the signup page. */}
+            {googleEnabled || facebookEnabled ? (
+              <label
+                htmlFor="login-accept-terms"
+                style={{
+                  display: "flex",
+                  gap: 10,
+                  alignItems: "flex-start",
+                  fontSize: 13,
+                  lineHeight: 1.5,
+                  cursor: "pointer",
+                }}
+              >
+                <input
+                  id="login-accept-terms"
+                  type="checkbox"
+                  checked={termsAccepted}
+                  onChange={(e) => {
+                    setTermsAccepted(e.target.checked)
+                    if (e.target.checked) setError("")
+                  }}
+                  style={{ marginTop: 3 }}
+                />
+                <span>
+                  I agree to the <Link href="/terms">Terms of Service</Link>{" "}
+                  and the <Link href="/privacy">Privacy Policy</Link>.
+                </span>
+              </label>
+            ) : null}
+
             {googleEnabled ? (
               <button
                 className="button-secondary"

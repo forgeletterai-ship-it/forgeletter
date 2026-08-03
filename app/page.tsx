@@ -187,31 +187,27 @@ export default async function HomePage() {
                 Every letter is quality-checked and refined in the background
                 at no extra cost.
               </p>
-              <div className="hero-actions">
-                {/* Logged-in customers never get bounced back through
-                    signup — the primary CTA takes them straight to
-                    their workspace. */}
-                <Link
-                  className="button hero-primary-button"
-                  href={isLoggedIn ? "/dashboard" : "/auth/signup"}
-                >
-                  {isLoggedIn ? "Open your workspace" : "Get started"}
-                  <span className="hero-button-arrow" aria-hidden="true">-&gt;</span>
-                </Link>
-              </div>
+              {/* Logged-in customers already have the Workspace button
+                  in the nav — a duplicate hero CTA is noise, so the
+                  hero button only renders for visitors. */}
+              {!isLoggedIn ? (
+                <div className="hero-actions">
+                  <Link className="button hero-primary-button" href="/auth/signup">
+                    Get started
+                    <span className="hero-button-arrow" aria-hidden="true">-&gt;</span>
+                  </Link>
+                </div>
+              ) : null}
               <div className="hero-proof" aria-label="Product highlights">
                 <div className="proof-item">
-                  <span className="proof-icon"><HeroIcon type="check" /></span>
                   <strong>Guided</strong>
                   <span>smart prompts that extract your strongest evidence</span>
                 </div>
                 <div className="proof-item">
-                  <span className="proof-icon"><HeroIcon type="check" /></span>
                   <strong>Verified</strong>
                   <span>every letter checked against your real experience</span>
                 </div>
                 <div className="proof-item">
-                  <span className="proof-icon"><HeroIcon type="check" /></span>
                   <strong>Ready</strong>
                   <span>polished PDF exports in seconds</span>
                 </div>
@@ -273,19 +269,19 @@ export default async function HomePage() {
                   <ul className="engine-compare__list">
                     <li className="engine-compare__item">
                       <span className="engine-compare__mark engine-compare__mark--bad" aria-hidden="true" />
-                      <span>Starts from a blank page</span>
+                      <span>A blank page every time: no structure, no feedback, and your strongest evidence stays in your head</span>
                     </li>
                     <li className="engine-compare__item">
                       <span className="engine-compare__mark engine-compare__mark--bad" aria-hidden="true" />
-                      <span>Unstructured AI prompts with no quality check</span>
+                      <span>One template reused for every job, and hiring managers spot it in the first sentence</span>
                     </li>
                     <li className="engine-compare__item">
                       <span className="engine-compare__mark engine-compare__mark--bad" aria-hidden="true" />
-                      <span>Keywords and evidence get missed</span>
+                      <span>Nobody checks whether the job&apos;s keywords or your real results actually made it in</span>
                     </li>
                     <li className="engine-compare__item">
                       <span className="engine-compare__mark engine-compare__mark--bad" aria-hidden="true" />
-                      <span>Slow edits for every application</span>
+                      <span>Rewriting from scratch for every application eats the hours you should spend applying</span>
                     </li>
                   </ul>
                 </article>
@@ -518,11 +514,11 @@ export default async function HomePage() {
             <h2>Stop sending generic letters. Start getting interviews.</h2>
             <p>
               ForgeLetter turns your real experience into stronger, faster,
-              more specific cover letters — one focused workflow from job
-              posting to send-ready letter.
+              more specific cover letters. One focused workflow takes you from
+              job posting to send-ready letter.
             </p>
             <Link className="button" href={isLoggedIn ? "/dashboard" : "/auth/signup"}>
-              {isLoggedIn ? "Open your workspace" : "Create your account"} -&gt;
+              {isLoggedIn ? "Open your workspace" : "Create your account"}
             </Link>
           </div>
         </section>
