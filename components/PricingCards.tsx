@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import {
   annualAmountCents,
@@ -202,46 +202,134 @@ export function PricingCards({
     pro: "monthly",
     ultra: "monthly",
   })
+  const [openKey, setOpenKey] = useState<PlanKey | "">("")
+  const dialogRef = useRef<HTMLDivElement | null>(null)
+
+  // Escape closes the pop-up; focus moves into the dialog when it
+  // opens so keyboard and screen-reader users land inside it.
+  useEffect(() => {
+    if (!openKey) return
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpenKey("")
+    }
+    window.addEventListener("keydown", onKey)
+    dialogRef.current?.focus()
+    return () => window.removeEventListener("keydown", onKey)
+  }, [openKey])
 
   function setPlanPeriod(plan: PlanKey, period: BillingPeriod) {
     setPeriods((current) => ({ ...current, [plan]: period }))
   }
 
+  function planView(plan: (typeof plans)[number]) {
+    const period = periods[plan.key]
+    const periodNoun = period === "annual" ? "year" : "month"
+    const lettersForPeriod = period === "annual" ? plan.letters * 12 : plan.letters
+    // Annual price must come from the same helper Stripe checkout
+    // uses (lib/plans.ts annualAmountCents, 25% off) so the number
+    // a customer sees is the number their card is charged.
+    const price =
+      period === "monthly" ? plan.monthlyCents : annualAmountCents(plan.monthlyCents)
+    const cadence = period === "monthly" ? "/ month" : "/ year"
+    const isCurrentPlan =
+      getBasePlan(currentPlan) === plan.key && getBillingPeriod(currentPlan) === period
+    return { period, periodNoun, lettersForPeriod, price, cadence, isCurrentPlan }
+  }
+
+  const open = plans.find((plan) => plan.key === openKey)
+
   return (
     <>
-      <div className="plux-grid">
+      <div className="plux-teaser-grid">
         {plans.map((plan) => {
           const isHighlighted = "highlight" in plan && plan.highlight
-          const period = periods[plan.key]
-          const periodNoun = period === "annual" ? "year" : "month"
-          const lettersForPeriod = period === "annual" ? plan.letters * 12 : plan.letters
-          // Annual price must come from the same helper Stripe checkout
-          // uses (lib/plans.ts annualAmountCents, 25% off) so the number
-          // a customer sees is the number their card is charged.
-          const price =
-            period === "monthly" ? plan.monthlyCents : annualAmountCents(plan.monthlyCents)
-          const cadence = period === "monthly" ? "/ month" : "/ year"
-          const currentBasePlan = getBasePlan(currentPlan)
-          const currentPeriod = getBillingPeriod(currentPlan)
-          const isCurrentPlan = currentBasePlan === plan.key && currentPeriod === period
-          const actionClass = `plux-cta${isCurrentPlan ? " plux-cta--current" : ""}`
-          const actionLabel = isCurrentPlan
-            ? "Current plan"
-            : loadingPlan === plan.key
-              ? "Opening Stripe..."
-              : plan.cta
+          const { lettersForPeriod, periodNoun, price, cadence } = planView(plan)
+          const isCurrentBase = getBasePlan(currentPlan) === plan.key
 
           return (
-            <article
-              className={`plux-card${isHighlighted ? " plux-card--dark plux-card--featured" : ""}`}
+            <div
+              className={`plux-teaser${isHighlighted ? " plux-teaser--dark plux-teaser--featured" : ""}`}
+              role="button"
+              tabIndex={0}
+              aria-haspopup="dialog"
+              aria-label={`${plan.name} plan, EUR ${formatPrice(price)} ${cadence}, ${lettersForPeriod} letters per ${periodNoun}. Open details.`}
               key={plan.name}
+              onClick={() => setOpenKey(plan.key)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault()
+                  setOpenKey(plan.key)
+                }
+              }}
             >
               <div className="plux-head">
                 <div>
                   <div className="plux-name">{plan.name}</div>
                   <div className="plux-rule" aria-hidden="true" />
                 </div>
-                {isHighlighted ? <div className="plux-popular">Most popular</div> : null}
+                {isHighlighted ? (
+                  <div className="plux-popular">Most popular</div>
+                ) : isCurrentBase ? (
+                  <div className="plux-popular plux-popular--current">Current plan</div>
+                ) : null}
+              </div>
+
+              <div className="plux-teaser__bottom">
+                <div className="plux-price">
+                  <span className="plux-price__cur">EUR</span>
+                  <strong>{formatPrice(price)}</strong>
+                  <em>{cadence}</em>
+                </div>
+                <div className="plux-teaser__meta">
+                  {lettersForPeriod} letters / {periodNoun} · tap to open
+                </div>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      {open ? (() => {
+        const isHighlighted = "highlight" in open && open.highlight
+        const { period, periodNoun, lettersForPeriod, price, cadence, isCurrentPlan } =
+          planView(open)
+        const actionClass = `plux-cta${isCurrentPlan ? " plux-cta--current" : ""}`
+        const actionLabel = isCurrentPlan
+          ? "Current plan"
+          : loadingPlan === open.key
+            ? "Opening Stripe..."
+            : `${open.cta} — EUR ${formatPrice(price)} ${cadence}`
+
+        return (
+          <div
+            className="plux-overlay"
+            onClick={() => setOpenKey("")}
+          >
+            <div
+              className={`plux-card plux-modal${isHighlighted ? " plux-card--dark plux-card--featured" : ""}`}
+              role="dialog"
+              aria-modal="true"
+              aria-label={`${open.name} plan details`}
+              tabIndex={-1}
+              ref={dialogRef}
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="plux-head">
+                <div>
+                  <div className="plux-name">
+                    {open.name}
+                    {isHighlighted ? <span className="plux-name__note"> · Most popular</span> : null}
+                  </div>
+                  <div className="plux-rule" aria-hidden="true" />
+                </div>
+                <button
+                  className="plux-close"
+                  type="button"
+                  aria-label="Close plan details"
+                  onClick={() => setOpenKey("")}
+                >
+                  ✕
+                </button>
               </div>
 
               <div className="plux-price">
@@ -253,7 +341,7 @@ export function PricingCards({
                 </em>
               </div>
 
-              <p className="plux-tagline">{plan.body}</p>
+              <p className="plux-tagline">{open.body}</p>
 
               <div
                 className="plux-pill"
@@ -268,13 +356,13 @@ export function PricingCards({
               <div
                 className="plux-toggle"
                 role="group"
-                aria-label={`${plan.name} billing period`}
+                aria-label={`${open.name} billing period`}
               >
                 <button
                   className={period === "monthly" ? "is-active" : ""}
                   type="button"
                   aria-pressed={period === "monthly"}
-                  onClick={() => setPlanPeriod(plan.key, "monthly")}
+                  onClick={() => setPlanPeriod(open.key, "monthly")}
                 >
                   Monthly
                 </button>
@@ -282,35 +370,35 @@ export function PricingCards({
                   className={period === "annual" ? "is-active" : ""}
                   type="button"
                   aria-pressed={period === "annual"}
-                  onClick={() => setPlanPeriod(plan.key, "annual")}
+                  onClick={() => setPlanPeriod(open.key, "annual")}
                 >
                   Annual <span>-25%</span>
                 </button>
               </div>
 
               <div className="plux-features">
-                {plan.features.map((feature) => (
+                {open.features.map((feature) => (
                   <div className="plux-feature" key={feature}>
                     <CheckIcon /> {feature}
                   </div>
                 ))}
               </div>
 
-              <div className="plux-section-label">{plan.agents.length} AI agents</div>
+              <div className="plux-section-label">{open.agents.length} AI agents</div>
 
-              <ul className="plux-agents" aria-label={`${plan.name} included AI agents`}>
-                {plan.agents.map((agent) => (
+              <ul className="plux-agents" aria-label={`${open.name} included AI agents`}>
+                {open.agents.map((agent) => (
                   <li key={agent}>{agent}</li>
                 ))}
               </ul>
 
               <div className="plux-rewrite">
                 <strong>
-                  {plan.rewrites === 0
+                  {open.rewrites === 0
                     ? "No included tone rewrites"
-                    : `${plan.rewrites} included tone ${plan.rewrites === 1 ? "rewrite" : "rewrites"}`}
+                    : `${open.rewrites} included tone ${open.rewrites === 1 ? "rewrite" : "rewrites"}`}
                 </strong>
-                <span>{plan.rewriteCopy}</span>
+                <span>{open.rewriteCopy}</span>
               </div>
 
               {onSelectPlan ? (
@@ -318,19 +406,19 @@ export function PricingCards({
                   className={actionClass}
                   type="button"
                   disabled={Boolean(loadingPlan) || isCurrentPlan}
-                  onClick={() => onSelectPlan(plan.key, period)}
+                  onClick={() => onSelectPlan(open.key, period)}
                 >
                   {actionLabel}
                 </button>
               ) : (
-                <Link className={actionClass} href={plan.href}>
+                <Link className={actionClass} href={open.href}>
                   {actionLabel}
                 </Link>
               )}
-            </article>
-          )
-        })}
-      </div>
+            </div>
+          </div>
+        )
+      })() : null}
 
       <div className="pricing-security-bar" aria-label="Purchase security">
         {securityItems.map((item) => (
