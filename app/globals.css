@@ -1639,7 +1639,9 @@ button.tone-chip:hover {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 22px;
   align-items: stretch;
-  max-width: 1160px;
+  /* Same width as the security bar below so the cards line up with
+     it edge to edge. */
+  max-width: 1280px;
   margin: 0 auto;
 }
 
@@ -2101,7 +2103,8 @@ button.tone-chip:hover {
   .plux-teaser-grid {
     grid-template-columns: 1fr;
     gap: 18px;
-    max-width: 460px;
+    /* Matches the security bar's mobile width below. */
+    max-width: 560px;
   }
 }
 
