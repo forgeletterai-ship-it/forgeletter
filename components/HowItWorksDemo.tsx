@@ -4,31 +4,42 @@ import { useEffect, useRef, useState } from "react"
 import Image from "next/image"
 
 /**
- * Embedded animated walkthrough on the landing page's "How it works"
- * section.
+ * Two embedded walkthroughs on the landing page's "How it works"
+ * section, switched by a tab pair:
+ *   1. Set up & generate — profile → wins → brief → letter
+ *   2. Track your letters — library, inline actions, outcome tracking
  *
- * The wrapper gives the iframe a real, stable 16:9 box via
- * aspect-ratio (with padding-top: 56.25% fallback via @supports in
- * globals.css). The iframe inside fills the box at width:100%
- * height:100%. That stable measurable box is exactly what the
- * demo's fit() function needs to compute the right scale.
+ * Zero switch latency by design: BOTH iframes are mounted and loaded
+ * up front, stacked in the same box. Switching only flips opacity and
+ * z-index, so there is no network request or re-layout on click.
+ * Because a hidden iframe would otherwise keep animating, the
+ * inactive one is paused via postMessage — the demo HTML gates its
+ * sleep() on that flag, so only the visible demo consumes CPU.
  *
- * The iframe src is set directly on render (no IntersectionObserver,
- * no swap-to-about:blank). loading="lazy" lets the browser defer the
- * network fetch when the frame is far off-screen, but otherwise the
- * iframe is just a normal iframe.
- *
- * The demo HTML file itself is hardened to re-measure aggressively:
- * fit() runs on requestAnimationFrame, document.fonts.ready, window
- * load, a ResizeObserver on body+documentElement, five staggered
- * setTimeout calls (50/150/300/600/1200ms), and at the top of every
- * animation loop iteration. Any iframe-height settling pattern is
- * caught.
+ * The frame itself is unchanged: the wrapper is still a 16:9 box (via
+ * .how-it-works-demo in globals.css) holding a 1280x720 stage, and
+ * each demo scales itself into it with the same fit() routine.
  *
  * Accessibility: prefers-reduced-motion shows a static fallback panel.
  */
 
-const DEMO_SRC = "/forgeletter_demo.html?v=23"
+const DEMOS = [
+  {
+    id: "workflow",
+    label: "Set up & generate",
+    hint: "Profile, wins, brief, letter",
+    src: "/forgeletter_demo.html?v=24",
+    title: "Animated walkthrough of building a profile and generating a letter",
+  },
+  {
+    id: "letters",
+    label: "Track your letters",
+    hint: "Library, actions, outcomes",
+    src: "/myletters_demo.html?v=1",
+    title: "Animated walkthrough of the letters library and outcome tracking",
+  },
+] as const
+
 const FALLBACK_IMAGE = "/hero-image-transparent.png"
 
 interface Props {
@@ -41,8 +52,9 @@ interface Props {
 export function HowItWorksDemo({ maxWidthPx = 1200, radiusPx = 14 }: Props) {
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
   const [userOptedIn, setUserOptedIn] = useState(false)
+  const [active, setActive] = useState<(typeof DEMOS)[number]["id"]>("workflow")
   const wrapperRef = useRef<HTMLDivElement | null>(null)
-  const iframeRef = useRef<HTMLIFrameElement | null>(null)
+  const frameRefs = useRef<Record<string, HTMLIFrameElement | null>>({})
 
   useEffect(() => {
     if (typeof window === "undefined") return
@@ -53,21 +65,35 @@ export function HowItWorksDemo({ maxWidthPx = 1200, radiusPx = 14 }: Props) {
     return () => mq.removeEventListener?.("change", onChange)
   }, [])
 
-  // Force the iframe's fit() to re-run whenever the wrapper resizes
-  // (e.g. media-query breakpoint changes, orientation, browser resize).
-  // The internal ResizeObserver inside the demo HTML isn't 100% reliable
-  // across browsers when the iframe's outer box changes via CSS.
+  // Pause every demo except the visible one. Runs on mount too, so the
+  // second demo never animates until it is first shown.
+  useEffect(() => {
+    for (const demo of DEMOS) {
+      const win = frameRefs.current[demo.id]?.contentWindow
+      if (!win) continue
+      try {
+        win.postMessage({ fl: demo.id === active ? "resume" : "pause" }, "*")
+      } catch {
+        /* not ready yet — the load handler re-sends */
+      }
+    }
+  }, [active])
+
+  // Force each iframe's fit() to re-run whenever the wrapper resizes
+  // (media-query breakpoint changes, orientation, browser resize).
   useEffect(() => {
     if (typeof window === "undefined") return
     const wrap = wrapperRef.current
     if (!wrap) return
     const refit = () => {
-      const win = iframeRef.current?.contentWindow
-      if (!win) return
-      try {
-        win.dispatchEvent(new Event("resize"))
-      } catch {
-        /* cross-origin or not ready yet — ignore */
+      for (const demo of DEMOS) {
+        const win = frameRefs.current[demo.id]?.contentWindow
+        if (!win) continue
+        try {
+          win.dispatchEvent(new Event("resize"))
+        } catch {
+          /* cross-origin or not ready yet — ignore */
+        }
       }
     }
     const ro = new ResizeObserver(refit)
@@ -84,47 +110,86 @@ export function HowItWorksDemo({ maxWidthPx = 1200, radiusPx = 14 }: Props) {
   const showFallback = prefersReducedMotion && !userOptedIn
 
   return (
-    <div
-      ref={wrapperRef}
-      className="how-it-works-demo"
-      style={{
-        width: "100%",
-        maxWidth: maxWidthPx,
-        margin: "0 auto",
-        position: "relative",
-        borderRadius: radiusPx,
-        overflow: "hidden",
-        boxShadow:
-          "0 18px 36px -16px rgba(40, 26, 12, 0.22), 0 2px 8px -4px rgba(40, 26, 12, 0.08)",
-        background: "#FAF6EE",
-        // aspect-ratio (modern) / padding-top: 56.25% (fallback) are
-        // applied via the .how-it-works-demo class in globals.css so
-        // we don't accidentally double-apply both methods here.
-      }}
-      role="region"
-      aria-label="ForgeLetter how-it-works animation"
-    >
-      {showFallback ? (
-        <FallbackPanel onPlay={() => setUserOptedIn(true)} />
-      ) : (
-        <iframe
-          ref={iframeRef}
-          src={DEMO_SRC}
-          title="Animated walkthrough of how ForgeLetter works"
-          loading="lazy"
-          // position:absolute so the iframe fills the wrapper whether
-          // the wrapper's height comes from aspect-ratio (modern) or
-          // padding-top:56.25% (fallback).
-          style={{
-            position: "absolute",
-            inset: 0,
-            width: "100%",
-            height: "100%",
-            border: 0,
-            display: "block",
-          }}
-        />
-      )}
+    <div style={{ width: "100%", maxWidth: maxWidthPx, margin: "0 auto" }}>
+      <div className="demo-tabs" role="tablist" aria-label="Choose a walkthrough">
+        {DEMOS.map((demo) => (
+          <button
+            key={demo.id}
+            id={`demo-tab-${demo.id}`}
+            role="tab"
+            type="button"
+            aria-selected={active === demo.id}
+            aria-controls={`demo-panel-${demo.id}`}
+            className={`demo-tab${active === demo.id ? " is-active" : ""}`}
+            onClick={() => setActive(demo.id)}
+          >
+            <span className="demo-tab__label">{demo.label}</span>
+            <span className="demo-tab__hint">{demo.hint}</span>
+          </button>
+        ))}
+      </div>
+
+      <div
+        ref={wrapperRef}
+        className="how-it-works-demo"
+        style={{
+          width: "100%",
+          margin: "0 auto",
+          position: "relative",
+          borderRadius: radiusPx,
+          overflow: "hidden",
+          boxShadow:
+            "0 18px 36px -16px rgba(40, 26, 12, 0.22), 0 2px 8px -4px rgba(40, 26, 12, 0.08)",
+          background: "#FAF6EE",
+        }}
+      >
+        {showFallback ? (
+          <FallbackPanel onPlay={() => setUserOptedIn(true)} />
+        ) : (
+          DEMOS.map((demo) => {
+            const isActive = active === demo.id
+            return (
+              <iframe
+                key={demo.id}
+                id={`demo-panel-${demo.id}`}
+                role="tabpanel"
+                aria-labelledby={`demo-tab-${demo.id}`}
+                aria-hidden={!isActive}
+                ref={(node) => {
+                  frameRefs.current[demo.id] = node
+                }}
+                src={demo.src}
+                title={demo.title}
+                onLoad={() => {
+                  // Re-assert pause state once the frame can receive it.
+                  try {
+                    frameRefs.current[demo.id]?.contentWindow?.postMessage(
+                      { fl: isActive ? "resume" : "pause" },
+                      "*"
+                    )
+                  } catch {
+                    /* ignore */
+                  }
+                }}
+                // Both frames stay in layout (never display:none) so each
+                // one measures its own box correctly for scaling.
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  width: "100%",
+                  height: "100%",
+                  border: 0,
+                  display: "block",
+                  opacity: isActive ? 1 : 0,
+                  zIndex: isActive ? 2 : 1,
+                  pointerEvents: isActive ? "auto" : "none",
+                  transition: "opacity 0.28s ease",
+                }}
+              />
+            )
+          })
+        )}
+      </div>
     </div>
   )
 }
