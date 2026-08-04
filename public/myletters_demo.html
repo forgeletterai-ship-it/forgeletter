@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tracking letters in ForgeLetter</title>
+
+<style>
+:root{--cream:#FEFBF6;--cream2:#F4EFE5;--card:#FAF6EE;--paper:#FFFFFF;--teal:#105250;--teal2:#0c403e;--teal3:#0f4a4c;--gold:#C79B3C;--goldl:#E0C47C;--ink:#1f3a39;--ink2:#16302f;--txt:#3A342C;--mute:rgba(31,58,57,.6);--line:rgba(16,82,80,.14);--line2:rgba(16,82,80,.2);--serif:'Spectral',Georgia,serif;--sans:'Inter',-apple-system,'Segoe UI',sans-serif}
+*{margin:0;padding:0;box-sizing:border-box}html,body{height:100%}
+body{background:#FAF6EE;font-family:var(--sans);color:var(--txt);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.stage-wrap{width:100vw;height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.stage{position:relative;width:1280px;height:720px;flex:0 0 1280px;background:#FAF6EE;overflow:hidden;transform-origin:center;contain:paint}
+.stage::before{content:"";position:absolute;inset:0;background-image:repeating-linear-gradient(135deg,rgba(176,162,138,.05) 0 1px,transparent 1px 22px);pointer-events:none}
+.goldline{position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,#C79B3C,#E0C47C);z-index:60}
+.center-layer{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;z-index:40;opacity:0;background:#FAF6EE;transition:opacity .9s ease;pointer-events:none}
+.center-layer.show{opacity:1}
+.center-layer h1{font-family:var(--serif);font-weight:700;color:#2A1A0E;font-size:58px;letter-spacing:-.5px}
+.center-layer p{font-family:var(--serif);color:var(--teal);font-size:25px;margin-top:14px}
+.cta{margin-top:30px;background:var(--teal);color:var(--goldl);font-weight:700;font-size:18px;padding:16px 34px;border-radius:40px;box-shadow:0 12px 30px rgba(16,82,80,.28);letter-spacing:.3px}
+.window{position:absolute;inset:0;background:var(--card);overflow:hidden;z-index:20}
+.titlebar{height:46px;background:var(--paper);border-bottom:1px solid #E7E0D2;display:flex;align-items:center;padding:0 18px}
+.addr{height:24px;flex:0 0 320px;background:var(--cream2);border-radius:12px;display:flex;align-items:center;gap:8px;padding:0 12px;font-size:12px;color:#9b9384}
+.addr .dot{width:9px;height:9px;border:1.5px solid #9b9384;border-radius:50%}
+.viewport{position:relative;height:calc(100% - 46px);overflow:hidden}
+.scene{position:absolute;inset:0;padding:26px 34px;background:var(--card);opacity:0;visibility:hidden;transform:translateX(28px);transition:opacity 1.2s ease,transform 1.2s cubic-bezier(.32,0,.18,1),visibility 0s linear 1.2s;overflow:hidden}
+.scene.active{opacity:1;visibility:visible;transform:none;z-index:2;transition:opacity 1.2s ease,transform 1.2s cubic-bezier(.32,0,.18,1),visibility 0s}
+/* ---------- shared ---------- */
+.pg-h1{font-size:28px;letter-spacing:-.03em;color:var(--ink2);font-weight:700}
+.pg-sub{font-size:13px;color:var(--mute);margin-top:5px}
+/* ---------- outcome strip ---------- */
+.strip{display:flex;align-items:center;gap:24px;margin:16px 0 14px;padding:13px 20px;border:1px solid rgba(16,82,80,.16);border-radius:14px;background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(248,253,252,.92));box-shadow:0 12px 26px -22px rgba(8,25,24,.4)}
+.strip-lead{display:flex;align-items:baseline;gap:8px;padding-right:22px;border-right:1px solid rgba(16,82,80,.14)}
+.strip-val{color:#0b5257;font-size:26px;font-weight:800;letter-spacing:-.02em}
+.strip-lab{color:var(--mute);font-size:12.5px;font-weight:650}
+.strip-stats{display:flex;align-items:center;gap:22px;flex:1}
+.strip-stat{display:flex;align-items:baseline;gap:6px}
+.strip-stat b{color:var(--ink);font-size:16px;font-weight:800}
+.strip-stat span{color:var(--mute);font-size:12.5px}
+.strip-gold{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border:1px solid rgba(199,154,54,.45);border-radius:999px;background:rgba(199,154,54,.1);color:#8a6d22;font-size:12.5px}
+.strip-gold b{font-weight:800}
+/* ---------- toolbar ---------- */
+.toolbar{display:grid;gap:11px;margin-bottom:14px}
+.search{position:relative;display:flex;align-items:center}
+.search svg{position:absolute;left:14px;width:17px;height:17px;fill:none;stroke:rgba(31,58,57,.45);stroke-width:1.9;stroke-linecap:round}
+.search input{width:100%;height:44px;padding:0 42px;border:1px solid var(--line2);border-radius:12px;background:#fff;color:var(--ink);font:inherit;font-size:14.5px}
+.search input::placeholder{color:rgba(31,58,57,.42)}
+.search.focus input{border-color:rgba(16,82,80,.55);box-shadow:0 0 0 3px rgba(16,82,80,.12)}
+.search .clr{position:absolute;right:12px;width:26px;height:26px;display:grid;place-items:center;border-radius:50%;background:rgba(16,82,80,.08);color:var(--ink);font-size:12px;opacity:0;transition:opacity .2s}
+.search .clr.on{opacity:1}
+.controls{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.chips{display:flex;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 13px;border:1px solid rgba(16,82,80,.18);border-radius:999px;background:#fff;color:var(--ink);font-size:13px;font-weight:650}
+.chip.on{background:var(--teal3);border-color:var(--teal3);color:#ecdfbc}
+.chip i{font-style:normal;padding:1px 7px;border-radius:999px;background:rgba(16,82,80,.09);font-size:11.5px;font-weight:800}
+.chip.on i{background:rgba(255,255,255,.16)}
+.sortwrap{display:inline-flex;align-items:center;gap:8px;color:var(--mute);font-size:12.5px;font-weight:650}
+.sortwrap .sel{height:32px;padding:0 10px;border:1px solid var(--line2);border-radius:9px;background:#fff;color:var(--ink);font-size:13px;display:flex;align-items:center;gap:8px}
+/* ---------- table ---------- */
+.table{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#fff;box-shadow:0 14px 30px -26px rgba(8,25,24,.45)}
+.thead,.row{display:grid;grid-template-columns:minmax(0,1fr) 78px 62px 62px 148px 150px;align-items:center;gap:14px;padding:0 18px}
+.thead{height:40px;border-bottom:1px solid rgba(16,82,80,.12);background:rgba(240,248,247,.6);color:var(--mute);font-size:11px;font-weight:800;letter-spacing:.09em;text-transform:uppercase}
+.thead .r,.row .num{text-align:right}
+.row{height:58px;border-bottom:1px solid rgba(16,82,80,.08);position:relative;transition:background .2s}
+.row:last-child{border-bottom:none}
+.row.hov{background:rgba(240,248,247,.5)}
+.row.hidden-row{display:none}
+.rtitle{min-width:0;display:flex;flex-direction:column;gap:1px}
+.rtitle b{color:var(--ink2);font-size:14.5px;font-weight:700;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rtitle span{color:var(--mute);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rdate{color:var(--mute);font-size:12.5px;white-space:nowrap}
+.num{color:var(--ink);font-size:13.5px;font-weight:700}
+.num em{color:rgba(31,58,57,.3);font-style:normal;font-weight:500}
+.selstat{position:relative}
+.selbox{width:100%;height:32px;padding:0 8px;border:1px solid var(--line2);border-radius:8px;background:#fff;color:var(--ink);font-size:12.5px;font-weight:650;display:flex;align-items:center;justify-content:space-between;transition:all .25s}
+.selbox .cv{font-size:9px;color:#9b9384;transition:transform .3s}
+.selbox.open{border-color:var(--teal3);box-shadow:0 0 0 3px rgba(16,82,80,.12)}
+.selbox.open .cv{transform:rotate(180deg)}
+.selbox.st-interviewing{border-color:rgba(199,154,54,.65);background:rgba(199,154,54,.1);color:#866a1c}
+.selbox.st-offer{border-color:rgba(18,121,106,.6);background:rgba(18,121,106,.09);color:#0d6355}
+.selmenu{position:absolute;left:0;right:0;top:36px;background:#fff;border:1px solid #e0d9ca;border-radius:10px;box-shadow:0 18px 38px -10px rgba(40,30,15,.35);padding:5px;opacity:0;transform:translateY(-6px);pointer-events:none;transition:opacity .25s,transform .25s;z-index:20}
+.selmenu.open{opacity:1;transform:none}
+.selmenu div{padding:7px 10px;border-radius:6px;font-size:12.5px;color:var(--ink)}
+.selmenu div.hover{background:#F0F8F7}
+.acts{display:flex;align-items:center;justify-content:flex-end;gap:6px}
+.act{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 11px;border:1px solid var(--line2);border-radius:8px;background:#fff;color:var(--ink);font-size:12.5px;font-weight:700;transition:all .2s}
+.act.press{border-color:rgba(16,82,80,.5);background:rgba(240,248,247,.9)}
+.act svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+/* ---------- detail ---------- */
+.dhead{display:flex;align-items:flex-start;justify-content:space-between;gap:20px}
+.back{color:var(--mute);font-size:13.5px;font-weight:650}
+.dhead h1{margin:6px 0 0;font-size:28px;letter-spacing:-.025em;color:var(--ink2);font-weight:700}
+.dhead h1 span{color:var(--mute);font-weight:400}
+.score{display:flex;align-items:baseline;gap:6px;padding:8px 16px;border-radius:999px;border:1px solid rgba(18,121,106,.45);background:rgba(18,121,106,.09)}
+.score b{font-size:20px;font-weight:800;color:#0d6355}
+.score span{color:var(--mute);font-size:12.5px;font-weight:650}
+.dgrid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:14px;align-items:start;margin-top:14px}
+.dcard{border:1px solid #E7E0D2;border-radius:14px;background:#FFFDF8;padding:16px 18px 18px;box-shadow:0 14px 30px -26px rgba(8,25,24,.4)}
+.dcard-h{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.dcard-h h2{font-size:15px;letter-spacing:-.015em;color:var(--ink2);font-weight:700}
+.wc{color:var(--mute);font-size:11.5px;font-weight:650}
+.editbtn{margin-left:auto;height:32px;padding:0 15px;border:1px solid rgba(197,132,42,.4);border-radius:999px;background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(255,247,235,.95));color:#8a6d22;font-size:12.5px;font-weight:800;display:flex;align-items:center}
+.paper{border:1px solid rgba(199,154,54,.34);border-radius:10px;padding:18px 22px;background:linear-gradient(180deg,rgba(255,254,249,.94),rgba(255,251,243,.94));height:268px;overflow:hidden}
+.paper p{margin:0 0 11px;color:#33291d;font-size:12.5px;line-height:1.62}
+.dacts{display:flex;gap:10px;margin-top:13px}
+.btn-p{height:42px;padding:0 20px;border-radius:10px;background:var(--teal);color:var(--goldl);font-size:13.5px;font-weight:700;display:flex;align-items:center;transition:transform .12s}
+.btn-p.press{transform:scale(.97)}
+.btn-s{height:42px;padding:0 18px;border-radius:10px;border:1px solid rgba(197,132,42,.42);background:#fffdf8;color:#8a6d22;font-size:13.5px;font-weight:700;display:flex;align-items:center}
+.tone{border:1px solid #E7E0D2;border-radius:14px;background:#FFFDF8;padding:13px 18px 15px;margin-top:12px}
+.tone-row{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:9px}
+.tone-row .l{color:var(--mute);font-size:12.5px}
+.tone-row .l b{color:var(--ink);text-transform:capitalize}
+.tone-row .q{color:var(--mute);font-size:11.5px}
+.tone-btns{display:flex;gap:8px}
+.tbtn{height:32px;padding:0 14px;border:1px solid rgba(16,82,80,.22);border-radius:999px;background:#fff;color:var(--ink);font-size:12.5px;font-weight:700;display:flex;align-items:center;transition:all .2s}
+.tbtn.press{border-color:rgba(16,82,80,.55);background:rgba(240,248,247,.85)}
+.panel{border:1px solid #E7E0D2;border-radius:14px;background:#FFFDF8;padding:15px 17px}
+.panel+.panel{margin-top:12px}
+.panel h3{font-size:13.5px;color:var(--ink2);font-weight:700;margin-bottom:11px}
+.pselect{width:100%;height:40px;padding:0 12px;border:1px solid rgba(18,121,106,.6);border-radius:10px;background:rgba(18,121,106,.09);color:#0d6355;font-size:13.5px;font-weight:700;display:flex;align-items:center;justify-content:space-between}
+.pnote{margin-top:9px;color:var(--mute);font-size:11.5px;line-height:1.5}
+.tl{list-style:none;margin-top:12px;padding-top:12px;border-top:1px solid #E7E0D2;display:grid;gap:9px}
+.tl li{display:flex;gap:9px;align-items:flex-start}
+.tl i{width:9px;height:9px;margin-top:4px;border-radius:50%;background:var(--gold);flex:0 0 9px}
+.tl b{display:block;color:var(--ink);font-size:12.5px}
+.tl em{display:block;margin-top:1px;color:var(--mute);font-size:11px;font-style:normal}
+.ats-h{display:flex;align-items:center;justify-content:space-between}
+.ats-pill{padding:3px 10px;border-radius:999px;border:1px solid rgba(18,121,106,.4);background:rgba(18,121,106,.08);color:#0d6355;font-size:10.5px;font-weight:800}
+.ats-n{font-size:26px;font-weight:800;color:var(--ink2);margin:8px 0 6px}
+.ats-n span{font-size:13px;color:var(--mute);font-weight:600}
+.ats-bar{height:7px;border-radius:999px;background:#EDE6D8;overflow:hidden}
+.ats-bar i{display:block;height:100%;width:86%;background:linear-gradient(90deg,#C79B3C,#e07800);border-radius:999px}
+.kw{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px}
+.kw span{padding:3px 8px;border-radius:999px;border:1px solid rgba(18,121,106,.28);background:rgba(18,121,106,.05);color:#0d6355;font-size:10.5px}
+/* ---------- cursor ---------- */
+.cursor{position:absolute;left:0;top:0;width:26px;height:26px;z-index:55;pointer-events:none;opacity:0;transition:transform .5s cubic-bezier(.4,0,.2,1),opacity .4s;will-change:transform}
+.cursor svg{filter:drop-shadow(0 2px 3px rgba(0,0,0,.35))}
+.cursor .ring{position:absolute;left:-12px;top:-12px;width:36px;height:36px;border:3px solid rgba(16,82,80,.55);border-radius:50%;opacity:0;transform:scale(.3)}
+.cursor.click .ring{animation:ring .55s ease-out}
+@keyframes ring{0%{opacity:.8;transform:scale(.3)}100%{opacity:0;transform:scale(1.1)}}
+@media (prefers-reduced-motion: reduce){.scene,.cursor{transition-duration:1ms}}
+</style></head>
+<body><div class="stage-wrap"><div class="stage" id="stage">
+<div class="goldline"></div>
+<div class="window" id="window"><div class="titlebar"><div class="addr"><span class="dot"></span>forgeletter.com/dashboard/letters</div></div><div class="viewport">
+
+<!-- SCENE 0: LETTERS LIST -->
+<div class="scene" id="sc-list">
+  <div class="pg-h1">My letters</div>
+  <div class="pg-sub" id="listSub">4 cover letters. Copy, download, or update status without leaving this page.</div>
+
+  <div class="strip">
+    <div class="strip-lead"><span class="strip-val" id="sRate">33%</span><span class="strip-lab">response rate</span></div>
+    <div class="strip-stats">
+      <div class="strip-stat"><b>3</b><span>submitted</span></div>
+      <div class="strip-stat"><b id="sHeard">1</b><span>heard back</span></div>
+      <div class="strip-stat"><b id="sInt">1</b><span>interview</span></div>
+      <div class="strip-stat"><b>0</b><span>offers</span></div>
+    </div>
+    <div class="strip-gold"><svg viewBox="0 0 24 24" width="15" height="15" style="fill:#C79B3C"><path d="M12 2.8 14.3 9l6.2 2.3-6.2 2.4L12 20l-2.3-6.3-6.2-2.4L9.7 9 12 2.8Z"/></svg><span><b id="sGold">1</b> gold-standard</span></div>
+  </div>
+
+  <div class="toolbar">
+    <div class="search" id="searchBox">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>
+      <input id="searchInput" placeholder="Search by role or company..." readonly>
+      <span class="clr" id="searchClr">✕</span>
+    </div>
+    <div class="controls">
+      <div class="chips">
+        <div class="chip on">All <i>4</i></div>
+        <div class="chip">Interviewing <i>1</i></div>
+        <div class="chip">Submitted <i>2</i></div>
+        <div class="chip">Not submitted <i>1</i></div>
+      </div>
+      <div class="sortwrap">Sort <div class="sel">Most recent <span style="font-size:9px">▾</span></div></div>
+    </div>
+  </div>
+
+  <div class="table">
+    <div class="thead"><span>Role</span><span>Created</span><span class="r">Score</span><span class="r">ATS</span><span>Status</span><span class="r">Actions</span></div>
+
+    <div class="row" id="row1">
+      <div class="rtitle"><b>Senior Operations Analyst</b><span>Beacon Parcel</span></div>
+      <span class="rdate">3h ago</span>
+      <span class="num">96</span>
+      <span class="num">91</span>
+      <span class="selstat">
+        <span class="selbox" id="sel1"><span id="sel1v">Submitted</span><span class="cv">▾</span></span>
+        <span class="selmenu" id="menu1">
+          <div data-v="Not submitted">Not submitted</div>
+          <div data-v="Submitted">Submitted</div>
+          <div data-v="Interviewing" id="optInt">Interviewing</div>
+          <div data-v="Offer">Offer</div>
+          <div data-v="Rejected">Rejected</div>
+          <div data-v="Ghosted">Ghosted</div>
+        </span>
+      </span>
+      <span class="acts">
+        <span class="act" id="copy1"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg><span id="copy1t">Copy</span></span>
+        <span class="act" id="pdf1"><svg viewBox="0 0 24 24"><path d="M12 4v10"/><path d="m8 11 4 4 4-4"/><path d="M5 19h14"/></svg><span id="pdf1t">PDF</span></span>
+      </span>
+    </div>
+
+    <div class="row nrow" id="row2">
+      <div class="rtitle"><b>Growth Marketing Manager</b><span>Fjordway</span></div>
+      <span class="rdate">2d ago</span><span class="num">94</span><span class="num">88</span>
+      <span class="selstat"><span class="selbox">Interviewing<span class="cv">▾</span></span></span>
+      <span class="acts"><span class="act"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>Copy</span><span class="act"><svg viewBox="0 0 24 24"><path d="M12 4v10"/><path d="m8 11 4 4 4-4"/><path d="M5 19h14"/></svg>PDF</span></span>
+    </div>
+
+    <div class="row nrow" id="row3">
+      <div class="rtitle"><b>Product Manager</b><span>Lumen Analytics</span></div>
+      <span class="rdate">5d ago</span><span class="num">92</span><span class="num">86</span>
+      <span class="selstat"><span class="selbox">Submitted<span class="cv">▾</span></span></span>
+      <span class="acts"><span class="act"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>Copy</span><span class="act"><svg viewBox="0 0 24 24"><path d="M12 4v10"/><path d="m8 11 4 4 4-4"/><path d="M5 19h14"/></svg>PDF</span></span>
+    </div>
+
+    <div class="row nrow" id="row4">
+      <div class="rtitle"><b>Software Engineer</b><span>Aldervelt Precision</span></div>
+      <span class="rdate">8d ago</span><span class="num">89</span><span class="num">—</span>
+      <span class="selstat"><span class="selbox">Not submitted<span class="cv">▾</span></span></span>
+      <span class="acts"><span class="act"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>Copy</span><span class="act"><svg viewBox="0 0 24 24"><path d="M12 4v10"/><path d="m8 11 4 4 4-4"/><path d="M5 19h14"/></svg>PDF</span></span>
+    </div>
+  </div>
+</div>
+
+<!-- SCENE 1: LETTER DETAIL -->
+<div class="scene" id="sc-detail">
+  <div class="dhead">
+    <div><div class="back">← All letters</div><h1>Senior Operations Analyst <span>at Beacon Parcel</span></h1></div>
+    <div class="score"><b>96</b><span>/ 100 quality</span></div>
+  </div>
+
+  <div class="dgrid">
+    <div>
+      <div class="dcard">
+        <div class="dcard-h"><h2>Your letter</h2><span class="wc">312 words</span><span class="editbtn">Edit</span></div>
+        <div class="paper">
+          <p>Dear Hiring Manager,</p>
+          <p>Cutting order-to-ship time from 48 hours to 20 hours across three warehouses is what end-to-end process ownership looks like in practice. At Nordvik Trading, I mapped the full fulfilment flow across all three sites, with the 58% reduction translating into a one-third drop in delivery complaints and measurable growth in repeat purchases.</p>
+          <p>In the same period, I renegotiated carrier contracts covering the entire parcel volume, producing EUR 210K in annual savings that funded two new packing lines without additional budget. Turning ambiguous operational questions into structured, measurable improvement projects is the core of my background.</p>
+          <p>My Lean Six Sigma Green Belt underpins the methodology I bring to this kind of work. I would welcome the opportunity to discuss how my skills and experience align with your needs.</p>
+        </div>
+        <div class="dacts"><span class="btn-p" id="dlBtn">Download PDF</span><span class="btn-s">Copy text</span><span class="btn-s">Duplicate for new job</span></div>
+      </div>
+
+      <div class="tone">
+        <div class="tone-row"><span class="l">Tone: <b>professional</b></span><span class="q">0 of 3 included rewrites used</span></div>
+        <div class="tone-btns"><span class="tbtn" id="tb1">Rewrite as Confident</span><span class="tbtn">Rewrite as Warm</span><span class="tbtn">Rewrite as Concise</span></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="panel">
+        <h3>Application status</h3>
+        <div class="pselect">Interviewing <span style="font-size:9px">▾</span></div>
+        <div class="pnote">Letters that earn offers or interviews feed the gold-standard examples base used by future generations.</div>
+        <ul class="tl">
+          <li><i></i><span><b>Submitted</b><em>3 Aug 2026, 09:14</em></span></li>
+          <li><i></i><span><b>Interview stage</b><em>7 Aug 2026, 16:02</em></span></li>
+        </ul>
+      </div>
+      <div class="panel">
+        <div class="ats-h"><h3 style="margin:0">ATS keyword score</h3><span class="ats-pill">ATS Ready</span></div>
+        <div class="ats-n">91 <span>/ 100</span></div>
+        <div class="ats-bar"><i></i></div>
+        <div class="kw"><span>operations</span><span>logistics</span><span>process</span><span>lean six sigma</span><span>cost reduction</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div></div>
+<div class="center-layer" id="outro"><h1>Every letter.<br>Tracked to the offer.</h1><div class="cta">Start now →</div></div>
+<div class="cursor" id="cursor"><span class="ring"></span><svg width="26" height="26" viewBox="0 0 26 26"><path d="M3 2 L3 20 L8 15.5 L11.5 23 L14.5 21.6 L11 14.2 L18 14 Z" fill="#241608" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/></svg></div>
+</div></div>
+<script>
+const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s);
+const stage=$('#stage'),cursor=$('#cursor');
+
+/* Pause support: the landing page keeps BOTH demo iframes mounted so
+   switching tabs is instant, and pauses the hidden one so only the
+   visible animation consumes CPU. */
+let paused=false;
+addEventListener('message',e=>{if(e&&e.data&&e.data.fl==='pause')paused=true;else if(e&&e.data&&e.data.fl==='resume')paused=false});
+const rest=ms=>new Promise(r=>setTimeout(r,ms));
+async function sleep(ms){await rest(ms);while(paused)await rest(140)}
+
+let _w=0,_h=0;function fit(){const wrap=document.querySelector('.stage-wrap');const w=(wrap&&wrap.clientWidth)||innerWidth||1280;const h=(wrap&&wrap.clientHeight)||innerHeight||720;if(w===_w&&h===_h)return;_w=w;_h=h;stage.style.transform=`scale(${Math.min(w/1280,h/720)})`}
+addEventListener('resize',fit);addEventListener('load',fit);requestAnimationFrame(fit);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fit);
+try{new ResizeObserver(fit).observe(document.body);new ResizeObserver(fit).observe(document.querySelector('.stage-wrap'))}catch(e){}
+[50,150,300,600,1200,2000,3500].forEach(ms=>setTimeout(fit,ms));setInterval(fit,500);fit();
+
+/* Cursor lands on the exact centre of the target element, so whatever
+   it points at is what the next action changes. */
+function moveTo(el,dx=0,dy=0){const s=stage.getBoundingClientRect(),r=el.getBoundingClientRect(),sc=s.width/1280;cursor.style.opacity='1';cursor.style.transform=`translate(${(r.left-s.left)/sc+r.width/sc/2+dx}px,${(r.top-s.top)/sc+r.height/sc/2+dy}px)`}
+async function click(){cursor.classList.remove('click');void cursor.offsetWidth;cursor.classList.add('click');await sleep(180)}
+function scene(id){$$('.scene').forEach(s=>{if(s.id===id){s.style.zIndex=2;s.classList.add('active')}else if(s.classList.contains('active')){s.style.zIndex=1;s.classList.remove('active')}})}
+function show(el,on=true){el.classList.toggle('show',on)}
+
+async function type(text,cps=52){const box=$('#searchBox'),inp=$('#searchInput');moveTo(box,-box.offsetWidth/2+40);await sleep(560);box.classList.add('focus');await sleep(140);for(let i=1;i<=text.length;i++){inp.value=text.slice(0,i);await sleep(cps+Math.random()*26)}$('#searchClr').classList.add('on')}
+
+let running=false;
+async function run(){
+  if(running)return;running=true;
+  fit();
+  /* reset */
+  $('#searchInput').value='';$('#searchBox').classList.remove('focus');$('#searchClr').classList.remove('on');
+  $$('.nrow').forEach(r=>r.classList.remove('hidden-row'));
+  $('#row1').classList.remove('hov');
+  $('#sel1v').textContent='Submitted';$('#sel1').className='selbox';$('#menu1').classList.remove('open');
+  $$('#menu1 div').forEach(d=>d.classList.remove('hover'));
+  $('#copy1t').textContent='Copy';$('#pdf1t').textContent='PDF';
+  $('#copy1').classList.remove('press');$('#pdf1').classList.remove('press');
+  $('#sRate').textContent='33%';$('#sHeard').textContent='1';$('#sInt').textContent='1';$('#sGold').textContent='1';
+  $('#listSub').textContent='4 cover letters. Copy, download, or update status without leaving this page.';
+  $$('.scene').forEach(s=>{s.classList.remove('active');s.style.zIndex=''});
+  cursor.style.opacity=0;await sleep(140);
+
+  scene('sc-list');
+  /* Loop boundary: rebuild the first scene BEHIND the outro, then
+     dissolve it — never a flash of leftover UI. */
+  if($('#outro').classList.contains('show')){await sleep(1400);show($('#outro'),false);await sleep(950)}
+  await sleep(1200);cursor.style.opacity=1;
+
+  /* 1. SEARCH — find one letter in a growing library */
+  await type('beacon');
+  await sleep(420);
+  $$('.nrow').forEach(r=>r.classList.add('hidden-row'));
+  $('#listSub').textContent='1 of 4 letters match.';
+  await sleep(1500);
+  const clr=$('#searchClr');moveTo(clr);await sleep(620);await click();
+  $('#searchInput').value='';clr.classList.remove('on');$('#searchBox').classList.remove('focus');
+  $$('.nrow').forEach(r=>r.classList.remove('hidden-row'));
+  $('#listSub').textContent='4 cover letters. Copy, download, or update status without leaving this page.';
+  await sleep(1100);
+
+  /* 2. COPY — no page load needed */
+  const c1=$('#copy1');moveTo(c1);await sleep(680);$('#row1').classList.add('hov');await click();
+  c1.classList.add('press');$('#copy1t').textContent='Copied';
+  await sleep(1500);c1.classList.remove('press');$('#copy1t').textContent='Copy';
+  await sleep(500);
+
+  /* 3. PDF — same row, one click */
+  const p1=$('#pdf1');moveTo(p1);await sleep(660);await click();
+  p1.classList.add('press');$('#pdf1t').textContent='...';
+  await sleep(1200);p1.classList.remove('press');$('#pdf1t').textContent='PDF';
+  await sleep(700);
+
+  /* 4. STATUS — track the outcome inline */
+  const s1=$('#sel1'),m1=$('#menu1');moveTo(s1);await sleep(700);await click();
+  s1.classList.add('open');m1.classList.add('open');await sleep(500);
+  const opt=$('#optInt');moveTo(opt);await sleep(700);opt.classList.add('hover');await sleep(160);await click();
+  $('#sel1v').textContent='Interviewing';s1.className='selbox st-interviewing';
+  opt.classList.remove('hover');m1.classList.remove('open');
+  await sleep(360);
+  /* the outcome strip re-reads from the same data */
+  $('#sHeard').textContent='2';$('#sInt').textContent='2';$('#sRate').textContent='67%';$('#sGold').textContent='2';
+  await sleep(1500);
+
+  /* 5. OPEN THE LETTER */
+  const t1=$('#row1').querySelector('.rtitle b');moveTo(t1);await sleep(760);await click();
+  $('#row1').classList.remove('hov');
+  await sleep(340);
+  scene('sc-detail');cursor.style.opacity=0;await sleep(1500);
+
+  /* 6. DETAIL — read, download, or change the voice */
+  cursor.style.opacity=1;
+  const dl=$('#dlBtn');moveTo(dl);await sleep(820);await click();dl.classList.add('press');await sleep(180);dl.classList.remove('press');
+  await sleep(1100);
+  const tb=$('#tb1');moveTo(tb);await sleep(780);await click();tb.classList.add('press');await sleep(200);tb.classList.remove('press');
+  await sleep(1500);
+
+  cursor.style.opacity=0;await sleep(700);
+  show($('#outro'),true);await sleep(4600);
+  running=false;setTimeout(()=>{if(!running)run()},900);
+}
+window.addEventListener('load',()=>setTimeout(run,400));
+</script></body></html>
