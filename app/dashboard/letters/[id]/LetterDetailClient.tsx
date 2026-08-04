@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useCallback, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { ATSScoreCard, type ATSData, type ATSVerdict } from "@/components/ATSScoreCard"
 import { TemplatePickerModal } from "@/components/TemplatePickerModal"
 
@@ -56,18 +56,32 @@ const TONE_REWRITE_FREE_CAP: Record<string, number> = {
 
 type BasePlan = "free" | "starter" | "pro" | "ultra"
 
-const STATUS_OPTIONS: Array<{
-  key: ApplicationStatus
-  label: string
-  description: string
-}> = [
-  { key: "not_submitted", label: "Not submitted", description: "Drafted, not yet sent" },
-  { key: "submitted", label: "Submitted", description: "Application sent, waiting" },
-  { key: "interviewing", label: "Interviewing", description: "They reached out" },
-  { key: "offer", label: "Offer", description: "You got the role" },
-  { key: "rejected", label: "Rejected", description: "Declined after response" },
-  { key: "ghosted", label: "Ghosted", description: "No response, given up" },
+const STATUS_OPTIONS: Array<{ key: ApplicationStatus; label: string }> = [
+  { key: "not_submitted", label: "Not submitted" },
+  { key: "submitted", label: "Submitted" },
+  { key: "interviewing", label: "Interviewing" },
+  { key: "offer", label: "Offer" },
+  { key: "rejected", label: "Rejected" },
+  { key: "ghosted", label: "Ghosted" },
 ]
+
+/** Read mode renders real paragraphs — the letter is the reason the
+ *  page exists, so it must be readable without scrolling inside a box. */
+function splitParagraphs(text: string): string[] {
+  const byBlank = text.split(/\n{2,}/).map((p) => p.trim()).filter(Boolean)
+  if (byBlank.length > 1) return byBlank
+  return text.split(/\n/).map((p) => p.trim()).filter(Boolean)
+}
+
+function formatStamp(iso: string): string {
+  return new Date(iso).toLocaleString(undefined, {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  })
+}
 
 export function LetterDetailClient({
   letter,
@@ -83,6 +97,7 @@ export function LetterDetailClient({
 }) {
   const router = useRouter()
   const [text, setText] = useState(letter.finalCoverLetter)
+  const [isEditing, setIsEditing] = useState(false)
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle")
   const [copyStatus, setCopyStatus] = useState<"idle" | "copied">("idle")
   const [deleting, setDeleting] = useState(false)
@@ -106,6 +121,16 @@ export function LetterDetailClient({
   const [toneError, setToneError] = useState("")
   const [toneNotice, setToneNotice] = useState("")
   const toneFreeCap = TONE_REWRITE_FREE_CAP[letter.tier] ?? 0
+
+  const paragraphs = useMemo(() => splitParagraphs(text), [text])
+  const isDirty = text !== letter.finalCoverLetter
+  const wordCount = useMemo(
+    () => text.split(/\s+/).filter((w) => /[A-Za-z0-9]/.test(w)).length,
+    [text]
+  )
+  const isBestEffort = letter.generationStatus === "failed"
+  const isPending =
+    letter.generationStatus === "running" || letter.generationStatus === "queued"
 
   const requestToneRewrite = useCallback(
     async (nextTone: string, acknowledgeLetterSpend: boolean) => {
@@ -163,11 +188,7 @@ export function LetterDetailClient({
   const updateApplicationStatus = useCallback(
     async (next: ApplicationStatus) => {
       if (next === appStatus) return
-      const previous = {
-        appStatus,
-        submittedAt,
-        outcomeAt,
-      }
+      const previous = { appStatus, submittedAt, outcomeAt }
       setAppStatus(next)
       setTrackStatus("saving")
       const now = new Date().toISOString()
@@ -227,11 +248,13 @@ export function LetterDetailClient({
       })
       if (!res.ok) throw new Error(await res.text())
       setSaveStatus("saved")
+      setIsEditing(false)
       setTimeout(() => setSaveStatus("idle"), 1800)
+      router.refresh()
     } catch {
       setSaveStatus("error")
     }
-  }, [letter.id, text])
+  }, [letter.id, router, text])
 
   const onCopy = useCallback(async () => {
     try {
@@ -265,282 +288,367 @@ export function LetterDetailClient({
         }
       : null
 
+  const scoreTone =
+    letter.finalScore >= 90 ? "high" : letter.finalScore >= 75 ? "mid" : "low"
+
+  // Only render timeline events that are genuinely distinct. Setting
+  // an outcome straight from "not submitted" stamps both fields at
+  // once, which used to render two identical rows.
+  const timelineEvents: Array<{ key: string; label: string; at: string }> = []
+  if (submittedAt) {
+    timelineEvents.push({ key: "submitted", label: "Submitted", at: submittedAt })
+  }
+  if (outcomeAt && appStatus !== "submitted") {
+    const sameMoment =
+      submittedAt != null &&
+      Math.abs(new Date(outcomeAt).getTime() - new Date(submittedAt).getTime()) < 60000
+    const label =
+      appStatus === "offer"
+        ? "Offer received"
+        : appStatus === "interviewing"
+          ? "Interview stage"
+          : appStatus === "rejected"
+            ? "Rejected"
+            : "Marked ghosted"
+    timelineEvents.push({
+      key: "outcome",
+      label: sameMoment ? `${label} (recorded together)` : label,
+      at: outcomeAt,
+    })
+  }
+
   return (
-    <div style={{ maxWidth: 920, margin: "0 auto", padding: "32px 20px 64px", display: "grid", gap: 16 }}>
-      <header style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: 16 }}>
-        <div>
-          <Link href="/dashboard/letters" style={{ color: "var(--muted)", fontSize: 14, textDecoration: "none" }}>
+    <div className="ldx">
+      <header className="ldx__head">
+        <div className="ldx__head-main">
+          <Link className="ldx__back" href="/dashboard/letters">
             ← All letters
           </Link>
-          <h1 style={{ margin: "6px 0 0", fontSize: "clamp(22px, 3vw, 30px)", letterSpacing: "-0.02em" }}>
+          <h1>
             {letter.jobTitle || "Untitled role"}
-            {letter.companyName ? (
-              <span style={{ color: "var(--muted)", fontWeight: 400 }}> at {letter.companyName}</span>
-            ) : null}
+            {letter.companyName ? <span> at {letter.companyName}</span> : null}
           </h1>
         </div>
-        <ScoreBadge score={letter.finalScore} status={letter.generationStatus} />
+        <div className={`ldx__score ldx__score--${scoreTone}`}>
+          <strong>{letter.finalScore}</strong>
+          <span>/ 100 quality</span>
+        </div>
       </header>
 
-      {letter.generationStatus === "failed" && (
-        <div className="alert">
-          {letter.failureReason ?? "Generation did not pass the quality threshold."}
-        </div>
-      )}
-
-      {letter.generationStatus === "running" || letter.generationStatus === "queued" ? (
-        <div className="dashboard-card">
-          <p style={{ margin: 0 }}>This letter is still generating. Refresh the page in a moment.</p>
-        </div>
-      ) : (
-        <div className="dashboard-card">
-          <textarea
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            rows={20}
-            style={{
-              width: "100%",
-              padding: 16,
-              border: "1px solid var(--line)",
-              borderRadius: 8,
-              background: "var(--paper)",
-              color: "var(--ink)",
-              fontFamily: "inherit",
-              fontSize: 14,
-              lineHeight: 1.6,
-              resize: "vertical",
-            }}
-          />
-          <div style={{ display: "flex", gap: 10, marginTop: 14, flexWrap: "wrap" }}>
-            <button className="button" onClick={onCopy}>
-              {copyStatus === "copied" ? "Copied" : "Copy"}
-            </button>
-            <button
-              className="button-secondary"
-              onClick={onSave}
-              disabled={saveStatus === "saving"}
-            >
-              {saveStatus === "saving"
-                ? "Saving…"
-                : saveStatus === "saved"
-                  ? "Saved"
-                  : saveStatus === "error"
-                    ? "Save failed"
-                    : "Save changes"}
-            </button>
-            <button
-              type="button"
-              className="button-secondary"
-              onClick={() => setShowPdfPicker(true)}
-            >
-              Download PDF
-            </button>
-            <Link
-              className="button-secondary"
-              href={`/dashboard?duplicateFrom=${encodeURIComponent(letter.id)}`}
-              title="Pre-fill the workspace with this letter's role, company and tone — then paste a new job description"
-            >
-              Duplicate for new job
-            </Link>
-            <button
-              className="button-ghost danger-link"
-              onClick={() => setShowDeleteConfirm(true)}
-              style={{ marginLeft: "auto" }}
-            >
-              Delete
-            </button>
-          </div>
-        </div>
-      )}
-
-      {letter.generationStatus === "passed" || letter.generationStatus === "failed" ? (
-        <div className="dashboard-card" aria-label="Tone rewrite">
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: 8 }}>
-            <h2 style={{ margin: 0, fontSize: 17 }}>Rewrite in a different tone</h2>
-            <span style={{ fontSize: 12.5, color: "var(--muted)" }}>
-              {toneFreeCap > 0
-                ? `${Math.min(toneRewriteCount, toneFreeCap)} of ${toneFreeCap} included ${toneFreeCap === 1 ? "rewrite" : "rewrites"} used for this letter`
-                : "Tone rewrites on Starter use a letter slot from your monthly allowance"}
-            </span>
-          </div>
-          <p style={{ margin: "6px 0 12px", fontSize: 13.5, color: "var(--muted)" }}>
-            The full agent pipeline re-runs with the same facts and job posting —
-            only the voice changes. Your letter stays grounded in your real experience.
-          </p>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            {TONE_OPTIONS.map((option) => {
-              const isCurrent = option.key === tone
-              const isRunning = rewritingTone === option.key
-              return (
-                <button
-                  key={option.key}
-                  type="button"
-                  className={isCurrent ? "button" : "button-secondary"}
-                  disabled={isCurrent || rewritingTone != null}
-                  aria-pressed={isCurrent}
-                  onClick={() => void requestToneRewrite(option.key, false)}
-                >
-                  {isRunning
-                    ? "Rewriting…"
-                    : isCurrent
-                      ? `${option.label} · current`
-                      : option.label}
-                </button>
-              )
-            })}
-          </div>
-          {rewritingTone ? (
-            <p style={{ margin: "12px 0 0", fontSize: 13, color: "var(--muted)" }}>
-              Re-running the pipeline in the new tone — typically 30–90 seconds.
-              Keep this page open.
-            </p>
-          ) : null}
-          {toneNotice ? (
-            <p style={{ margin: "12px 0 0", fontSize: 13, color: "var(--teal, #0b6b70)", fontWeight: 600 }}>
-              {toneNotice}
-            </p>
-          ) : null}
-          {toneError ? <div className="alert" style={{ marginTop: 12 }}>{toneError}</div> : null}
-          {toneConfirm ? (
-            <div
-              style={{
-                marginTop: 12,
-                padding: "12px 14px",
-                borderRadius: 10,
-                border: "1px solid rgba(178, 58, 48, 0.25)",
-                background: "rgba(178, 58, 48, 0.05)",
-              }}
-            >
-              <p style={{ margin: "0 0 10px", fontSize: 13.5 }}>{toneConfirm.message}</p>
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                <button
-                  type="button"
-                  className="button"
-                  onClick={() => void requestToneRewrite(toneConfirm.tone, true)}
-                >
-                  Use a letter slot &amp; rewrite
-                </button>
-                <button
-                  type="button"
-                  className="button-secondary"
-                  onClick={() => setToneConfirm(null)}
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          ) : null}
+      {isBestEffort ? (
+        <div className="ldx__notice">
+          <strong>Best draft delivered.</strong>
+          <span>
+            This letter scored under the quality bar for your tier, so the
+            agents kept the strongest version they produced across{" "}
+            {letter.rewriteCycles}{" "}
+            {letter.rewriteCycles === 1 ? "cycle" : "cycles"}. It&apos;s still
+            grounded in your real experience — read it through, edit anything
+            that feels off, or try a different tone.
+          </span>
         </div>
       ) : null}
 
-      <section className={`letter-tracker letter-tracker--${appStatus}`} aria-label="Application outcome tracker">
-        <div className="letter-tracker__header">
-          <div>
-            <p className="letter-tracker__kicker">Application outcome</p>
-            <h2>Track where this letter landed</h2>
-            <p className="letter-tracker__sub">
-              Marking outcomes feeds the gold-standard examples base —
-              letters that earned offers train future generations.
-            </p>
-          </div>
-          {trackStatus !== "idle" ? (
-            <span className={`letter-tracker__pill letter-tracker__pill--${trackStatus}`}>
-              {trackStatus === "saving"
-                ? "Saving…"
-                : trackStatus === "saved"
-                  ? "Saved"
-                  : "Save failed — retry"}
-            </span>
-          ) : null}
+      {isPending ? (
+        <div className="dashboard-card">
+          <p style={{ margin: 0 }}>
+            This letter is still generating. Refresh the page in a moment.
+          </p>
         </div>
+      ) : (
+        <div className="ldx__grid">
+          <main className="ldx__main">
+            <section className="ldx__letter-card">
+              <div className="ldx__letter-head">
+                <h2>Your letter</h2>
+                <span className="ldx__wordcount">{wordCount} words</span>
+                {!isEditing ? (
+                  <button
+                    className="ldx__edit-btn"
+                    type="button"
+                    onClick={() => setIsEditing(true)}
+                  >
+                    Edit
+                  </button>
+                ) : null}
+              </div>
 
-        <div className="letter-tracker__grid" role="radiogroup" aria-label="Application status">
-          {STATUS_OPTIONS.map((option) => {
-            const isActive = appStatus === option.key
-            return (
-              <button
-                key={option.key}
-                type="button"
-                role="radio"
-                aria-checked={isActive}
-                className={`letter-tracker__option letter-tracker__option--${option.key}${
-                  isActive ? " is-active" : ""
-                }`}
-                onClick={() => updateApplicationStatus(option.key)}
-                disabled={trackStatus === "saving"}
-              >
-                <span className="letter-tracker__option-dot" aria-hidden="true" />
-                <span className="letter-tracker__option-copy">
-                  <strong>{option.label}</strong>
-                  <span>{option.description}</span>
-                </span>
-              </button>
-            )
-          })}
+              {isEditing ? (
+                <>
+                  <textarea
+                    className="ldx__editor"
+                    value={text}
+                    onChange={(e) => setText(e.target.value)}
+                    rows={22}
+                    aria-label="Letter text"
+                  />
+                  {/* Single save path: Save is primary, Cancel is the
+                      quiet escape — same rule as the workspace. */}
+                  <div className="ldx__editor-actions">
+                    <button
+                      className="button"
+                      type="button"
+                      onClick={onSave}
+                      disabled={saveStatus === "saving" || !isDirty}
+                    >
+                      {saveStatus === "saving"
+                        ? "Saving…"
+                        : saveStatus === "saved"
+                          ? "Saved"
+                          : saveStatus === "error"
+                            ? "Save failed — retry"
+                            : "Save changes"}
+                    </button>
+                    <button
+                      className="button-secondary"
+                      type="button"
+                      onClick={() => {
+                        setText(letter.finalCoverLetter)
+                        setIsEditing(false)
+                        setSaveStatus("idle")
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <article className="ldx__paper">
+                  {paragraphs.map((p, i) => (
+                    <p key={i}>{p}</p>
+                  ))}
+                </article>
+              )}
+
+              {!isEditing ? (
+                <div className="ldx__actions">
+                  <button
+                    className="button"
+                    type="button"
+                    onClick={() => setShowPdfPicker(true)}
+                  >
+                    Download PDF
+                  </button>
+                  <button className="button-secondary" type="button" onClick={onCopy}>
+                    {copyStatus === "copied" ? "Copied" : "Copy text"}
+                  </button>
+                  <Link
+                    className="button-secondary"
+                    href={`/dashboard?duplicateFrom=${encodeURIComponent(letter.id)}`}
+                    title="Pre-fill the workspace with this letter's role, company and tone — then paste a new job description"
+                  >
+                    Duplicate for new job
+                  </Link>
+                </div>
+              ) : null}
+            </section>
+
+            {/* Tone rewrite sits directly under the letter: you decide
+                the voice is wrong only after reading it. Compact by
+                design — it's one control, not a section. */}
+            {!isEditing && (letter.generationStatus === "passed" || isBestEffort) ? (
+              <section className="ldx__tone" aria-label="Rewrite in a different tone">
+                <div className="ldx__tone-row">
+                  <span className="ldx__tone-label">
+                    Tone: <strong>{tone}</strong>
+                  </span>
+                  <span className="ldx__tone-quota">
+                    {toneFreeCap > 0
+                      ? `${Math.min(toneRewriteCount, toneFreeCap)} of ${toneFreeCap} included ${toneFreeCap === 1 ? "rewrite" : "rewrites"} used`
+                      : "Rewrites use a letter slot on Starter"}
+                  </span>
+                </div>
+                <div className="ldx__tone-buttons">
+                  {TONE_OPTIONS.filter((o) => o.key !== tone).map((option) => (
+                    <button
+                      key={option.key}
+                      type="button"
+                      className="ldx__tone-btn"
+                      disabled={rewritingTone !== null}
+                      onClick={() => void requestToneRewrite(option.key, false)}
+                    >
+                      {rewritingTone === option.key
+                        ? "Rewriting…"
+                        : `Rewrite as ${option.label}`}
+                    </button>
+                  ))}
+                </div>
+                {toneNotice ? <p className="ldx__tone-notice">{toneNotice}</p> : null}
+                {toneError ? <p className="ldx__tone-error">{toneError}</p> : null}
+                {toneConfirm ? (
+                  <div className="ldx__tone-confirm">
+                    <p>{toneConfirm.message}</p>
+                    <div>
+                      <button
+                        className="button"
+                        type="button"
+                        onClick={() => void requestToneRewrite(toneConfirm.tone, true)}
+                      >
+                        Use a letter slot
+                      </button>
+                      <button
+                        className="button-secondary"
+                        type="button"
+                        onClick={() => setToneConfirm(null)}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
+              </section>
+            ) : null}
+          </main>
+
+          <aside className="ldx__rail">
+            <section className="ldx__panel">
+              <h2 className="ldx__panel-title">
+                Application status
+                {trackStatus !== "idle" ? (
+                  <span className={`ldx__panel-pill ldx__panel-pill--${trackStatus}`}>
+                    {trackStatus === "saving"
+                      ? "Saving…"
+                      : trackStatus === "saved"
+                        ? "Saved"
+                        : "Failed — retry"}
+                  </span>
+                ) : null}
+              </h2>
+              <label className="ldx__status-field">
+                <span className="ldx__visually-hidden">Application status</span>
+                <select
+                  className={`ldx__status-select ldx__status-select--${appStatus}`}
+                  value={appStatus}
+                  disabled={trackStatus === "saving"}
+                  onChange={(e) =>
+                    void updateApplicationStatus(e.target.value as ApplicationStatus)
+                  }
+                >
+                  {STATUS_OPTIONS.map((o) => (
+                    <option key={o.key} value={o.key}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <p className="ldx__panel-note">
+                Letters that earn offers or interviews feed the gold-standard
+                examples base used by future generations.
+              </p>
+
+              {timelineEvents.length > 0 ? (
+                <ul className="ldx__timeline">
+                  {timelineEvents.map((event) => (
+                    <li key={event.key}>
+                      <span className="ldx__timeline-dot" aria-hidden="true" />
+                      <span>
+                        <strong>{event.label}</strong>
+                        <em>{formatStamp(event.at)}</em>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+
+              {appStatus !== "not_submitted" ? (
+                <div className="ldx__notes">
+                  <label htmlFor="outcome-notes">
+                    Notes <span>optional, visible only to you</span>
+                  </label>
+                  <textarea
+                    id="outcome-notes"
+                    value={notes}
+                    onChange={(event) => setNotes(event.target.value)}
+                    onBlur={() => {
+                      if (notes !== letter.outcomeNotes) void saveNotes()
+                    }}
+                    rows={3}
+                    maxLength={2000}
+                    placeholder="e.g. opener resonated with the founder."
+                  />
+                  <div className="ldx__notes-foot">
+                    <span>
+                      {notesStatus === "saving"
+                        ? "Saving…"
+                        : notesStatus === "saved"
+                          ? "Saved"
+                          : notesStatus === "error"
+                            ? "Save failed"
+                            : `${notes.length}/2000`}
+                    </span>
+                    <button
+                      type="button"
+                      className="button-secondary"
+                      onClick={() => void saveNotes()}
+                    >
+                      Save notes
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+            </section>
+
+            {atsData ? <ATSScoreCard atsData={atsData} tier={basePlan} /> : null}
+
+            <section className="ldx__panel">
+              <details>
+                <summary className="ldx__details-summary">Generation details</summary>
+                <ul className="ldx__details-list">
+                  <li>
+                    <span>Tier</span>
+                    <strong>{letter.tier.toUpperCase()}</strong>
+                  </li>
+                  <li>
+                    <span>Quality score</span>
+                    <strong>{letter.finalScore}/100</strong>
+                  </li>
+                  {letter.atsScore != null ? (
+                    <li>
+                      <span>ATS score</span>
+                      <strong>
+                        {letter.atsScore}/100 ({letter.atsVerdict})
+                      </strong>
+                    </li>
+                  ) : null}
+                  {letter.hallucinationRisk ? (
+                    <li>
+                      <span>Hallucination risk</span>
+                      <strong>{letter.hallucinationRisk}</strong>
+                    </li>
+                  ) : null}
+                  <li>
+                    <span>Rewrite cycles</span>
+                    <strong>{letter.rewriteCycles}</strong>
+                  </li>
+                  <li>
+                    <span>Agents run</span>
+                    <strong>{letter.agentsRun.length}</strong>
+                  </li>
+                  <li>
+                    <span>Created</span>
+                    <strong>{formatStamp(letter.createdAt)}</strong>
+                  </li>
+                  {letter.failureReason ? (
+                    <li>
+                      <span>Quality gate</span>
+                      <strong>{letter.failureReason}</strong>
+                    </li>
+                  ) : null}
+                </ul>
+                <p className="ldx__agents">{letter.agentsRun.join(" · ")}</p>
+              </details>
+            </section>
+
+            <button
+              className="ldx__delete"
+              type="button"
+              onClick={() => setShowDeleteConfirm(true)}
+            >
+              Delete this letter
+            </button>
+          </aside>
         </div>
-
-        {appStatus !== "not_submitted" ? (
-          <div className="letter-tracker__timeline" aria-label="Timeline">
-            <Timeline submittedAt={submittedAt} outcomeAt={outcomeAt} status={appStatus} />
-          </div>
-        ) : null}
-
-        {appStatus !== "not_submitted" ? (
-          <div className="letter-tracker__notes">
-            <label htmlFor="outcome-notes">
-              Notes
-              <span>
-                Optional — what worked, what you'd change next time. Visible
-                only to you.
-              </span>
-            </label>
-            <textarea
-              id="outcome-notes"
-              value={notes}
-              onChange={(event) => setNotes(event.target.value)}
-              onBlur={() => {
-                if (notes !== letter.outcomeNotes) void saveNotes()
-              }}
-              rows={3}
-              maxLength={2000}
-              placeholder="e.g. opener resonated with the founder, technical paragraph could be tighter."
-            />
-            <div className="letter-tracker__notes-footer">
-              <span>
-                {notesStatus === "saving"
-                  ? "Saving…"
-                  : notesStatus === "saved"
-                    ? "Saved"
-                    : notesStatus === "error"
-                      ? "Save failed"
-                      : `${notes.length}/2000`}
-              </span>
-              <button type="button" className="button-secondary" onClick={() => void saveNotes()}>
-                Save notes
-              </button>
-            </div>
-          </div>
-        ) : null}
-      </section>
-
-      {atsData && <ATSScoreCard atsData={atsData} tier={basePlan} />}
-
-      <div className="dashboard-card">
-        <details>
-          <summary style={{ cursor: "pointer", fontWeight: 700 }}>
-            Generation details
-          </summary>
-          <ul style={{ marginTop: 12, color: "var(--muted)", fontSize: 14, lineHeight: 1.7 }}>
-            <li>Tier: {letter.tier}</li>
-            <li>Quality score: {letter.finalScore}/100</li>
-            {letter.atsScore != null && <li>ATS score: {letter.atsScore}/100 ({letter.atsVerdict})</li>}
-            {letter.hallucinationRisk && <li>Hallucination risk: {letter.hallucinationRisk}</li>}
-            <li>Rewrite cycles: {letter.rewriteCycles}</li>
-            <li>Agents run: {letter.agentsRun.join(", ")}</li>
-            <li>Created: {new Date(letter.createdAt).toLocaleString()}</li>
-          </ul>
-        </details>
-      </div>
+      )}
 
       {showPdfPicker && (
         <TemplatePickerModal
@@ -565,36 +673,45 @@ export function LetterDetailClient({
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(23,18,15,0.55)",
+            zIndex: 200,
             display: "grid",
             placeItems: "center",
-            zIndex: 100,
-            padding: 16,
+            padding: 20,
+            background: "rgba(23,18,15,0.6)",
+            backdropFilter: "blur(4px)",
           }}
         >
-          <div className="dashboard-card" style={{ maxWidth: 420, width: "100%" }}>
-            <h3 id="delete-letter-title" style={{ marginTop: 0 }}>Delete this letter?</h3>
-            <p style={{ color: "var(--muted)" }}>
-              The letter will be removed from your library and can&apos;t be
-              restored. It still counts toward this month&apos;s allowance —
-              deleting a letter doesn&apos;t return the slot.
+          <div
+            style={{
+              width: "min(460px, 100%)",
+              background: "var(--paper-strong)",
+              border: "1px solid var(--line)",
+              borderRadius: 14,
+              padding: 24,
+              boxShadow: "var(--shadow)",
+            }}
+          >
+            <h3 id="delete-letter-title" style={{ marginTop: 0 }}>
+              Delete this letter?
+            </h3>
+            <p style={{ color: "var(--muted)", lineHeight: 1.6 }}>
+              This removes the letter from your library permanently. Your
+              monthly allowance is not refunded.
             </p>
-            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 16 }}>
+            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
               <button
                 className="button-secondary"
                 onClick={() => setShowDeleteConfirm(false)}
                 disabled={deleting}
-                // Focus lands inside the dialog so Escape works
-                // immediately and the safe action is the default.
-                autoFocus
+                type="button"
               >
-                Cancel
+                Keep it
               </button>
               <button
-                className="button"
+                className="button danger-button"
                 onClick={onDelete}
                 disabled={deleting}
-                style={{ background: "var(--red)", boxShadow: "none" }}
+                type="button"
               >
                 {deleting ? "Deleting…" : "Delete forever"}
               </button>
@@ -602,73 +719,6 @@ export function LetterDetailClient({
           </div>
         </div>
       )}
-    </div>
-  )
-}
-
-function Timeline({
-  submittedAt,
-  outcomeAt,
-  status,
-}: {
-  submittedAt: string | null
-  outcomeAt: string | null
-  status: ApplicationStatus
-}) {
-  const outcomeReached =
-    status === "interviewing" ||
-    status === "offer" ||
-    status === "rejected" ||
-    status === "ghosted"
-  return (
-    <ol className="letter-tracker__timeline-list">
-      <li className={submittedAt ? "is-done" : ""}>
-        <span className="letter-tracker__timeline-dot" aria-hidden="true" />
-        <div>
-          <strong>Submitted</strong>
-          <span>{submittedAt ? new Date(submittedAt).toLocaleString() : "—"}</span>
-        </div>
-      </li>
-      <li className={outcomeReached ? "is-done" : ""}>
-        <span
-          className={`letter-tracker__timeline-dot letter-tracker__timeline-dot--${status}`}
-          aria-hidden="true"
-        />
-        <div>
-          <strong>
-            {status === "offer"
-              ? "Offer received"
-              : status === "interviewing"
-                ? "Interview booked"
-                : status === "rejected"
-                  ? "Rejected"
-                  : status === "ghosted"
-                    ? "Ghosted"
-                    : "Outcome pending"}
-          </strong>
-          <span>{outcomeAt ? new Date(outcomeAt).toLocaleString() : "—"}</span>
-        </div>
-      </li>
-    </ol>
-  )
-}
-
-function ScoreBadge({ score, status }: { score: number; status: string }) {
-  const color =
-    score >= 95 ? "var(--gold)" : score >= 85 ? "var(--teal)" : score >= 70 ? "var(--amber)" : "var(--red)"
-  return (
-    <div
-      style={{
-        padding: "8px 16px",
-        borderRadius: 999,
-        background: "var(--paper)",
-        border: `2px solid ${color}`,
-        color,
-        fontWeight: 800,
-        fontSize: 14,
-      }}
-    >
-      {status === "passed" ? "✓ " : ""}Score: {score}/100
     </div>
   )
 }
