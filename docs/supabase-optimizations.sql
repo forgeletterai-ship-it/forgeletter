@@ -86,3 +86,20 @@ select cron.schedule(
     where (used_at is not null and used_at < now() - interval '7 days')
        or expires_at < now() - interval '7 days'$$
 );
+
+-- Every 10 minutes: finalise letters stuck in 'running'/'queued' for
+-- more than 10 minutes (the Vercel function was killed mid-pipeline).
+--
+-- /dashboard/letters also runs this sweep on page load as a fallback,
+-- so enabling this job is optional — but with it scheduled the page
+-- becomes read-only, which removes a write from every render.
+select cron.schedule(
+  'finalize-stalled-letters',
+  '*/10 * * * *',
+  $$update public.generated_letters
+       set generation_status = 'failed',
+           failure_reason = 'Pipeline timed out — function exceeded the runtime limit. Try again.',
+           completed_at = now()
+     where generation_status in ('running', 'queued')
+       and created_at < now() - interval '10 minutes'$$
+);
