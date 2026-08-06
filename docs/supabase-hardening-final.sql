@@ -41,13 +41,23 @@ drop policy if exists "Anyone can read approved examples"
 --    Pinning the path removes the vector entirely. This is also the
 --    "Function Search Path Mutable" item in Supabase's linter.
 --
---    try_start_letter already sets search_path — left untouched.
+--    Note the explicit trailing pg_temp. Postgres searches the temp
+--    schema FIRST unless pg_temp appears in the list, so a bare
+--    "set search_path = public" still leaves a temp-object shadowing
+--    path open. All three definer functions are pinned the same way
+--    below so there is no exception to remember.
 -- ============================================================
 alter function public.purge_expired_data_recovery_snapshots()
   set search_path = public, pg_temp;
 
 alter function public.prune_stripe_processed_events()
   set search_path = public, pg_temp;
+
+-- Was already SECURITY DEFINER with "set search_path = public";
+-- re-pinned to place pg_temp last.
+alter function public.try_start_letter(
+  uuid, int, timestamptz, text, text, text, text, text, text
+) set search_path = public, pg_temp;
 
 -- ============================================================
 -- 3. Verify
