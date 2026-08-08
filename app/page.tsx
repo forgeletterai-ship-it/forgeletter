@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
-import Image from "next/image"
 import Link from "next/link"
 import { auth } from "@/auth"
+import { AgentOrbit } from "@/components/AgentOrbit"
 import { AnimatedSeparator } from "@/components/AnimatedSeparator"
 import { ExampleShowcase } from "@/components/ExampleShowcase"
 import { HowItWorksDemo } from "@/components/HowItWorksDemo"
@@ -215,15 +215,10 @@ export default async function HomePage() {
             </div>
 
             <div className="hero-media">
-              <div className="hero-image-frame">
-                <Image
-                  src="/hero-image-transparent.png"
-                  alt="ForgeLetter brain workspace illustration"
-                  width={1254}
-                  height={1254}
-                  priority
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 600px"
-                />
+              {/* The orbit scene is absolutely positioned inside this
+                  frame, so the frame is what gives it its size. */}
+              <div className="hero-orbit-frame">
+                <AgentOrbit />
               </div>
               <div className="mini-metrics">
                 <div className="mini-metric">

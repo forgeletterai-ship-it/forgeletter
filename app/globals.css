@@ -386,7 +386,7 @@ body:has(.command-palette-fab) .back-to-top {
   gap: 14px;
 }
 
-.hero-image-frame {
+.hero-orbit-frame {
   overflow: hidden;
   border: none;
   border-radius: var(--radius);
@@ -394,11 +394,6 @@ body:has(.command-palette-fab) .back-to-top {
   box-shadow: none;
 }
 
-.hero-image-frame img {
-  display: block;
-  width: 100%;
-  height: auto;
-}
 
 .mini-metrics {
   display: grid;
@@ -11323,15 +11318,18 @@ button.tone-chip:hover {
   align-self: center;
 }
 
-.hero-image-frame {
+/* The orbit scene inside is position:absolute/inset:0, so this frame
+   is what defines its size. The old image supplied its own height;
+   an aspect-ratio replaces that. */
+.hero-orbit-frame {
   position: relative;
   z-index: 1;
   margin: -10px auto 0;
   width: min(100%, 720px);
-}
-
-.hero-image-frame img {
-  filter: drop-shadow(0 26px 34px rgba(42, 31, 17, 0.16));
+  aspect-ratio: 1 / 1;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 26px 60px -30px rgba(6, 20, 34, 0.55);
 }
 
 .mini-metrics {
@@ -11443,7 +11441,7 @@ button.tone-chip:hover {
     order: -1;
   }
 
-  .hero-image-frame {
+  .hero-orbit-frame {
     width: min(100%, 560px);
     margin-top: 0;
   }
@@ -11485,7 +11483,7 @@ button.tone-chip:hover {
     row-gap: 22px;
   }
 
-  .hero-image-frame {
+  .hero-orbit-frame {
     width: min(100%, 390px);
   }
 
@@ -14071,7 +14069,7 @@ button.tone-chip:hover {
     font-size: clamp(54px, 5.2vw, 82px);
   }
 
-  .hero-image-frame {
+  .hero-orbit-frame {
     width: min(100%, 690px);
   }
 }
