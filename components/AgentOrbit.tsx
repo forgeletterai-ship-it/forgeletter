@@ -345,9 +345,9 @@ export function AgentOrbit() {
       g.fillRect(0, 0, s, s)
       return c
     }
-    const SPR_BLUE = glowSprite("70,130,255")
-    const SPR_WHITE = glowSprite("232,242,255")
-    const SPR_DEEP = glowSprite("34,66,168")
+    const SPR_BLUE = glowSprite("16,82,80")
+    const SPR_WHITE = glowSprite("199,155,60")
+    const SPR_DEEP = glowSprite("120,140,142")
 
     // ── Interaction — free orientation matrix ────────────
     const M = [1, 0, 0, 0, 1, 0, 0, 0, 1]
@@ -623,18 +623,6 @@ export function AgentOrbit() {
     let bucketPaths: Path2D[] = []
     for (let b = 0; b < DEPTH_BUCKETS; b++) bucketPaths.push(new Path2D())
 
-    function drawOcclusion() {
-      const R = sphereScale * 0.74
-      const g = ctx!.createRadialGradient(cx, cy, 0, cx, cy, R)
-      g.addColorStop(0, "rgba(2,7,15,.55)")
-      g.addColorStop(0.75, "rgba(2,7,15,.28)")
-      g.addColorStop(1, "rgba(2,7,15,0)")
-      ctx!.fillStyle = g
-      ctx!.beginPath()
-      ctx!.arc(cx, cy, R, 0, Math.PI * 2)
-      ctx!.fill()
-    }
-
     function drawEdges() {
       bucketPaths = []
       for (let i = 0; i < DEPTH_BUCKETS; i++) bucketPaths.push(new Path2D())
@@ -658,11 +646,11 @@ export function AgentOrbit() {
 
       for (let i = 0; i < DEPTH_BUCKETS; i++) {
         const f = i / (DEPTH_BUCKETS - 1)
-        ctx!.strokeStyle = `rgba(72,124,232,${(0.055 + f * f * 0.145).toFixed(3)})`
+        ctx!.strokeStyle = `rgba(16,82,80,${(0.07 + f * f * 0.20).toFixed(3)})`
         ctx!.lineWidth = 0.45 + f * 0.4
         ctx!.stroke(bucketPaths[i])
       }
-      ctx!.strokeStyle = "rgba(58,94,186,.05)"
+      ctx!.strokeStyle = "rgba(16,82,80,.055)"
       ctx!.lineWidth = 0.45
       ctx!.stroke(longPath)
 
@@ -682,14 +670,14 @@ export function AgentOrbit() {
         controls(root0.px, root0.py, ag.ax, ag.ay, bend2, _c)
         const grad = ctx!.createLinearGradient(root0.px, root0.py, ag.ax, ag.ay)
         if (live) {
-          grad.addColorStop(0, `rgba(140,195,255,${(0.5 * dimBack).toFixed(2)})`)
-          grad.addColorStop(0.62, `rgba(120,180,255,${(0.22 * dimBack).toFixed(2)})`)
-          grad.addColorStop(1, "rgba(120,180,255,0)")
+          grad.addColorStop(0, `rgba(199,155,60,${(0.85 * dimBack).toFixed(2)})`)
+          grad.addColorStop(0.62, `rgba(199,155,60,${(0.38 * dimBack).toFixed(2)})`)
+          grad.addColorStop(1, "rgba(199,155,60,0)")
           ctx!.lineWidth = 1.1
         } else {
-          grad.addColorStop(0, `rgba(72,124,232,${(0.15 * dimBack).toFixed(2)})`)
-          grad.addColorStop(0.55, `rgba(72,124,232,${(0.06 * dimBack).toFixed(2)})`)
-          grad.addColorStop(1, "rgba(72,124,232,0)")
+          grad.addColorStop(0, `rgba(16,82,80,${(0.24 * dimBack).toFixed(2)})`)
+          grad.addColorStop(0.55, `rgba(16,82,80,${(0.10 * dimBack).toFixed(2)})`)
+          grad.addColorStop(1, "rgba(16,82,80,0)")
           ctx!.lineWidth = 0.6
         }
         ctx!.strokeStyle = grad
@@ -702,8 +690,8 @@ export function AgentOrbit() {
         for (let b2 = 1; b2 < roots.length; b2++) {
           const rn = nodes[roots[b2]]
           const g2 = ctx!.createLinearGradient(rn.px, rn.py, _p.x, _p.y)
-          g2.addColorStop(0, `rgba(72,124,232,${((live ? 0.26 : 0.09) * dimBack).toFixed(2)})`)
-          g2.addColorStop(1, "rgba(72,124,232,0)")
+          g2.addColorStop(0, `rgba(16,82,80,${((live ? 0.40 : 0.15) * dimBack).toFixed(2)})`)
+          g2.addColorStop(1, "rgba(16,82,80,0)")
           ctx!.strokeStyle = g2
           ctx!.lineWidth = live ? 0.8 : 0.5
           ctx!.beginPath()
@@ -772,9 +760,9 @@ export function AgentOrbit() {
       ctx!.globalAlpha = 1
 
       ctx!.lineWidth = 1
-      ctx!.strokeStyle = "rgba(240,248,255,.40)"
+      ctx!.strokeStyle = "rgba(199,155,60,.65)"
       ctx!.stroke(whiteTails)
-      ctx!.strokeStyle = "rgba(84,140,255,.40)"
+      ctx!.strokeStyle = "rgba(16,82,80,.55)"
       ctx!.stroke(blueTails)
     }
 
@@ -809,7 +797,7 @@ export function AgentOrbit() {
 
         ctx!.globalAlpha = 1
         if (depth > 0.5 && (n.white || r > 1.5)) {
-          ctx!.fillStyle = `rgba(255,255,255,${Math.min(1, (0.25 + depth * 0.45) * (0.5 + flicker) * envGlow).toFixed(2)})`
+          ctx!.fillStyle = `rgba(13,63,61,${Math.min(1, (0.30 + depth * 0.5) * (0.5 + flicker) * envGlow).toFixed(2)})`
           ctx!.beginPath()
           ctx!.arc(n.px, n.py, Math.max(0.4, r * 0.3), 0, Math.PI * 2)
           ctx!.fill()
@@ -821,9 +809,9 @@ export function AgentOrbit() {
     function drawCoreGlow() {
       const r = Math.min(width, height) * 0.13
       const g = ctx!.createRadialGradient(cx, cy, 0, cx, cy, r)
-      g.addColorStop(0, "rgba(255,255,255,.11)")
-      g.addColorStop(0.22, "rgba(72,130,255,.09)")
-      g.addColorStop(1, "rgba(72,130,255,0)")
+      g.addColorStop(0, "rgba(199,155,60,.16)")
+      g.addColorStop(0.22, "rgba(199,155,60,.09)")
+      g.addColorStop(1, "rgba(199,155,60,0)")
       ctx!.fillStyle = g
       ctx!.beginPath()
       ctx!.arc(cx, cy, r, 0, Math.PI * 2)
@@ -889,10 +877,12 @@ export function AgentOrbit() {
       projectNodes()
       placeAgents()
 
-      drawOcclusion()
+      // drawOcclusion() intentionally not called: it painted a dark
+      // radial to sink the sphere's far side into a black backdrop.
+      // On cream that reads as a grey smudge.
 
       ctx!.save()
-      ctx!.globalCompositeOperation = "lighter"
+      ctx!.globalCompositeOperation = "source-over"
       drawEdges()
       drawSignals()
       drawNodes()
