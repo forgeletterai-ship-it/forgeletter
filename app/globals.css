@@ -11327,9 +11327,11 @@ button.tone-chip:hover {
   margin: -10px auto 0;
   width: min(100%, 720px);
   aspect-ratio: 1 / 1;
-  border-radius: 20px;
+  /* No radius, border or shadow: the scene fades to transparent at
+     its own edges, so any frame styling here would re-introduce the
+     rectangle we're trying to lose. overflow stays hidden only to
+     keep far-orbit cards from spilling into the hero copy. */
   overflow: hidden;
-  box-shadow: 0 26px 60px -30px rgba(6, 20, 34, 0.55);
 }
 
 .mini-metrics {

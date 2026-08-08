@@ -21,32 +21,32 @@
   position: absolute;
   inset: 0;
   overflow: hidden;
-  border-radius: inherit;
-  background:
-    radial-gradient(ellipse 60% 65% at 50% 50%, rgba(40, 100, 210, 0.12), transparent 70%),
-    linear-gradient(180deg, #040a13, #030913 60%, #04101c);
   cursor: grab;
   touch-action: none;
+
+  /* No box. The neurons are drawn additively, so they still need
+     darkness behind them to read — but that darkness is a soft pool
+     centred on the sphere that fades to fully transparent before it
+     reaches the frame edge. The result has no rectangle: the scene
+     melts into the page background instead of sitting on top of it. */
+  background:
+    radial-gradient(
+      circle at 50% 50%,
+      rgba(4, 10, 19, 0.96) 0%,
+      rgba(4, 10, 19, 0.92) 34%,
+      rgba(4, 11, 20, 0.72) 52%,
+      rgba(5, 13, 24, 0.34) 66%,
+      rgba(6, 15, 26, 0.1) 78%,
+      rgba(6, 15, 26, 0) 88%
+    );
 }
 
 .dragging {
   cursor: grabbing;
 }
 
-/* Vignette */
-.scene::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 8;
-  background: radial-gradient(
-    ellipse 82% 82% at 50% 50%,
-    transparent 58%,
-    rgba(2, 6, 12, 0.55) 100%
-  );
-}
-
+/* The canvas fades on the same curve, so stray edge nodes and the
+   long links don't terminate on a hard line. */
 .canvas {
   position: absolute;
   inset: 0;
@@ -54,6 +54,18 @@
   height: 100%;
   display: block;
   z-index: 2;
+  -webkit-mask-image: radial-gradient(
+    circle at 50% 50%,
+    #000 62%,
+    rgba(0, 0, 0, 0.55) 76%,
+    transparent 90%
+  );
+  mask-image: radial-gradient(
+    circle at 50% 50%,
+    #000 62%,
+    rgba(0, 0, 0, 0.55) 76%,
+    transparent 90%
+  );
 }
 
 /* Agent cards — orbiting, so all positioning is JS-driven */
