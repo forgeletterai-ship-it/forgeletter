@@ -86,4 +86,42 @@ Appendix A regression holds: ChatGPT letter → 0 / 25 / FILLER,
 
 ## Phase 2 — Data layer, ladder, abuse stack
 
+**Built:**
+- `docs/swap-test-schema.sql` — the doc's six tables verbatim +
+  indexes, RLS enabled with no policies + anon/authenticated REVOKE
+  (project posture), `purge_swap_vocab()` (cnt<10 + closed-vocab
+  shape) and `purge_expired_swap_shares()` SECURITY DEFINER functions
+  with pinned search_path. **STOP AND ASK: needs running in the
+  Supabase SQL editor** (established manual-migration pattern).
+- `app/api/outcome/[token]/route.ts` — one-tap outcome writes
+  (interview/none/noapply), single-use per stat, unsubscribe revokes
+  consent, queue row deleted on first touch.
+- `app/api/cron/outcomes/route.ts` — daily 30-day email via Resend
+  (subject + copy from templates.ts, three one-tap links +
+  unsubscribe); deletes the plaintext address on send.
+- `app/api/cron/cleanup/route.ts`, `app/api/cron/vocab-purge/route.ts`
+  — RPC wrappers, CRON_SECRET bearer check (DEV ONLY bypass outside
+  production).
+- `lib/swap/disposable-domains.ts` (~90 domains) wired into the
+  signup route; signup also accepts `outcomeOptin`/`researchOptin`
+  (both default off) and writes `swap_consents` rows.
+
+**Deviations:**
+- Added `swap_outcome_queue` DDL — the doc describes the queue
+  ("plaintext email only until send") but its SQL block omits it.
+- `vocab_counts` doubles as the jd_corpus TF store using a reserved
+  `__docs__` gram per role_family for corpus size (the doc's diagram
+  names jd_corpus but its DDL defines only vocab_counts).
+- Closed-vocabulary check implemented as a shape rule (lowercase
+  ascii words) rather than a shipped 50k wordlist; k-anonymity
+  (cnt<10) fully enforced. Wordlist upgrade noted in
+  TODO-POSTLAUNCH.md at Phase 8.
+- Keep-warm cron is Phase 4 (needs the agent); vercel.json crons
+  registered there.
+
+**Test numbers:** tsc clean; suite still 78 green (data layer has no
+unit-testable pure logic beyond Phase 1's ladder/ratelimit tests).
+
+## Phase 3 — Knowledge distillation
+
 _(pending)_

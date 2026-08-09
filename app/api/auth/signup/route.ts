@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { hash } from 'bcryptjs'
 import { dataErrorMessage } from '@/lib/app-data'
 import { checkRateLimit, clientIpFrom, rateLimitKey } from '@/lib/rate-limit'
+import { isDisposableEmail } from '@/lib/swap/disposable-domains'
 import { supabaseAdmin } from '@/lib/supabase'
 
 // bcrypt truncates input at 72 bytes silently — cap explicitly so two
@@ -10,10 +11,17 @@ const MAX_PASSWORD_LENGTH = 72
 const EMAIL_SHAPE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export async function POST(req: NextRequest) {
-  const { email, password, name } = (await req.json().catch(() => ({}))) as {
+  const { email, password, name, outcomeOptin, researchOptin } = (await req
+    .json()
+    .catch(() => ({}))) as {
     email?: string
     password?: string
     name?: string
+    /** Swap-test account gate checkboxes — both default OFF
+     *  (unticked, Appendix B). Consent rows are written only on an
+     *  explicit true. */
+    outcomeOptin?: boolean
+    researchOptin?: boolean
   }
   const normalizedEmail = String(email || "").trim().toLowerCase()
 
@@ -32,6 +40,14 @@ export async function POST(req: NextRequest) {
   if (!EMAIL_SHAPE.test(normalizedEmail)) {
     return NextResponse.json(
       { error: 'Enter a valid email address.' },
+      { status: 400 }
+    )
+  }
+  // Disposable domains are blocked: a throwaway inbox exists here
+  // only to farm the swap-test ladder (+2 scans per fake account).
+  if (isDisposableEmail(normalizedEmail)) {
+    return NextResponse.json(
+      { error: 'Disposable email addresses are not supported — use a real inbox.' },
       { status: 400 }
     )
   }
@@ -74,13 +90,33 @@ export async function POST(req: NextRequest) {
 
     const hashed = await hash(password, 12)
 
-    const { error } = await supabaseAdmin.from('users').insert({
-      email: normalizedEmail,
-      name: String(name || normalizedEmail.split('@')[0]).trim(),
-      password: hashed,
-      provider: 'email',
-      plan: 'free',
-    })
+    const { data: created, error } = await supabaseAdmin
+      .from('users')
+      .insert({
+        email: normalizedEmail,
+        name: String(name || normalizedEmail.split('@')[0]).trim(),
+        password: hashed,
+        provider: 'email',
+        plan: 'free',
+      })
+      .select('id')
+      .single()
+
+    if (!error && created?.id) {
+      // Swap-test consents (both boxes ship unticked — a row exists
+      // only on an explicit opt-in). Failure here must not fail the
+      // signup; the post-results block offers the same opt-in again.
+      const consents: { user_id: string; kind: string }[] = []
+      if (outcomeOptin === true) {
+        consents.push({ user_id: created.id, kind: 'outcome_email' })
+      }
+      if (researchOptin === true) {
+        consents.push({ user_id: created.id, kind: 'research_copy' })
+      }
+      if (consents.length) {
+        await supabaseAdmin.from('swap_consents').insert(consents)
+      }
+    }
 
     if (error) {
       // 23505 = unique violation — a concurrent signup for the same
