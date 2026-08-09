@@ -45,4 +45,45 @@ DEV ONLY fallbacks that assert `NODE_ENV !== "production"`.
 
 ## Phase 1 — Core deterministic library
 
+**Built:** `lib/swap/` — types, segment (Intl.Segmenter + abbreviation
+merge), score (word-weighted Anchor / claim-counted Proof, RUBRIC 1.0.0,
+bands 12/35/66, quadrants, sentence-class resolution), redact (exact
+"Nothing was removed." string), signals/{echo,affect,rhythm}, profile
+(FILLER split gated on calibrated thresholds — Rule 7), idf (corpus
+mode ≥200 docs / stoplist bootstrap + employer inference), fixes
+(deterministic, max 3, fixed priority), simhash (64-bit, unigram
+features, ≥0.92 / 10-min window), fingerprint (sha256 of salt+ip+
+coarse UA+platform+tz), ladder (lifetime 1+2, paying bypass, per-IP
+25/day), ratelimit (Upstash REST + DEV ONLY memory fallback with prod
+assert, sliding windows, 5,000/day circuit breaker), logscrub (Rule 2:
+lengths + hashes only). Plus `lib/swap/demo-data.ts` (Appendix A
+verbatim) and `config/boilerplate-stoplist.json`.
+
+**Test numbers:** 42 swap tests green (78 total suite). Mandatory
+Appendix A regression holds: ChatGPT letter → 0 / 25 / FILLER,
+"Nothing was removed."; ForgeLetter letter → anchor 24 (±2 band) /
+100 / TARGETED, opener redacted.
+
+**Deviations:**
+- `config/boilerplate-stoplist.json` pulled forward from Phase 3
+  (idf + tests need it); ~250 phrases + genericProperNouns (geo,
+  months, job-title words, sentence starters). Header-commented
+  HAND-CURATED BOOTSTRAP. Phase 3 human gate reviews it.
+- Employer inference added to stoplist mode: a capitalized
+  non-generic token mentioned ≥2× is treated as the employer, so
+  letters that skip the optional company field still score
+  "names the company three times — none survive" correctly. A
+  single-mention employer with an otherwise generic phrase can
+  slip through until the corpus switchover — accepted bootstrap
+  limitation, retired automatically at 200 docs/family.
+- Simhash features are word unigrams (bigrams flipped too many bits
+  on one-word edits to hold the ≥0.92 duplicate window on
+  letter-length text).
+- Repair templates (`lib/swap/templates.ts`) written now rather than
+  Phase 3: F01/F03/F08 verbatim from Appendix B, F02/F04–F07 +
+  ENGAGE/TRADE in the same voice; gold quotes only from the verified
+  Appendix A letters pending Phase 3 extraction.
+
+## Phase 2 — Data layer, ladder, abuse stack
+
 _(pending)_
