@@ -1,0 +1,156 @@
+{
+  "_comment": "Catalogue v0.1 — seed set from MASTER_BUILD_SWAP_TEST.md Phase 3.2, validated against the corpus's own worked example (Appendix A). Trigger phrasing is what eval iteration tunes (Phase 5). PENDING HUMAN GATE review before public launch. Exemplars are anonymised: Appendix A verified letters + bracket-anonymised gold snippets only (anonymisation CI: tests/swap-anonymisation.test.ts).",
+  "version": "0.1",
+  "techniques": [
+    {
+      "id": "T01",
+      "name": "Quantified self-initiative",
+      "definition": "Something the applicant started or built unprompted, with a magnitude attached.",
+      "trigger": "A self-started action plus a number (users, revenue, savings, rating). Both must be present, and the action must be the applicant's own initiative rather than an assigned task.",
+      "exemplar": "A tool I built over three weekends now has 4,200 active users"
+    },
+    {
+      "id": "T02",
+      "name": "Before/after with baseline",
+      "definition": "A metric stated with its starting value and its ending value.",
+      "trigger": "A baseline AND an end state for the same metric — 'from A to B' shapes, or an explicit delta over a stated period. A lone end state without its baseline does not qualify.",
+      "exemplar": "11 experiments over two quarters lifted trial starts from 6.1% to 8.4%."
+    },
+    {
+      "id": "T03",
+      "name": "Named failure before the win",
+      "definition": "A failed attempt named explicitly before the eventual success.",
+      "trigger": "Words like 'failed', 'didn't work', 'missed', or 'wrong' describing the applicant's own attempt, appearing before or alongside the win it led to.",
+      "exemplar": "The first three tests failed outright — the real win came from re-ordering the paywall, not redesigning it."
+    },
+    {
+      "id": "T04",
+      "name": "Constraint showing judgment",
+      "definition": "A limitation stated together with the decision it forced.",
+      "trigger": "A named constraint (budget, time, headcount, tooling) plus the trade-off or decision the applicant made because of it. The constraint alone is not enough.",
+      "exemplar": "With no budget for paid acquisition, I cut the onboarding flow to two screens instead"
+    },
+    {
+      "id": "T05",
+      "name": "Employer decision referenced",
+      "definition": "A specific decision, launch, or change the employer actually made.",
+      "trigger": "A concrete, dateable move by this employer — a launch, bundle, pricing change, acquisition, expansion — named specifically. Their mission, values, or category standing do NOT qualify.",
+      "exemplar": "Chorusline's move to bundle Daily Mix with the family plan is exactly the conversion problem I've spent two years on."
+    },
+    {
+      "id": "T06",
+      "name": "Employer problem diagnosed",
+      "definition": "A problem the employer plausibly has, framed from evidence.",
+      "trigger": "The applicant names a specific problem or gap on the employer's side, grounded in something observable (their funnel, pricing page, posting, public metrics) — analysis, not praise.",
+      "exemplar": "your checkout still asks for a card before the trial starts, which is where I'd expect the drop-off"
+    },
+    {
+      "id": "T07",
+      "name": "Product used as customer",
+      "definition": "First-hand use of the employer's product with an observation only a user would have.",
+      "trigger": "Evidence of actually using the product (a feature detail, a workflow quirk, a moment of friction) that could not be written from the marketing site alone.",
+      "exemplar": "after two months on the free tier I noticed the export button disappears on mobile"
+    },
+    {
+      "id": "T08",
+      "name": "Posting detail engaged",
+      "definition": "A specific line of the posting engaged with new information.",
+      "trigger": "A requirement or detail from the job ad taken up and ADVANCED — challenged, extended, or connected to the applicant's evidence. Restating it does not qualify (that is F05).",
+      "exemplar": "exactly the conversion problem I've spent two years on"
+    },
+    {
+      "id": "T09",
+      "name": "Concrete first step",
+      "definition": "A specific action the applicant would take in the role.",
+      "trigger": "A named first action — what they would audit, build, measure, or ship first — specific enough to disagree with. Generic eagerness to 'contribute' does not qualify.",
+      "exemplar": "The first thing I'd audit is the order of the paywall screens against your trial data"
+    },
+    {
+      "id": "T10",
+      "name": "Scope stated precisely",
+      "definition": "The exact ownership boundary of the applicant's work.",
+      "trigger": "What the applicant owned, on which surface, for how long — precise enough that an interviewer could probe the edges of it.",
+      "exemplar": "At my current app, I owned free-to-paid activation"
+    },
+    {
+      "id": "T11",
+      "name": "Method named",
+      "definition": "The named technique or process behind a result.",
+      "trigger": "A concrete method (experiment design, framework, tooling, process) named as the mechanism of a result — not adjectives about approach ('analytical', 'rigorous').",
+      "exemplar": "11 experiments over two quarters"
+    },
+    {
+      "id": "T12",
+      "name": "Public statement referenced",
+      "definition": "A public statement by the employer referenced specifically.",
+      "trigger": "A quote, blog post, interview, talk, or announcement from the employer referenced with enough specificity to identify the actual source.",
+      "exemplar": "your CTO's post on why you rebuilt the recommendation stack in-house"
+    }
+  ],
+  "failures": [
+    {
+      "id": "F01",
+      "name": "Verb without magnitude",
+      "definition": "An achievement verb with no number, baseline, or named result.",
+      "trigger": "Verbs like 'improved', 'increased', 'strengthened', 'drove', 'optimised' carrying no magnitude and no named artefact — the reader cannot size the claim.",
+      "repairs": ["T02"],
+      "exemplar": "In my current role I improved onboarding, strengthened retention, and partnered closely with design and engineering."
+    },
+    {
+      "id": "F02",
+      "name": "Self-rating",
+      "definition": "A self-assigned trait with no evidence attached.",
+      "trigger": "Traits the applicant grants themselves — 'data-driven', 'passionate', 'strategic thinker', 'natural leader' — without the result or method that would earn them.",
+      "repairs": ["T01", "T11"],
+      "exemplar": "I'm a data-driven leader with a genuine passion for music and technology."
+    },
+    {
+      "id": "F03",
+      "name": "Category praise",
+      "definition": "Praise that fits every company in the category.",
+      "trigger": "Compliments that would survive unchanged at any competitor — mission admiration, 'commitment to innovation', 'industry leader'. If swapping the company name breaks nothing, it is F03.",
+      "repairs": ["T05", "T06"],
+      "exemplar": "Chorusline's commitment to putting artists first is something I deeply believe in."
+    },
+    {
+      "id": "F04",
+      "name": "Tenure as achievement",
+      "definition": "Years of experience presented as the achievement itself.",
+      "trigger": "Duration offered as the substance of the claim — 'with over six years of experience' — with no scope or outcome attached to the years.",
+      "repairs": ["T10", "T02"],
+      "exemplar": "As a product manager with over six years of experience in consumer subscription apps, I've led cross-functional teams through discovery, experimentation, and launch."
+    },
+    {
+      "id": "F05",
+      "name": "Requirement restated",
+      "definition": "A posting requirement repeated back as a qualification.",
+      "trigger": "The ad's own language mirrored back — 'you need X; I have X' — adding nothing the posting didn't already say.",
+      "repairs": ["T08"],
+      "exemplar": "I have extensive experience with cross-functional stakeholder management, as your posting requires"
+    },
+    {
+      "id": "F06",
+      "name": "Close without next step",
+      "definition": "A closing that requests nothing and proposes nothing.",
+      "trigger": "Sign-off sentences that end the letter without a concrete action — 'I look forward to hearing from you', 'thank you for your consideration' — when nothing before them proposed a step either.",
+      "repairs": ["T09"],
+      "exemplar": "I look forward to hearing from you and hope to discuss this opportunity further"
+    },
+    {
+      "id": "F07",
+      "name": "Excitement opener",
+      "definition": "An opening whose only content is enthusiasm.",
+      "trigger": "First live sentence built on 'excited to apply', 'thrilled to see', or equivalent — enthusiasm about the role with no information about employer or applicant.",
+      "repairs": ["T05", "T01"],
+      "exemplar": "I'm excited to apply for the Senior Product Manager role at Chorusline."
+    },
+    {
+      "id": "F08",
+      "name": "Unbroken success narrative",
+      "definition": "Wins stacked with no failure, obstacle, or trade-off anywhere.",
+      "trigger": "A sentence stacking multiple unqualified wins as part of an all-wins narrative — no attempt named that didn't work, no constraint, no cost.",
+      "repairs": ["T03"],
+      "exemplar": "I consistently exceeded every target, delivered every launch on time, and earned top ratings across all my roles"
+    }
+  ]
+}

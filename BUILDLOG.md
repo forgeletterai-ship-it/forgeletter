@@ -124,4 +124,28 @@ unit-testable pure logic beyond Phase 1's ladder/ratelimit tests).
 
 ## Phase 3 — Knowledge distillation
 
+**Built:**
+- `config/catalogue.v0.1.json` — T01–T12 + F01–F08 from the doc's
+  seed set: id, name, one-line definition, explicit trigger phrasing
+  (the eval-iteration surface), anonymised exemplar, failure→repair
+  mappings exactly per Phase 3.2. Exemplars only from Appendix A
+  verified letters + bracket-anonymised gold snippets.
+- `scripts/extract-techniques.ts` — Batch API extraction (Sonnet
+  names the move per sentence; submit + --poll modes) →
+  `data/technique-extraction.json`. NOT yet run (≈$0.20 + async
+  batch); the seed catalogue ships regardless, extraction refines
+  trigger phrasing before the human gate.
+- Anonymisation CI ⚙ — `tests/swap-anonymisation.test.ts`: every
+  gold quote in templates + catalogue checked for unresolved
+  [placeholders] and for proper nouns that survive un-bracketed in
+  gold bodies (denylist built from the source records at test time).
+  Green (3 tests). Runs with the suite in CI.
+- Repair templates were completed in Phase 1 (templates.ts).
+
+**HUMAN GATE — STOP AND ASK (open):** catalogue v0.1 needs ~1–2h of
+human review before public launch. Build continues on v0.1 as the
+doc allows.
+
+## Phase 4 — Agent, route, keep-warm
+
 _(pending)_
