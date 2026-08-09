@@ -381,63 +381,6 @@ body:has(.command-palette-fab) .back-to-top {
   line-height: 1.35;
 }
 
-.hero-media {
-  display: grid;
-  gap: 14px;
-}
-
-.hero-orbit-frame {
-  overflow: hidden;
-  border: none;
-  border-radius: var(--radius);
-  background: transparent;
-  box-shadow: none;
-}
-
-
-.mini-metrics {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 158px));
-  gap: 8px;
-  justify-content: center;
-  width: fit-content;
-  max-width: 100%;
-  margin: -18px auto 0;
-}
-
-.mini-metric {
-  min-height: 82px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  border: 1px solid rgba(36, 107, 111, 0.34);
-  border-radius: var(--radius);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.04)),
-    var(--teal);
-  padding: 10px 12px;
-  box-shadow:
-    0 14px 30px rgba(36, 107, 111, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.32);
-}
-
-.mini-metric span {
-  color: rgba(247, 244, 238, 0.78);
-  font-size: 10px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.mini-metric strong {
-  display: block;
-  margin-top: 4px;
-  color: #f7f4ee;
-  font-size: 20px;
-  line-height: 1.18;
-  letter-spacing: -0.035em;
-}
-
 .premium-separator {
   position: relative;
   overflow: hidden;
@@ -4936,10 +4879,6 @@ button.tone-chip:hover {
     overflow-x: hidden;
   }
 
-  .hero-media {
-    order: -1;
-  }
-
   .auth-story {
     min-height: 420px;
   }
@@ -5221,7 +5160,6 @@ button.tone-chip:hover {
   }
 
   .hero-actions,
-  .mini-metrics,
   .hero-proof,
   .grid-4,
   .grid-3,
@@ -5305,18 +5243,6 @@ button.tone-chip:hover {
 
   .landing-workspace {
     gap: 12px;
-  }
-
-  .mini-metrics {
-    width: fit-content;
-    grid-template-columns: repeat(2, minmax(0, min(158px, calc((100vw - 58px) / 2))));
-    justify-content: center;
-    margin-top: -12px;
-  }
-
-  .mini-metric {
-    min-height: 78px;
-    padding: 10px 12px;
   }
 
   .hero-proof {
@@ -9220,20 +9146,6 @@ button.tone-chip:hover {
 }
 
 @media (max-width: 560px) {
-  .hero-media .mini-metrics {
-    grid-template-columns: repeat(2, minmax(0, min(142px, calc((100vw - 34px) / 2))));
-    gap: 8px;
-  }
-
-  .hero-media .mini-metric {
-    width: min(142px, calc((100vw - 34px) / 2));
-    min-height: 74px;
-    padding: 9px 10px;
-  }
-
-  .hero-media .mini-metric strong {
-    font-size: 17px;
-  }
 
   .hero-proof {
     grid-template-columns: repeat(3, minmax(0, min(142px, calc((100vw - 34px) / 3))));
@@ -11131,41 +11043,51 @@ button.tone-chip:hover {
     linear-gradient(180deg, #f7f1e7 0%, #fffaf1 34%, #f2eadf 100%);
 }
 
+/* Flat site canvas. The updated neural scene ships its own page
+   background — exactly #f6f4ee, the site's --canvas — and presents
+   itself as a light bevelled frame around the dark 16:9 aperture.
+   A flat hero in the same colour makes the iframe rectangle
+   invisible; the scene's frame is the visual. */
 .hero {
   position: relative;
   min-height: calc(100vh - 72px);
   overflow: hidden;
-  padding: clamp(34px, 4vw, 62px) 0 clamp(42px, 4vw, 64px);
-  background:
-    radial-gradient(circle at 70% 7%, rgba(255, 255, 255, 0.86), transparent 22%),
-    radial-gradient(circle at 82% 54%, rgba(248, 199, 106, 0.12), transparent 28%),
-    linear-gradient(118deg, #fffaf2 0%, #f8efe2 48%, #fff8ee 100%);
+  /* The approved portal design puts content 84px from the viewport
+     top. The sticky nav is in-flow and 72px tall, so the hero itself
+     only adds the remaining 12px. Bottom matches the design's 56px. */
+  padding: 12px 0 56px;
+  background: var(--canvas);
 }
 
+/* Dot grain retired: the embedded scene's page is flat #f6f4ee, and a
+   grain-free rectangle inside a grainy hero reads as a seam. A flat
+   hero keeps the embed invisible. */
 .hero::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.28;
-  background:
-    radial-gradient(circle at 57% 12%, rgba(248, 199, 106, 0.8) 0 1px, transparent 2px),
-    radial-gradient(circle at 62% 26%, rgba(36, 107, 111, 0.45) 0 1px, transparent 2px),
-    radial-gradient(circle at 88% 18%, rgba(248, 199, 106, 0.55) 0 1px, transparent 2px);
-  background-size: 112px 92px, 140px 120px, 172px 140px;
+  content: none;
 }
 
 .hero .container {
   position: relative;
   z-index: 1;
-  width: min(100% - 52px, 1420px);
+  /* Full-bleed with the design's symmetric page padding — the portal
+     is a contained rounded object inside this padding, no edge bleed. */
+  width: 100%;
+  padding-inline: clamp(22px, 4.5vw, 64px);
 }
 
 .hero-grid {
-  grid-template-columns: minmax(420px, 0.84fr) minmax(500px, 1.16fr);
-  column-gap: clamp(36px, 5vw, 76px);
-  row-gap: 28px;
-  align-items: center;
+  /* The approved portal design's split: copy capped at 42% of the
+     row, portal takes the rest. align-items: start so the frame's
+     top edge lines up with the headline. */
+  grid-template-columns: minmax(300px, 42%) minmax(0, 1fr);
+  gap: clamp(18px, 3.5vw, 48px);
+  align-items: start;
+}
+
+.hero-copy-col {
+  /* Nudges the headline's cap height level with the frame's top —
+     from the design file's .copy block. */
+  padding-top: clamp(8px, 3vh, 40px);
 }
 
 .hero h1 {
@@ -11269,17 +11191,6 @@ button.tone-chip:hover {
     inset 0 0 0 1px rgba(255, 255, 255, 0.38);
 }
 
-.mini-metric-icon svg {
-  width: 23px;
-  height: 23px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.85;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  filter: drop-shadow(0 0 4px rgba(255, 217, 138, 0.2));
-}
-
 .proof-item strong {
   align-self: center;
   display: inline-block;
@@ -11312,90 +11223,348 @@ button.tone-chip:hover {
   letter-spacing: -0.02em;
 }
 
-.hero-media {
-  position: relative;
-  gap: 0;
-  align-self: center;
-}
+/* ── Neural portal — ported verbatim from the approved standalone
+   design (agent-orbit-portal). Scoped under .hero-portal so the dark
+   palette and generic class names (.frame, .scene, .agent) cannot
+   leak into the rest of the site. The canvas engine lives in
+   components/neural-portal-engine.ts; markup in NeuralPortal.tsx. ── */
 
-/* The orbit scene inside is position:absolute/inset:0, so this frame
-   is what defines its size. The old image supplied its own height;
-   an aspect-ratio replaces that. */
-.hero-orbit-frame {
+.hero-portal {
+  --panel: rgba(11, 23, 38, 0.9);
+  --line: rgba(125, 165, 215, 0.16);
+  --ink: #e9f1fb;
+  --ok: #35e2c5;
+  --ok-soft: rgba(53, 226, 197, 0.1);
+  --ok-line: rgba(53, 226, 197, 0.3);
+  /* The standalone loads JetBrains Mono from Google; the site
+     self-hosts its type, so the labels use the system mono stack. */
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
   position: relative;
   z-index: 1;
-  margin: -10px auto 0;
-  width: min(100%, 720px);
-  aspect-ratio: 1 / 1;
-  /* No radius, border or shadow: the scene fades to transparent at
-     its own edges, so any frame styling here would re-introduce the
-     rectangle we're trying to lose. overflow stays hidden only to
-     keep far-orbit cards from spilling into the hero copy. */
-  overflow: hidden;
+  width: 100%;
+  min-width: 0;
 }
 
-.mini-metrics {
+/* The window: a plaster reveal stepping down to a bronze profile,
+   flat on the page (the spec's 3D tilt was removed on request). No
+   border, shadow, hairline, light spill, or hover: the frame emerges
+   seamlessly from the page. All geometry derives from --w (plaster
+   depth) and --f (bronze depth). The walls OVERLAY the scene's
+   edges, so the canvas is never shrunk.
+   Per frame-and-background-specs.md. */
+.hero-portal .frame {
+  --w: clamp(26px, 3.4vw, 46px);
+  --f: clamp(15px, 1.8vw, 24px);
+
   position: relative;
-  z-index: 2;
-  grid-template-columns: repeat(2, minmax(0, 210px));
-  gap: 14px;
-  width: min(100%, 434px);
-  margin: -30px auto 0;
+  width: 100%;
+  height: min(76vh, 740px);
+  border-radius: 2px;
 }
 
-.mini-metric {
-  min-height: 82px;
-  display: grid;
-  grid-template-columns: 42px 1fr;
-  align-items: center;
-  justify-content: stretch;
-  gap: 14px;
-  border: 1px solid rgba(248, 199, 106, 0.72);
-  border-radius: 10px;
-  padding: 14px 18px;
+/* Reveal walls, flattened to the page colour on request: the frame
+   surround IS the site background (var(--canvas)), so it tracks the
+   landing bg exactly and disappears into the page. Plain overlapping
+   strips instead of mitred trapezoids — flat same-colour clip-paths
+   would only risk antialiasing seams. z-index 9 lifts them above the
+   scene's corner AO / vignette (z8) so no occlusion tints the cream;
+   the occlusion still seats the bronze (z6) and the aperture. */
+.hero-portal .wall {
+  position: absolute;
+  pointer-events: none;
+  z-index: 9;
+  background: var(--canvas);
+}
+
+.hero-portal .wall.wt {
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--w);
+}
+
+.hero-portal .wall.wb {
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: var(--w);
+}
+
+.hero-portal .wall.wl {
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: var(--w);
+}
+
+.hero-portal .wall.wr {
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: var(--w);
+}
+
+/* Bronze frame profile: inset by --w, each member --f deep, mitred
+   at 45°. Every member opens with a 1px shadow gap where the metal
+   seats into the plaster. Bottom member brightest, top darkest. */
+.hero-portal .wall2 {
+  position: absolute;
+  pointer-events: none;
+  z-index: 6;
+}
+
+.hero-portal .wall2.wt {
+  top: var(--w);
+  left: var(--w);
+  right: var(--w);
+  height: var(--f);
+  clip-path: polygon(0 0, 100% 0, calc(100% - var(--f)) 100%, var(--f) 100%);
   background:
-    radial-gradient(circle at 78% 0, rgba(255, 255, 255, 0.12), transparent 35%),
-    linear-gradient(180deg, #0b5960, #06343d);
-  box-shadow:
-    0 18px 34px rgba(5, 45, 53, 0.2),
-    0 0 0 1px rgba(117, 73, 18, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+    linear-gradient(180deg, rgba(40, 28, 14, 0.55) 0, rgba(40, 28, 14, 0.55) 1px, transparent 1px),
+    linear-gradient(180deg, #c2925a 0%, #8a5c2d 22%, #5f3d1d 58%, #452c13 86%, #35210e 100%);
 }
 
-.mini-metric-icon {
-  width: 34px;
-  height: 34px;
+.hero-portal .wall2.wb {
+  bottom: var(--w);
+  left: var(--w);
+  right: var(--w);
+  height: var(--f);
+  clip-path: polygon(var(--f) 0, calc(100% - var(--f)) 0, 100% 100%, 0 100%);
+  background:
+    linear-gradient(0deg, rgba(40, 28, 14, 0.55) 0, rgba(40, 28, 14, 0.55) 1px, transparent 1px),
+    linear-gradient(0deg, #d0a465 0%, #a1703a 34%, #7a5227 72%, #64411d 100%);
+}
+
+.hero-portal .wall2.wl {
+  top: var(--w);
+  bottom: var(--w);
+  left: var(--w);
+  width: var(--f);
+  clip-path: polygon(0 0, 100% var(--f), 100% calc(100% - var(--f)), 0 100%);
+  background:
+    linear-gradient(90deg, rgba(40, 28, 14, 0.55) 0, rgba(40, 28, 14, 0.55) 1px, transparent 1px),
+    linear-gradient(90deg, #b08148 0%, #7e5429 40%, #5c3b1c 78%, #483015 100%);
+}
+
+.hero-portal .wall2.wr {
+  top: var(--w);
+  bottom: var(--w);
+  right: var(--w);
+  width: var(--f);
+  clip-path: polygon(0 var(--f), 100% 0, 100% 100%, 0 calc(100% - var(--f)));
+  background:
+    linear-gradient(270deg, rgba(40, 28, 14, 0.55) 0, rgba(40, 28, 14, 0.55) 1px, transparent 1px),
+    linear-gradient(270deg, #a77a42 0%, #764e26 40%, #563819 78%, #442d14 100%);
+}
+
+/* The aperture: fills the whole frame (the walls overlay its edges).
+   Base gradient, corner occlusion, edge vignette, and recessed-depth
+   inset shadows per frame-and-background-specs.md Part 2. The scene
+   deliberately has NO z-index: its z8 pseudos must paint above the
+   walls (z7/z6) in the frame's stacking context. */
+.hero-portal .scene {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 420px;
+  border-radius: 2px;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 60% 65% at 50% 50%, rgba(22, 138, 126, 0.11), transparent 70%),
+    linear-gradient(180deg, #071e1c, #051615 55%, #061c1a);
+  cursor: grab;
+  box-shadow:
+    inset 0 4px 26px rgba(0, 0, 0, 0.62),
+    inset 0 -2px 14px rgba(0, 0, 0, 0.4),
+    inset 0 0 64px rgba(0, 0, 0, 0.34);
+}
+
+/* Corner ambient occlusion */
+.hero-portal .scene::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 8;
+  background:
+    radial-gradient(110px 110px at 0 0, rgba(0, 0, 0, 0.26), transparent 70%),
+    radial-gradient(110px 110px at 100% 0, rgba(0, 0, 0, 0.26), transparent 70%),
+    radial-gradient(110px 110px at 0 100%, rgba(0, 0, 0, 0.26), transparent 70%),
+    radial-gradient(110px 110px at 100% 100%, rgba(0, 0, 0, 0.26), transparent 70%);
+}
+
+/* Edge vignette */
+.hero-portal .scene::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 8;
+  background: radial-gradient(ellipse 82% 82% at 50% 50%, transparent 58%, rgba(2, 11, 10, 0.55) 100%);
+}
+
+.hero-portal .scene.dragging {
+  cursor: grabbing;
+}
+
+.hero-portal #net {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  z-index: 2;
+}
+
+/* Agent cards — orbiting, so all positioning is JS-driven */
+.hero-portal .agent {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 142px;
+  padding: 7px 10px 7px 7px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+  backdrop-filter: blur(10px);
+  pointer-events: none; /* drag passes straight through */
+  will-change: transform, opacity;
+}
+
+.hero-portal .agent .ico {
+  flex: none;
+  width: 26px;
+  height: 26px;
   display: grid;
   place-items: center;
-  border: 1px solid rgba(248, 199, 106, 0.68);
-  border-radius: 999px;
-  color: #f8c76a;
+  border-radius: 7px;
+  background: var(--ok-soft);
+  border: 1px solid var(--ok-line);
+  color: var(--ok);
 }
 
-.mini-metric span:not(.mini-metric-icon) {
-  color: rgba(247, 244, 238, 0.78);
-  font-size: 10px;
-  font-weight: 850;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.mini-metric strong {
-  margin-top: 2px;
-  color: #fffaf0;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 25px;
+.hero-portal .agent b {
+  display: block;
+  font-size: 11.5px;
   font-weight: 600;
-  line-height: 1.04;
-  letter-spacing: -0.045em;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.hero-portal .agent .status {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 1px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.03em;
+  color: var(--ok);
+}
+
+.hero-portal .agent .dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--ok);
+  box-shadow: 0 0 6px rgba(53, 226, 197, 0.8);
+}
+
+.hero-portal .core {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  background: rgba(9, 16, 26, 0.8);
+  backdrop-filter: blur(8px);
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  color: var(--ink);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.hero-portal .core span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #2dd4bf;
+  box-shadow: 0 0 12px #2dd4bf;
+  animation: blink 2s ease-in-out infinite;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.hero-portal .hint {
+  position: absolute;
+  left: 50%;
+  /* Clears the plaster + bronze overlay so the hint sits inside the
+     visible aperture (the file's 26px assumed no wall overlay). */
+  bottom: calc(var(--w) + var(--f) + 16px);
+  transform: translateX(-50%);
+  z-index: 6;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(147, 167, 189, 0.55);
+  pointer-events: none;
+  transition: opacity 0.8s ease;
+}
+
+.hero-portal .hint.gone {
+  opacity: 0;
+}
+
+@media (max-width: 680px) {
+  .hero-portal .agent {
+    width: 122px;
+  }
+
+  .hero-portal .agent b {
+    font-size: 10.5px;
+  }
+}
+
+/* Stacked layout: the portal sits flat (no tilt), full width under
+   the copy, with shallower reveal depths. The bronze profile stays
+   on mobile. */
+@media (max-width: 900px) {
+  .hero-portal .frame {
+    height: auto;
+    --w: 18px;
+    --f: 12px;
+  }
+
+  .hero-portal .scene {
+    height: auto;
+    aspect-ratio: 16 / 11;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-portal .core span {
+    animation: none;
+  }
 }
 
 @media (max-width: 1180px) {
-  .hero-grid {
-    grid-template-columns: minmax(0, 1fr) minmax(420px, 0.95fr);
-    column-gap: 34px;
-  }
-
   .hero h1 {
     font-size: clamp(48px, 5.6vw, 68px);
   }
@@ -11411,11 +11580,6 @@ button.tone-chip:hover {
     padding: 12px 12px 10px;
   }
 
-  .mini-metric-icon svg {
-    width: 23px;
-    height: 23px;
-  }
-
   .proof-item strong {
     font-size: 20px;
   }
@@ -11426,26 +11590,25 @@ button.tone-chip:hover {
 }
 
 @media (max-width: 900px) {
+  /* Stack: copy first (source order), then the portal full width —
+     the design file's mobile padding, 24px clamp(16px,4vw,24px). */
   .hero {
-    padding-top: 28px;
+    padding-top: 24px;
   }
 
   .hero .container {
-    width: min(100% - 34px, 720px);
+    padding-inline: clamp(16px, 4vw, 24px);
   }
 
   .hero-grid {
     grid-template-columns: minmax(0, 1fr);
+    gap: 0;
     text-align: left;
   }
 
-  .hero-media {
-    order: -1;
-  }
-
-  .hero-orbit-frame {
-    width: min(100%, 560px);
-    margin-top: 0;
+  .hero-copy-col {
+    padding-top: 0;
+    margin-bottom: 22px;
   }
 
   .hero h1,
@@ -11465,28 +11628,12 @@ button.tone-chip:hover {
     width: 100%;
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
-
-  .mini-metrics {
-    margin-top: -18px;
-  }
 }
 
 @media (max-width: 640px) {
   .hero {
     min-height: auto;
     padding: 22px 0 42px;
-  }
-
-  .hero .container {
-    width: min(100% - 26px, 430px);
-  }
-
-  .hero-grid {
-    row-gap: 22px;
-  }
-
-  .hero-orbit-frame {
-    width: min(100%, 390px);
   }
 
   .hero h1 {
@@ -11537,30 +11684,6 @@ button.tone-chip:hover {
     margin-top: 0;
     font-size: 13px;
   }
-
-  .mini-metrics {
-    width: 100%;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
-    margin-top: -10px;
-  }
-
-  .mini-metric {
-    grid-template-columns: 1fr;
-    gap: 8px;
-    min-height: 92px;
-    padding: 12px;
-    text-align: left;
-  }
-
-  .mini-metric-icon {
-    width: 30px;
-    height: 30px;
-  }
-
-  .mini-metric strong {
-    font-size: 21px;
-  }
 }
 
 @media (max-width: 390px) {
@@ -11570,10 +11693,6 @@ button.tone-chip:hover {
 
   .hero h1 {
     font-size: clamp(37px, 12.5vw, 48px);
-  }
-
-  .mini-metric strong {
-    font-size: 18px;
   }
 }
 
@@ -14063,16 +14182,8 @@ button.tone-chip:hover {
 }
 
 @media (min-width: 1181px) {
-  .hero {
-    padding-top: clamp(46px, 4.8vw, 76px);
-  }
-
   .hero h1 {
     font-size: clamp(54px, 5.2vw, 82px);
-  }
-
-  .hero-orbit-frame {
-    width: min(100%, 690px);
   }
 }
 

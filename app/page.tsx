@@ -1,10 +1,10 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { auth } from "@/auth"
-import { AgentOrbit } from "@/components/AgentOrbit"
 import { AnimatedSeparator } from "@/components/AnimatedSeparator"
 import { ExampleShowcase } from "@/components/ExampleShowcase"
 import { HowItWorksDemo } from "@/components/HowItWorksDemo"
+import NeuralPortal from "@/components/NeuralPortal"
 import { PricingCards } from "@/components/PricingCards"
 import { PublicFooter, PublicNav } from "@/components/PublicChrome"
 import { ProductRoadmap } from "@/components/ProductRoadmap"
@@ -121,52 +121,6 @@ function EngineFeatureIcon({ name }: { name: (typeof engineFeatures)[number]["ic
   )
 }
 
-function HeroIcon({ type }: { type: "check" | "compass" | "shield" | "lock" | "pause" }) {
-  if (type === "check") {
-    return (
-      <svg viewBox="0 0 32 32" aria-hidden="true">
-        <path d="M8.5 16.7 13.5 21.7 24 10.8" />
-      </svg>
-    )
-  }
-
-  if (type === "compass") {
-    return (
-      <svg viewBox="0 0 32 32" aria-hidden="true">
-        <circle cx="16" cy="16" r="9.5" />
-        <path d="m19.6 9.2-2.3 8.1-5 5.5 2.3-8.1 5-5.5Z" />
-        <path d="M16 4.5v3M16 24.5v3M4.5 16h3M24.5 16h3" />
-      </svg>
-    )
-  }
-
-  if (type === "shield") {
-    return (
-      <svg viewBox="0 0 32 32" aria-hidden="true">
-        <path d="M16 4.6 25 8v6.6c0 5.9-3.6 10.1-9 12.8-5.4-2.7-9-6.9-9-12.8V8l9-3.4Z" />
-        <path d="m12.4 16 2.5 2.5 5.3-5.9" />
-      </svg>
-    )
-  }
-
-  if (type === "pause") {
-    return (
-      <svg viewBox="0 0 32 32" aria-hidden="true">
-        <circle cx="16" cy="16" r="10" />
-        <path d="M13 11.5v9M19 11.5v9" />
-      </svg>
-    )
-  }
-
-  return (
-    <svg viewBox="0 0 32 32" aria-hidden="true">
-      <rect x="8" y="14" width="16" height="12" rx="2.2" />
-      <path d="M11.5 14v-3.1a4.5 4.5 0 0 1 9 0V14" />
-      <path d="M16 18.2v3.4" />
-    </svg>
-  )
-}
-
 export default async function HomePage() {
   const session = await auth()
   const isLoggedIn = Boolean(session?.user)
@@ -177,7 +131,7 @@ export default async function HomePage() {
       <main className="landing-main">
         <section className="hero">
           <div className="container hero-grid">
-            <div>
+            <div className="hero-copy-col">
               <h1>
                 Apply with letters that feel <span>specific, sharp, and yours.</span>
               </h1>
@@ -214,29 +168,7 @@ export default async function HomePage() {
               </div>
             </div>
 
-            <div className="hero-media">
-              {/* The orbit scene is absolutely positioned inside this
-                  frame, so the frame is what gives it its size. */}
-              <div className="hero-orbit-frame">
-                <AgentOrbit />
-              </div>
-              <div className="mini-metrics">
-                <div className="mini-metric">
-                  <span className="mini-metric-icon"><HeroIcon type="lock" /></span>
-                  <div>
-                    <span>Workspace</span>
-                    <strong>Private</strong>
-                  </div>
-                </div>
-                <div className="mini-metric">
-                  <span className="mini-metric-icon"><HeroIcon type="check" /></span>
-                  <div>
-                    <span>Status</span>
-                    <strong>Live</strong>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <NeuralPortal />
           </div>
         </section>
 
