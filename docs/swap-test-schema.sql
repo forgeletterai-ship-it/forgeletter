@@ -144,3 +144,20 @@ $$;
 SELECT tablename, rowsecurity FROM pg_tables
 WHERE schemaname = 'public' AND tablename LIKE 'swap_%' OR tablename = 'vocab_counts'
 ORDER BY tablename;
+
+-- ════════════════════════════════════════════════════════════════
+-- Phase 7.1 — edit capture (the one additive change touching the
+-- product side; lib/agents/ itself stays read-only per Rule 14).
+-- One row per letter (latest final), upserted on save. Account
+-- data, disclosed in ToS.
+-- ════════════════════════════════════════════════════════════════
+
+CREATE TABLE IF NOT EXISTS letter_edits (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  letter_id uuid REFERENCES generated_letters(id) UNIQUE,
+  user_id uuid NOT NULL,
+  delivered_text text, final_text text,       -- account data, disclosed in ToS
+  created_at timestamptz DEFAULT now());
+
+ALTER TABLE letter_edits ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON letter_edits FROM anon, authenticated;

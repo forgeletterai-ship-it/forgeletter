@@ -220,4 +220,69 @@ everything stays behind SWAP_TEST_ENABLED.
 
 ## Phase 6 — UI
 
-_(pending)_
+**Built:** `components/swap/` (ResultsFlow, RedactionView, Scores,
+Quadrant, MarkedLetter, ProfileBlock, Fixes, Wall, HomepageDemo,
+AccountGate, ShareButton), `app/swap-test/page.tsx` (+swap.css),
+`app/api/og/swap/route.tsx`, `app/api/swap-share/route.ts`,
+`app/api/swap-consent/route.ts`. Fixed results order 1–9; Appendix
+B/C/D verbatim; class colours + underline styles (AA, survives
+colour-blindness); count-up/lift-out motion with reduced-motion final
+states; keyboard-reachable tooltips; JSON-LD WebApplication; homepage
+demo at section 2 with the doc's reorder (examples→4, why-choose
+down) — both flag-gated behind SWAP_TEST_ENABLED (Rule 11). Analytics
+events per §6.1 push to window.dataLayer (no analytics backend exists
+on the site yet — noted). Rule 6 + rhythm greps are CI tests
+(`tests/swap-ui-gates.test.ts`) with two verbatim-mandated
+exemptions: the Appendix A demo title and the Appendix C Yale
+sentence. Fonts: site self-hosted stack + system mono (the doc's
+Google-font trio conflicts with the site's no-external-fonts policy —
+mapped, per §3.3's "map to existing tokens" instruction).
+Deviation: swap-share + swap-consent routes added beyond the file map
+(ShareButton→OG needs a server write; results-order item 8 needs a
+consent write).
+
+**Test numbers:** 90 tests green (17 files); tsc + prod build clean.
+
+## Phase 7 — Learning loops
+
+**Built:**
+- 7.1 `letter_edits` DDL (UNIQUE(letter_id), RLS) + capture in the
+  letter PATCH route (delivered vs final, upsert, non-fatal) +
+  `scripts/edit-diff.ts` nightly report → reports/edit-insights.md.
+  Report only (Rule 13); lib/agents/ untouched (Rule 14).
+- 7.2 `scripts/prevalence-report.ts` → reports/prevalence.md
+  (failure/technique histograms, opening/closing codes, profile mix,
+  corpus progress). The monthly technique-outcome job needs benchmark
+  exports + letter outcome fields — deferred to post-launch.
+- 7.3 `scripts/anonymise.ts` (bracketed placeholders, gold-corpus
+  discipline; exported for the route + CLI) wired into the scan
+  route behind the research_copy consent; gold invite condition
+  (TARGETED ∧ anchor 12–35 ∧ proof ≥80) returned as `goldInvite`;
+  `gold_invite` consent kind accepted.
+
+**STOP AND ASK (open):** privacy-policy additions need human/legal
+sign-off before launch — research copy, outcome email,
+fingerprint-for-fraud, JD term frequencies (GDPR mapping in Part V.2
+is the source text).
+
+## Phase 8 — Launch gates (checklist status)
+
+- [ ] Phase 5 gates green + reliability number in FAQ — **harnesses
+      ready, not yet run** (≈$15 API + Set K / benchmark exports)
+- [x] Canonical: metadataBase → forgeletter.com (curl check on deploy)
+- [x] Rule 1/2 audits: no letter persistence path outside the three
+      exceptions; logscrub on the route (grep clean)
+- [x] Rule 6/8 greps: CI tests green
+- [x] Anonymisation CI green
+- [ ] Catalogue human-approved (v0.1 awaiting review)
+- [ ] Privacy text human-approved
+- [ ] Upstash/Turnstile live (Resend already configured);
+      DEV-ONLY paths assert NODE_ENV — unreachable in prod builds
+- [x] Crons registered in vercel.json (warm/outcomes/cleanup/vocab-purge)
+- [x] Analytics events firing (dataLayer)
+- [x] TODO-POSTLAUNCH.md complete
+- [ ] Deploy behind flag; human runs 20 varied manual scans; flip
+      SWAP_TEST_ENABLED
+
+**Spend so far:** $0 API (all gate runs deferred). Build is
+code-complete behind the flag.

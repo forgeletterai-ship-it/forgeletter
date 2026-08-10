@@ -65,7 +65,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
 
   const { data: existing } = await supabaseAdmin
     .from("generated_letters")
-    .select("submitted_at")
+    .select("submitted_at, cover_letter")
     .eq("id", id)
     .eq("user_id", user.id)
     .maybeSingle()
@@ -142,6 +142,34 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
 
   if (updateError) {
     return NextResponse.json({ error: dataErrorMessage(updateError, "generated_letters") }, { status: 500 })
+  }
+
+  // Edit capture (swap build Phase 7.1): every letter shipped before
+  // this existed is lost data. One row per letter — latest final
+  // alongside the delivered text (account data, disclosed in ToS).
+  // The nightly edit-diff job mines these into reports; nothing here
+  // feeds the pipeline automatically (Rule 13). Failure is non-fatal.
+  if (
+    typeof body.finalCoverLetter === "string" &&
+    typeof existing?.cover_letter === "string" &&
+    body.finalCoverLetter !== existing.cover_letter
+  ) {
+    await supabaseAdmin
+      .from("letter_edits")
+      .upsert(
+        {
+          letter_id: id,
+          user_id: user.id,
+          delivered_text: existing.cover_letter,
+          final_text: body.finalCoverLetter,
+        },
+        { onConflict: "letter_id" }
+      )
+      .then(({ error: editError }) => {
+        if (editError) {
+          console.warn("letter_edits capture failed:", editError.message)
+        }
+      })
   }
 
   return NextResponse.json({ ok: true })

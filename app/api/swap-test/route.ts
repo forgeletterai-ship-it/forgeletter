@@ -401,6 +401,33 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    // Research copy (Rule 1 exception c / Phase 7.3): ONLY with the
+    // explicit unticked-by-default consent, and only after
+    // anonymisation strips names, employers, dates and figures.
+    if (user) {
+      const { data: research } = await supabaseAdmin
+        .from("swap_consents")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("kind", "research_copy")
+        .is("revoked_at", null)
+        .maybeSingle()
+      if (research) {
+        const { anonymiseText } = await import("@/scripts/anonymise")
+        await supabaseAdmin.from("swap_research_corpus").insert({
+          consent_id: research.id,
+          anonymised_text: anonymiseText(letter, {
+            companyTokens: [
+              ...(body.company ? [body.company] : []),
+              ...inferCompanyTokens(letter, stoplist),
+            ],
+          }),
+          scores: { anchor: scores.anchor, proof: scores.proof, quadrant: scores.quadrant },
+          role_family: family,
+        })
+      }
+    }
+
     await commitScan({ kv, fingerprint, ipHash, tier: ladder.tier })
     await kv.set(dupKey, simhashHex(hash), DUPLICATE_WINDOW_SECONDS)
   }
@@ -424,6 +451,15 @@ export async function POST(req: NextRequest) {
     outcomeToken,
   }
 
+  // Exceptional-letter gold invite (Phase 7.3): anchor in the healthy
+  // band ∧ proof ≥ 80 ∧ TARGETED. The UI offers 3 months Pro for an
+  // anonymised copy under its own consent kind.
+  const goldInvite =
+    scores.quadrant === "TARGETED" &&
+    scores.anchor >= 12 &&
+    scores.anchor <= 35 &&
+    scores.proof >= 80
+
   swapLog("scan_completed", {
     ordinal: ladder.ordinal,
     anchor: scores.anchor,
@@ -442,5 +478,5 @@ export async function POST(req: NextRequest) {
     letter: undefined,
   })
 
-  return NextResponse.json(result)
+  return NextResponse.json({ ...result, goldInvite })
 }

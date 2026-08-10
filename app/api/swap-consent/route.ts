@@ -9,7 +9,7 @@ import { supabaseAdmin } from "@/lib/supabase"
  * only; revocation goes through the outcome email's unsubscribe.
  */
 
-const KINDS = new Set(["outcome_email", "research_copy"])
+const KINDS = new Set(["outcome_email", "research_copy", "gold_invite"])
 
 export async function POST(req: NextRequest) {
   const { user } = await getCurrentAppUser()
