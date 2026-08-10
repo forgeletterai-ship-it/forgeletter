@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { track } from "@/lib/swap/analytics"
-import { DEMO_COPY, DEMO_LETTERS, type DemoLetter } from "@/lib/swap/demo-data"
+import { DEMO_LETTERS, type DemoLetter } from "@/lib/swap/demo-data"
 import { sentenceReason } from "@/lib/swap/templates"
 import type { SentenceClass } from "@/lib/swap/types"
 
@@ -11,6 +11,10 @@ import type { SentenceClass } from "@/lib/swap/types"
  * Appendix A letters when 30% visible. Static data, zero API calls,
  * pure DOM/CSS. No paste box — watching is free; the CTA leads to
  * /swap-test where the 30 seconds of effort belong.
+ *
+ * Presented as a product surface: the letter on a document sheet
+ * with a scan pass, scores and the pass/fail verdict on a side rail
+ * (the verdict language mirrors the Examples section).
  */
 
 type Phase = "idle" | "marking" | "redacting" | "scored"
@@ -23,10 +27,10 @@ function classFor(s: DemoLetter["sentences"][number]): SentenceClass {
   return "asserted-you"
 }
 
-function scoresFor(letter: DemoLetter): { anchor: number; proof: number; quadrant: string } {
+function scoresFor(letter: DemoLetter): { anchor: number; proof: number; passes: boolean; verdict: string } {
   return letter.id === "generic"
-    ? { anchor: 0, proof: 25, quadrant: "FILLER" }
-    : { anchor: 24, proof: 100, quadrant: "TARGETED" }
+    ? { anchor: 0, proof: 25, passes: false, verdict: "Fails — filler" }
+    : { anchor: 24, proof: 100, passes: true, verdict: "Passes — targeted" }
 }
 
 export default function HomepageDemo() {
@@ -49,11 +53,11 @@ export default function HomepageDemo() {
     }
     setPhase("marking")
     timers.current.push(
-      setTimeout(() => setPhase("redacting"), 1400),
+      setTimeout(() => setPhase("redacting"), 1500),
       setTimeout(() => {
         setPhase("scored")
         track("demo_completed", { letter_variant: letter.id })
-      }, 2600)
+      }, 2700)
     )
   }
 
@@ -78,111 +82,140 @@ export default function HomepageDemo() {
   }, [])
 
   const scores = scoresFor(variant)
+  const scored = phase === "scored"
 
   return (
-    <div className="swap-scope swap-demo" ref={rootRef}>
-      <div className="swap-demo-toggle" role="group" aria-label="Demo letter">
-        {DEMO_LETTERS.map((l) => (
-          <button
-            key={l.id}
-            type="button"
-            aria-pressed={variant.id === l.id}
-            onClick={() => {
-              setVariant(l)
-              play(l)
-            }}
-          >
-            {l.title}
-          </button>
-        ))}
-      </div>
-
-      <p className="swap-demo-letter swap-marked swap-anim">
-        {variant.sentences.map((s, i) => {
-          const cls = classFor(s)
-          const marked = phase !== "idle"
-          const removed = phase !== "idle" && phase !== "marking" && cls === "distinctive-them"
-          const className = removed
-            ? "swap-s swap-s--removed"
-            : marked
-              ? `swap-s swap-s--${cls}`
-              : "swap-s"
-          const style =
-            marked && !removed ? { transitionDelay: `${i * 180}ms` } : undefined
-          // Once marked, every sentence explains itself on hover/tap/
-          // focus — same template reasons as the real results screen.
-          if (!marked) {
-            return (
-              <span key={i} className={className}>
-                {s.text}{" "}
-              </span>
-            )
-          }
-          return (
-            <span key={i} className="swap-tip">
-              <button
-                type="button"
-                className={className}
-                style={style}
-                aria-describedby={openTip === i ? `swap-demo-tip-${i}` : undefined}
-                onMouseEnter={() => setOpenTip(i)}
-                onMouseLeave={() => setOpenTip((v) => (v === i ? null : v))}
-                onFocus={() => setOpenTip(i)}
-                onBlur={() => setOpenTip((v) => (v === i ? null : v))}
-                onClick={() => setOpenTip((v) => (v === i ? null : i))}
-              >
-                {s.text}
-              </button>{" "}
-              {openTip === i ? (
-                <span role="tooltip" id={`swap-demo-tip-${i}`}>
-                  {sentenceReason(cls, s.failure ?? null)}
+    <div className="swap-scope swap-demo-shell" ref={rootRef}>
+      <div className={`swap-demo-doc${phase === "marking" ? " is-scanning" : ""}`}>
+        <div className="swap-demo-doc__bar">
+          <span>Pasted letter</span>
+          <span>{variant.title}</span>
+        </div>
+        <div className="swap-demo-doc__body">
+          <p className="swap-demo-letter swap-marked swap-anim">
+            {variant.sentences.map((s, i) => {
+              const cls = classFor(s)
+              const marked = phase !== "idle"
+              const removed =
+                phase !== "idle" && phase !== "marking" && cls === "distinctive-them"
+              const className = removed
+                ? "swap-s swap-s--removed"
+                : marked
+                  ? `swap-s swap-s--${cls}`
+                  : "swap-s"
+              const style =
+                marked && !removed ? { transitionDelay: `${i * 180}ms` } : undefined
+              if (!marked) {
+                return (
+                  <span key={i} className={className}>
+                    {s.text}{" "}
+                  </span>
+                )
+              }
+              // Once marked, every sentence explains itself on
+              // hover/tap/focus — the same template reasons as the
+              // real results screen.
+              return (
+                <span key={i} className="swap-tip">
+                  <button
+                    type="button"
+                    className={className}
+                    style={style}
+                    aria-describedby={openTip === i ? `swap-demo-tip-${i}` : undefined}
+                    onMouseEnter={() => setOpenTip(i)}
+                    onMouseLeave={() => setOpenTip((v) => (v === i ? null : v))}
+                    onFocus={() => setOpenTip(i)}
+                    onBlur={() => setOpenTip((v) => (v === i ? null : v))}
+                    onClick={() => setOpenTip((v) => (v === i ? null : i))}
+                  >
+                    {s.text}
+                  </button>{" "}
+                  {openTip === i ? (
+                    <span role="tooltip" id={`swap-demo-tip-${i}`}>
+                      {sentenceReason(cls, s.failure ?? null)}
+                    </span>
+                  ) : null}
                 </span>
-              ) : null}
-            </span>
-          )
-        })}
-      </p>
-
-      {phase === "scored" ? (
-        <>
-          <div className="swap-redaction-verdict" aria-live="polite">
-            {variant.id === "generic"
-              ? "Nothing was removed."
-              : "The opening passage was removed — it only fits this employer."}
-          </div>
-          <div className="swap-demo-scores">
-            <div>
-              <div className="swap-score-name">Anchor</div>
-              <div className="swap-score-num">
-                {scores.anchor}%
-              </div>
-              <div className="swap-band-line">{variant.anchorBandLine}</div>
-            </div>
-            <div>
-              <div className="swap-score-name">Proof</div>
-              <div className="swap-score-num">{scores.proof}%</div>
-              <div className="swap-band-line">{variant.proofBandLine}</div>
-            </div>
-          </div>
-        </>
-      ) : null}
-
-      <div>
-        <button className="swap-demo-replay" type="button" onClick={() => play(variant)}>
-          Replay
-        </button>
+              )
+            })}
+          </p>
+        </div>
       </div>
 
-      <p style={{ marginTop: 14 }}>
-        <a
-          className="swap-cta"
-          href="/swap-test"
-          onClick={() => track("demo_cta_clicked")}
-        >
-          Test your own letter →
-        </a>
-      </p>
-      <p className="swap-disclosure">{DEMO_COPY.heroSub}</p>
+      <div className="swap-demo-rail">
+        <div className="swap-demo-toggle" role="group" aria-label="Demo letter">
+          {DEMO_LETTERS.map((l) => (
+            <button
+              key={l.id}
+              type="button"
+              aria-pressed={variant.id === l.id}
+              onClick={() => {
+                setVariant(l)
+                play(l)
+              }}
+            >
+              {l.title}
+            </button>
+          ))}
+        </div>
+
+        <div className={`swap-stat${scored ? " is-in" : ""}`}>
+          <div className="swap-score-name">Anchor</div>
+          <div
+            className={`swap-score-num ${
+              scores.anchor >= 12 && scores.anchor <= 35
+                ? "swap-num--good"
+                : "swap-num--alarm"
+            }`}
+          >
+            {scored ? `${scores.anchor}%` : "—"}
+          </div>
+          <div className="swap-band-line">
+            {scored ? variant.anchorBandLine : "How much is really about this employer?"}
+          </div>
+        </div>
+
+        <div className={`swap-stat${scored ? " is-in" : ""}`}>
+          <div className="swap-score-name">Proof</div>
+          <div
+            className={`swap-score-num ${scores.proof > 66 ? "swap-num--good" : "swap-num--alarm"}`}
+          >
+            {scored ? `${scores.proof}%` : "—"}
+          </div>
+          <div className="swap-band-line">
+            {scored ? variant.proofBandLine : "How many claims could a reader check?"}
+          </div>
+        </div>
+
+        {scored ? (
+          <div className="swap-demo-verdict">
+            <span
+              className={`swap-verdict-chip ${
+                scores.passes ? "swap-verdict-chip--pass" : "swap-verdict-chip--fail"
+              }`}
+            >
+              Swap test: {scores.verdict}
+            </span>
+            <div className="swap-redaction-verdict" aria-live="polite">
+              {variant.id === "generic"
+                ? "Nothing was removed."
+                : "The opening passage was removed — it only fits this employer."}
+            </div>
+          </div>
+        ) : null}
+
+        <div className="swap-demo-cta-row">
+          <a className="swap-cta" href="/swap-test" onClick={() => track("demo_cta_clicked")}>
+            Test your own letter →
+          </a>
+          <div className="swap-demo-micro">
+            Free · no account for your first scan · the letter is never stored
+          </div>
+          <button className="swap-demo-replay" type="button" onClick={() => play(variant)}>
+            Replay the scan
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

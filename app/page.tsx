@@ -377,8 +377,11 @@ export default async function HomePage() {
         {swapTestEnabled ? (
           <section className="section" id="swap-demo">
             <div className="container">
-              <span className="section-kicker">The Swap Test</span>
-              <h2>{DEMO_COPY.sectionH2}</h2>
+              <div className="swap-scope swap-demo-head">
+                <span className="section-kicker">The Swap Test</span>
+                <h2>{DEMO_COPY.sectionH2}</h2>
+                <p>{DEMO_COPY.heroSub}</p>
+              </div>
               <HomepageDemo />
             </div>
           </section>

@@ -322,44 +322,170 @@
   color: var(--ink);
 }
 
-/* Homepage demo */
-.swap-demo {
-  border: 1px solid rgba(199, 154, 54, 0.42);
-  border-radius: var(--radius);
-  background:
-    radial-gradient(circle at 52% 0, rgba(255, 255, 255, 0.78), transparent 46%),
-    rgba(255, 253, 248, 0.72);
-  padding: 24px;
-  box-shadow:
-    0 18px 40px rgba(72, 50, 21, 0.07),
-    inset 0 1px 0 rgba(255, 255, 255, 0.84);
+/* ── Homepage demo: a product surface, not a widget. Left: the
+   letter on a white document sheet with a scan pass. Right: the
+   results rail — gold-lined stat tiles (the proof-card treatment),
+   the pass/fail verdict chip (Examples-section language), CTA. ── */
+
+.swap-demo-head { max-width: 760px; }
+.swap-demo-head p {
+  margin: 10px 0 0;
+  color: var(--muted-strong);
+  font-size: 16.5px;
+  line-height: 1.7;
 }
-.swap-demo-toggle { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
-.swap-demo-toggle button {
-  padding: 8px 15px;
+
+.swap-demo-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(300px, 1fr);
+  gap: 22px;
+  align-items: start;
+  margin-top: 30px;
+}
+
+/* The document sheet */
+.swap-demo-doc {
+  position: relative;
+  background: var(--paper-strong);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: var(--shadow-soft), inset 0 1px 0 #ffffff;
+  overflow: hidden;
+}
+.swap-demo-doc__bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 18px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(246, 243, 235, 0.72);
+  font-family: var(--swap-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted-strong);
+  white-space: nowrap;
+}
+.swap-demo-doc__bar span:last-child { overflow: hidden; text-overflow: ellipsis; }
+.swap-demo-doc__body { padding: 24px 26px 26px; }
+.swap-demo-letter {
+  line-height: 2.05;
+  min-height: 220px;
+  color: var(--ink-soft);
+  font-size: 15px;
+}
+
+/* Scan pass while the classifier "reads" */
+.swap-demo-doc.is-scanning::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(36, 107, 111, 0.09) 46%,
+    rgba(36, 107, 111, 0.16) 50%,
+    rgba(36, 107, 111, 0.09) 54%,
+    transparent 100%
+  );
+  background-size: 100% 220%;
+  animation: swap-scan 1.4s ease-in-out 1;
+}
+@keyframes swap-scan {
+  from { background-position: 0 -120%; }
+  to { background-position: 0 120%; }
+}
+
+/* The results rail */
+.swap-demo-rail { display: grid; gap: 12px; align-content: start; }
+
+.swap-demo-toggle {
+  display: flex;
+  padding: 4px;
+  gap: 4px;
   border: 1px solid var(--line);
   border-radius: 999px;
-  background: rgba(255, 253, 248, 0.72);
-  font-size: 13px;
-  font-weight: 700;
+  background: rgba(255, 253, 248, 0.85);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+.swap-demo-toggle button {
+  flex: 1;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  font-size: 12.5px;
+  font-weight: 750;
   cursor: pointer;
   color: var(--muted-strong);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .swap-demo-toggle button[aria-pressed="true"] {
   background: var(--teal);
-  border-color: var(--teal);
   color: #f2faf8;
+  box-shadow: 0 8px 18px rgba(36, 107, 111, 0.24);
 }
-.swap-demo-letter { line-height: 1.95; min-height: 180px; color: var(--ink-soft); }
-.swap-demo-scores { display: flex; gap: 26px; margin-top: 14px; flex-wrap: wrap; }
+
+.swap-stat {
+  border: 1px solid rgba(199, 154, 54, 0.42);
+  border-radius: var(--radius);
+  padding: 14px 16px 13px;
+  background:
+    radial-gradient(circle at 52% 0, rgba(255, 255, 255, 0.78), transparent 46%),
+    rgba(255, 253, 248, 0.72);
+  box-shadow:
+    0 18px 40px rgba(72, 50, 21, 0.07),
+    inset 0 1px 0 rgba(255, 255, 255, 0.84),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.38);
+  opacity: 0.65;
+  transition: opacity 300ms ease;
+}
+.swap-stat.is-in { opacity: 1; }
+.swap-stat .swap-score-num { font-size: 38px; margin: 2px 0 4px; color: var(--muted); }
+.swap-stat.is-in .swap-num--good { color: var(--teal); }
+.swap-stat.is-in .swap-num--alarm { color: var(--swap-alarm); }
+
+.swap-demo-verdict { display: grid; gap: 8px; }
+.swap-verdict-chip {
+  justify-self: start;
+  display: inline-block;
+  padding: 7px 14px;
+  border-radius: 999px;
+  font-family: var(--swap-mono);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.swap-verdict-chip--fail {
+  background: rgba(176, 86, 60, 0.13);
+  border: 1px solid rgba(176, 86, 60, 0.38);
+  color: #8c3d28;
+}
+.swap-verdict-chip--pass {
+  background: var(--teal-soft);
+  border: 1px solid rgba(36, 107, 111, 0.38);
+  color: var(--teal);
+}
+
+.swap-demo-cta-row { display: grid; gap: 8px; justify-items: start; margin-top: 4px; }
+.swap-demo-micro { font-size: 12px; color: var(--muted); }
 .swap-demo-replay {
-  margin-top: 12px;
   background: none;
   border: 0;
   color: var(--teal);
   font-weight: 800;
+  font-size: 13px;
   cursor: pointer;
   padding: 0;
+}
+
+@media (max-width: 900px) {
+  .swap-demo-shell { grid-template-columns: 1fr; }
 }
 
 /* Staggered class colouring + count-up run under the motion flag */
