@@ -9,14 +9,21 @@
 
 .swap-scope {
   --swap-alarm: var(--red);
-  --cls-them-d: #cfe7e2;
-  --cls-you-c: #dae6f6;
+  /* Class tints aligned with the Examples section's language:
+     strengths in site teal/green, weaknesses in the Examples' rust
+     flaw tint and neutral grey. (The doc's amber for weak claims
+     collided with the site's gold-means-win convention.) */
+  --cls-them-d: var(--teal-soft);
+  --cls-you-c: rgba(40, 120, 94, 0.14);
   --cls-them-b: #ebede9;
-  --cls-you-a: #f7e9d6;
+  --cls-you-a: rgba(176, 86, 60, 0.13);
   --swap-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 }
 
-/* ── Sentence classes: colour + underline (doc-verbatim, functional) ── */
+/* ── Sentence classes: colour + a UNIQUE underline style per class,
+   so the four stay distinguishable under any colour vision:
+   solid = employer-specific · double = checkable proof ·
+   none = inert boilerplate · dashed = unbacked claim. ── */
 .swap-s {
   padding: 1px 3px;
   border-radius: 3px;
@@ -26,16 +33,17 @@
 .swap-s--structural { color: var(--muted); }
 .swap-s--distinctive-them {
   background: var(--cls-them-d);
-  text-decoration: underline solid #0c403e;
+  text-decoration: underline solid var(--teal);
 }
 .swap-s--checkable-you {
   background: var(--cls-you-c);
-  text-decoration: underline solid #17497f;
+  text-decoration: underline double var(--green);
+  text-decoration-thickness: 1.5px;
 }
 .swap-s--boilerplate-them { background: var(--cls-them-b); }
 .swap-s--asserted-you {
   background: var(--cls-you-a);
-  text-decoration: underline dashed #8a5210;
+  text-decoration: underline dashed #a04b32;
 }
 
 /* ── Tool ── */
@@ -115,7 +123,7 @@
 .swap-redaction .swap-s--removed {
   display: inline-block;
   background: var(--cls-them-d);
-  text-decoration: line-through solid #0c403e;
+  text-decoration: line-through solid var(--teal);
   animation: swap-lift 600ms ease forwards;
 }
 @keyframes swap-lift {
