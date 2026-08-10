@@ -148,4 +148,41 @@ doc allows.
 
 ## Phase 4 — Agent, route, keep-warm
 
+**Built:**
+- `lib/swap/agent-prefix.ts` — prefix assembled from the catalogue
+  (role → techniques → failures → 3 contrastive pairs → TASK block
+  verbatim from the doc). ~1.5k tokens vs the doc's ~7k sketch —
+  leaner is cheaper with no gate impact; Phase 5 iteration may grow
+  the triggers. Rule 8 grep enforced in tests.
+- `lib/swap/agent.ts` — Haiku 4.5 pinned (`claude-haiku-4-5-20251001`),
+  `max_tokens 1200`, `temperature 0`, `cache_control ephemeral 1h` on
+  the prefix; strict short-key parser (unknown codes dropped+logged,
+  malformed → one retry → typed 502); cache token usage logged.
+- `app/api/swap-test/route.ts` — full §3.1 pipeline: validate
+  300–8,000 → sliding window → ladder (Wall payload on acct_limit
+  with real trajectory) → Turnstile ≥scan 2 → circuit breaker (hard
+  Turnstile for anon over budget + alert log) → duplicate window →
+  segment → agent → distinctiveness (corpus/stoplist w/ live
+  vocab_counts) → score/signals/profile/redact/fixes →
+  swap_stats numbers-only row → outcome queue (consented) → JD TF
+  upsert → ladder burn LAST → ScanResult. scan-1 shows 1 fix.
+- `app/api/cron/warm/route.ts` + `vercel.json` (all four crons
+  registered: warm hourly, outcomes daily, cleanup daily,
+  vocab-purge weekly).
+- Guardrail tests ⚙ (`tests/swap-agent.test.ts`, 6 green): prefix
+  ≤8,500 tokens, max_tokens ≤1,500, model pin, Rule 8 grep, verbatim
+  task rules, all 20 codes present.
+
+**Deviation (documented reasoning):** the resubmit window stores
+hash+TTL only in KV — never text, per the doc's own simhash
+constraint — so a duplicate re-runs the (cache-cheap) classification
+instead of replaying a stored result. The ladder is not burned and
+no stats row is written; the user still gets their result. This
+reconciles "returns the cached result without burning a scan" with
+"Hash + TTL only; never text" in favour of the privacy rule.
+
+**Test numbers:** 6 agent guardrail tests green; tsc clean.
+
+## Phase 5 — Gates: eval, injection, reliability, calibration, benchmark
+
 _(pending)_

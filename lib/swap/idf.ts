@@ -147,3 +147,27 @@ export function sentenceIsDistinctive(
 ): boolean {
   return themPhrases.some((p) => phraseIsDistinctive(p, ctx))
 }
+
+/** Deterministic role-family bucketing for the JD corpus and stats
+ *  (a coarse taxonomy — corpus accuracy per family is what matters,
+ *  not taxonomy purity). */
+const ROLE_FAMILIES: [string, RegExp][] = [
+  ["engineering", /\b(engineer|developer|devops|sre|programmer|software|frontend|backend|full[- ]?stack)\b/i],
+  ["data", /\b(data|analytics|analyst|scientist|machine learning|ml engineer|bi\b)\b/i],
+  ["design", /\b(designer|design|ux|ui\b|user experience|user interface)\b/i],
+  ["product", /\b(product manager|product owner|product lead|pm\b|product)\b/i],
+  ["marketing", /\b(marketing|seo|sem|content|brand|growth|social media|communications)\b/i],
+  ["sales", /\b(sales|account executive|account manager|business development|bdr|sdr)\b/i],
+  ["support", /\b(support|customer success|customer service|helpdesk|service desk)\b/i],
+  ["operations", /\b(operations|logistics|supply chain|warehouse|procurement|office manager)\b/i],
+  ["finance", /\b(finance|accountant|accounting|controller|auditor|payroll|treasury)\b/i],
+  ["people", /\b(recruiter|talent|human resources|hr\b|people ops)\b/i],
+]
+
+export function roleFamily(jd: string | null | undefined, letter: string): string {
+  const basis = `${(jd || "").slice(0, 600)} ${letter.slice(0, 400)}`
+  for (const [family, re] of ROLE_FAMILIES) {
+    if (re.test(basis)) return family
+  }
+  return "other"
+}
