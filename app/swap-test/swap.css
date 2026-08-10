@@ -182,9 +182,11 @@
    button chrome WITHOUT outranking the .swap-s--* colour classes,
    which sit at (0,1,0). A plain `.swap-marked button` reset was
    (0,1,1) and silently killed every sentence tint. */
+/* Click/tap opens the explanation — nothing happens on hover
+   (owner preference); pointer cursor signals the click affordance. */
 :where(.swap-marked button) {
   all: unset;
-  cursor: help;
+  cursor: pointer;
 }
 .swap-marked button:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
 .swap-tip { position: relative; display: inline; }

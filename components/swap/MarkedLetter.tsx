@@ -28,9 +28,6 @@ export default function MarkedLetter({ sentences }: { sentences: ClassifiedSente
               type="button"
               className={`swap-s swap-s--${s.cls}`}
               aria-describedby={open === s.index ? `swap-tip-${s.index}` : undefined}
-              onMouseEnter={() => setOpen(s.index)}
-              onMouseLeave={() => setOpen((v) => (v === s.index ? null : v))}
-              onFocus={() => setOpen(s.index)}
               onBlur={() => setOpen((v) => (v === s.index ? null : v))}
               onClick={() => setOpen((v) => (v === s.index ? null : s.index))}
             >

@@ -127,9 +127,6 @@ export default function HomepageDemo() {
                     className={className}
                     style={style}
                     aria-describedby={openTip === i ? `swap-demo-tip-${i}` : undefined}
-                    onMouseEnter={() => setOpenTip(i)}
-                    onMouseLeave={() => setOpenTip((v) => (v === i ? null : v))}
-                    onFocus={() => setOpenTip(i)}
                     onBlur={() => setOpenTip((v) => (v === i ? null : v))}
                     onClick={() => setOpenTip((v) => (v === i ? null : i))}
                   >
