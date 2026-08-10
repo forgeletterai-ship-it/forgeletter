@@ -70,11 +70,19 @@ function loadThresholds(): SwapThresholds | null {
 }
 const thresholds = loadThresholds()
 
+function turnstileConfigured(): boolean {
+  return Boolean(process.env.TURNSTILE_SECRET_KEY?.trim())
+}
+
 async function verifyTurnstile(token: string | undefined, ip: string): Promise<boolean> {
   const secret = process.env.TURNSTILE_SECRET_KEY?.trim()
   if (!secret) {
-    // DEV ONLY — production requires Turnstile from scan 2 (Part V).
-    return process.env.NODE_ENV !== "production"
+    // Turnstile is OPTIONAL by owner decision (no extra third-party
+    // dependency): the ladder, IP ceiling, sliding windows and
+    // circuit breaker carry abuse defense alone. When the breaker
+    // trips, the anonymous tier fails CLOSED instead (below) so the
+    // worst-case day stays bounded. Add a key any time to enable.
+    return true
   }
   if (!token) return false
   try {
@@ -262,7 +270,11 @@ export async function POST(req: NextRequest) {
   if (globalCount > dailyBudget()) {
     swapLogError("circuit_breaker", { count: globalCount, budget: dailyBudget() })
     if (ladder.tier === "anon") {
-      const human = await verifyTurnstile(body.turnstileToken, ip)
+      // Over budget: hard Turnstile when configured; fail CLOSED for
+      // anonymous scans when it isn't (cost stays bounded either way).
+      const human = turnstileConfigured()
+        ? await verifyTurnstile(body.turnstileToken, ip)
+        : false
       if (!human) {
         swapLog("scan_blocked", { reason: "circuit" })
         return NextResponse.json({ reason: "circuit" }, { status: 503 })

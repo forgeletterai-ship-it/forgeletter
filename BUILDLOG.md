@@ -276,8 +276,14 @@ is the source text).
 - [x] Anonymisation CI green
 - [ ] Catalogue human-approved (v0.1 awaiting review)
 - [ ] Privacy text human-approved
-- [ ] Upstash/Turnstile live (Resend already configured);
-      DEV-ONLY paths assert NODE_ENV — unreachable in prod builds
+- [x] KV + human-check: OWNER DECISION (2026-08-10) — no new
+      third-party services. Counters run on the swap_kv table in
+      Supabase (atomic swap_kv_incr RPC, purged by the cleanup
+      cron); Turnstile is optional-when-unconfigured and the circuit
+      breaker fails CLOSED for anonymous scans without it, keeping
+      the worst-case day bounded (~$16). Upstash/Turnstile remain
+      drop-in via env vars. Resend already configured. DEV-ONLY
+      memory KV asserts NODE_ENV — unreachable in prod builds.
 - [x] Crons registered in vercel.json (warm/outcomes/cleanup/vocab-purge)
 - [x] Analytics events firing (dataLayer)
 - [x] TODO-POSTLAUNCH.md complete

@@ -161,3 +161,56 @@ CREATE TABLE IF NOT EXISTS letter_edits (
 
 ALTER TABLE letter_edits ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON letter_edits FROM anon, authenticated;
+
+-- ════════════════════════════════════════════════════════════════
+-- KV backend on Supabase (owner decision: no Upstash dependency).
+-- Shared counters for the ladder, rate windows, duplicate window
+-- and circuit breaker. swap_kv_incr is atomic; expired rows reset
+-- on touch and are purged by the daily cleanup cron.
+-- ════════════════════════════════════════════════════════════════
+
+CREATE TABLE IF NOT EXISTS swap_kv (
+  key text PRIMARY KEY,
+  value text NOT NULL,
+  expires_at timestamptz
+);
+
+ALTER TABLE swap_kv ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON swap_kv FROM anon, authenticated;
+
+CREATE OR REPLACE FUNCTION swap_kv_incr(p_key text, p_ttl_seconds int DEFAULT NULL)
+RETURNS bigint
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE new_val bigint;
+BEGIN
+  INSERT INTO swap_kv (key, value, expires_at)
+  VALUES (p_key, '1',
+          CASE WHEN p_ttl_seconds IS NULL THEN NULL
+               ELSE now() + make_interval(secs => p_ttl_seconds) END)
+  ON CONFLICT (key) DO UPDATE SET
+    value = CASE WHEN swap_kv.expires_at IS NOT NULL AND swap_kv.expires_at < now()
+                 THEN '1'
+                 ELSE (swap_kv.value::bigint + 1)::text END,
+    expires_at = CASE WHEN p_ttl_seconds IS NULL THEN swap_kv.expires_at
+                      ELSE now() + make_interval(secs => p_ttl_seconds) END
+  RETURNING value::bigint INTO new_val;
+  RETURN new_val;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION purge_expired_swap_kv()
+RETURNS int
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE deleted int;
+BEGIN
+  DELETE FROM swap_kv WHERE expires_at IS NOT NULL AND expires_at < now();
+  GET DIAGNOSTICS deleted = ROW_COUNT;
+  RETURN deleted;
+END;
+$$;

@@ -11,6 +11,8 @@
  *  - global daily circuit breaker (route budget, default 5,000)
  */
 
+import { supabaseAdmin } from "@/lib/supabase"
+
 export interface SwapKV {
   /** INCR with optional TTL refresh; returns the new value. */
   incr(key: string, ttlSeconds?: number): Promise<number>
@@ -61,15 +63,57 @@ class UpstashKV implements SwapKV {
   }
 }
 
-// DEV ONLY — in-process fallback so the stack runs before Upstash
-// credentials arrive. Unreachable in production (assertion below).
+/**
+ * Supabase-backed KV — the DEFAULT production backend (owner's call:
+ * no extra third-party service). Same pattern as lib/rate-limit.ts:
+ * serverless instances share state through Postgres. swap_kv_incr is
+ * an atomic upsert-increment RPC (docs/swap-test-schema.sql); the
+ * cleanup cron purges expired rows daily. A few ms slower than Redis
+ * per op — noise next to the 1.5–2.5s agent call. Upstash remains a
+ * drop-in upgrade whenever its env vars appear.
+ */
+class SupabaseKV implements SwapKV {
+  async incr(key: string, ttlSeconds?: number): Promise<number> {
+    const { data, error } = await supabaseAdmin.rpc("swap_kv_incr", {
+      p_key: key,
+      p_ttl_seconds: ttlSeconds ?? null,
+    })
+    if (error) throw new Error(`swap_kv_incr failed: ${error.message}`)
+    return Number(data)
+  }
+
+  async get(key: string): Promise<string | null> {
+    const { data } = await supabaseAdmin
+      .from("swap_kv")
+      .select("value, expires_at")
+      .eq("key", key)
+      .maybeSingle()
+    if (!data) return null
+    if (data.expires_at && new Date(data.expires_at) < new Date()) return null
+    return String(data.value)
+  }
+
+  async set(key: string, value: string, ttlSeconds?: number): Promise<void> {
+    const { error } = await supabaseAdmin.from("swap_kv").upsert({
+      key,
+      value,
+      expires_at: ttlSeconds
+        ? new Date(Date.now() + ttlSeconds * 1000).toISOString()
+        : null,
+    })
+    if (error) throw new Error(`swap_kv set failed: ${error.message}`)
+  }
+}
+
+// DEV ONLY — in-process fallback when neither Upstash nor Supabase
+// env exists. Unreachable in production (assertion below).
 class MemoryKV implements SwapKV {
   private store = new Map<string, { value: string; expiresAt: number | null }>()
 
   constructor() {
     if (process.env.NODE_ENV === "production") {
       throw new Error(
-        "Swap KV: UPSTASH_REDIS_REST_URL/TOKEN are required in production"
+        "Swap KV: no backend — configure Supabase (default) or Upstash"
       )
     }
   }
@@ -112,7 +156,16 @@ export function getSwapKV(): SwapKV {
   if (kv) return kv
   const url = process.env.UPSTASH_REDIS_REST_URL?.trim()
   const token = process.env.UPSTASH_REDIS_REST_TOKEN?.trim()
-  kv = url && token ? new UpstashKV(url, token) : new MemoryKV()
+  if (url && token) {
+    kv = new UpstashKV(url, token)
+  } else if (
+    process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() &&
+    (process.env.SUPABASE_URL?.trim() || process.env.NEXT_PUBLIC_SUPABASE_URL?.trim())
+  ) {
+    kv = new SupabaseKV()
+  } else {
+    kv = new MemoryKV()
+  }
   return kv
 }
 

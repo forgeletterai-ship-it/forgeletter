@@ -14,10 +14,15 @@ export async function GET(req: NextRequest) {
   if (!authorized(req)) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 })
   }
-  const { data, error } = await supabaseAdmin.rpc("purge_expired_swap_shares")
+  const { data: shares, error } = await supabaseAdmin.rpc("purge_expired_swap_shares")
   if (error) {
     swapLogError("cron.cleanup", { message: error.message })
     return NextResponse.json({ error: "purge failed" }, { status: 500 })
   }
-  return NextResponse.json({ deleted: data ?? 0 })
+  // Expired KV counters (Supabase KV backend) go with the same sweep.
+  const { data: kvRows, error: kvError } = await supabaseAdmin.rpc(
+    "purge_expired_swap_kv"
+  )
+  if (kvError) swapLogError("cron.cleanup.kv", { message: kvError.message })
+  return NextResponse.json({ shares: shares ?? 0, kv: kvRows ?? 0 })
 }
