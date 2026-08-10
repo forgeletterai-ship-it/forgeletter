@@ -1,4 +1,4 @@
-import type { Profile } from "@/lib/swap/types"
+import type { Profile, SentenceClass } from "@/lib/swap/types"
 
 /**
  * Every user-facing string the diagnostic renders (Rule 5: the model
@@ -79,6 +79,26 @@ export const REPAIRS: Record<string, RepairTemplate> = {
     goldQuote: "11 experiments over two quarters lifted trial starts from 6.1% to 8.4%",
     ask: "Which employer sentence would you trade for your strongest number?",
   },
+}
+
+/** Hover/tap reason per sentence class (Rule 5: every explanation a
+ *  user reads is template language, never model output). */
+export const CLASS_REASON: Record<SentenceClass, string> = {
+  structural: "Structural — greeting or sign-off; excluded from every score.",
+  "distinctive-them":
+    "Could only have been written to this employer — it survives the swap test.",
+  "boilerplate-them":
+    "About the employer, but it would survive unchanged at any competitor.",
+  "checkable-you":
+    "A claim about you an interviewer could probe and catch a wrong answer on.",
+  "asserted-you": "A claim about you with no number, baseline, or named result.",
+}
+
+/** Class reason + the failure headline when the sentence commits one. */
+export function sentenceReason(cls: SentenceClass, failure: string | null): string {
+  const base = CLASS_REASON[cls]
+  if (failure && REPAIRS[failure]) return `${base} ${REPAIRS[failure].headline}.`
+  return base
 }
 
 export interface ProfileCopy {

@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from "react"
 import { track } from "@/lib/swap/analytics"
 import { DEMO_COPY, DEMO_LETTERS, type DemoLetter } from "@/lib/swap/demo-data"
+import { sentenceReason } from "@/lib/swap/templates"
+import type { SentenceClass } from "@/lib/swap/types"
 
 /**
  * Homepage demo (§1.3 / Phase 6): auto-plays the two verified
@@ -13,7 +15,7 @@ import { DEMO_COPY, DEMO_LETTERS, type DemoLetter } from "@/lib/swap/demo-data"
 
 type Phase = "idle" | "marking" | "redacting" | "scored"
 
-function classFor(s: DemoLetter["sentences"][number]): string {
+function classFor(s: DemoLetter["sentences"][number]): SentenceClass {
   if (s.structural) return "structural"
   if (s.themPhrases && (s.technique === "T05" || s.technique === "T07")) return "distinctive-them"
   if (s.aboutThem) return "boilerplate-them"
@@ -30,6 +32,7 @@ function scoresFor(letter: DemoLetter): { anchor: number; proof: number; quadran
 export default function HomepageDemo() {
   const [variant, setVariant] = useState<DemoLetter>(DEMO_LETTERS[0])
   const [phase, setPhase] = useState<Phase>("idle")
+  const [openTip, setOpenTip] = useState<number | null>(null)
   const rootRef = useRef<HTMLDivElement | null>(null)
   const timers = useRef<ReturnType<typeof setTimeout>[]>([])
   const played = useRef(false)
@@ -37,6 +40,7 @@ export default function HomepageDemo() {
   function play(letter: DemoLetter) {
     timers.current.forEach(clearTimeout)
     timers.current = []
+    setOpenTip(null)
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches
     if (reduced) {
       setPhase("scored")
@@ -93,24 +97,47 @@ export default function HomepageDemo() {
         ))}
       </div>
 
-      <p className="swap-demo-letter swap-anim">
+      <p className="swap-demo-letter swap-marked swap-anim">
         {variant.sentences.map((s, i) => {
           const cls = classFor(s)
           const marked = phase !== "idle"
           const removed = phase !== "idle" && phase !== "marking" && cls === "distinctive-them"
+          const className = removed
+            ? "swap-s swap-s--removed"
+            : marked
+              ? `swap-s swap-s--${cls}`
+              : "swap-s"
+          const style =
+            marked && !removed ? { transitionDelay: `${i * 180}ms` } : undefined
+          // Once marked, every sentence explains itself on hover/tap/
+          // focus — same template reasons as the real results screen.
+          if (!marked) {
+            return (
+              <span key={i} className={className}>
+                {s.text}{" "}
+              </span>
+            )
+          }
           return (
-            <span
-              key={i}
-              className={
-                removed
-                  ? "swap-s swap-s--removed"
-                  : marked
-                    ? `swap-s swap-s--${cls}`
-                    : "swap-s"
-              }
-              style={marked && !removed ? { transitionDelay: `${i * 180}ms` } : undefined}
-            >
-              {s.text}{" "}
+            <span key={i} className="swap-tip">
+              <button
+                type="button"
+                className={className}
+                style={style}
+                aria-describedby={openTip === i ? `swap-demo-tip-${i}` : undefined}
+                onMouseEnter={() => setOpenTip(i)}
+                onMouseLeave={() => setOpenTip((v) => (v === i ? null : v))}
+                onFocus={() => setOpenTip(i)}
+                onBlur={() => setOpenTip((v) => (v === i ? null : v))}
+                onClick={() => setOpenTip((v) => (v === i ? null : i))}
+              >
+                {s.text}
+              </button>{" "}
+              {openTip === i ? (
+                <span role="tooltip" id={`swap-demo-tip-${i}`}>
+                  {sentenceReason(cls, s.failure ?? null)}
+                </span>
+              ) : null}
             </span>
           )
         })}

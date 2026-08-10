@@ -1,8 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { REPAIRS } from "@/lib/swap/templates"
-import type { ClassifiedSentence, SentenceClass } from "@/lib/swap/types"
+import { sentenceReason } from "@/lib/swap/templates"
+import type { ClassifiedSentence } from "@/lib/swap/types"
 
 /**
  * Result beat 4 — the marked letter. Every sentence carries its
@@ -11,23 +11,8 @@ import type { ClassifiedSentence, SentenceClass } from "@/lib/swap/types"
  * all reasoning language comes from templates, never the model).
  */
 
-const CLASS_REASON: Record<SentenceClass, string> = {
-  structural: "Structural — greeting or sign-off; excluded from every score.",
-  "distinctive-them":
-    "Could only have been written to this employer — it survives the swap test.",
-  "boilerplate-them":
-    "About the employer, but it would survive unchanged at any competitor.",
-  "checkable-you":
-    "A claim about you an interviewer could probe and catch a wrong answer on.",
-  "asserted-you": "A claim about you with no number, baseline, or named result.",
-}
-
 function reasonFor(s: ClassifiedSentence): string {
-  const base = CLASS_REASON[s.cls]
-  if (s.failure && REPAIRS[s.failure]) {
-    return `${base} ${REPAIRS[s.failure].headline}.`
-  }
-  return base
+  return sentenceReason(s.cls, s.failure)
 }
 
 export default function MarkedLetter({ sentences }: { sentences: ClassifiedSentence[] }) {
