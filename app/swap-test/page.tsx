@@ -36,7 +36,9 @@ export async function generateMetadata(props: {
 }): Promise<Metadata> {
   const { share } = await props.searchParams
   const base: Metadata = {
-    title: "Is your cover letter generic? Free swap test — ForgeLetter",
+    // The layout's title template appends "— ForgeLetter"; the
+    // rendered result is the doc's exact title.
+    title: "Is your cover letter generic? Free swap test",
     description:
       "Paste a cover letter. We redact everything specific to the employer and show you what's left — plus how many of your claims a reader could actually check.",
     alternates: { canonical: "/swap-test" },
