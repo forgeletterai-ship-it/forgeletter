@@ -103,6 +103,20 @@ function clientIp(req: NextRequest): string {
   return (fwd ? fwd.split(",")[0] : "").trim() || "0.0.0.0"
 }
 
+/** KV-backed gates fail CLOSED in production (the shared counters
+ *  are the cost defense — a scan must not proceed unmetered) but
+ *  fail OPEN in development, so the stack previews on localhost
+ *  before docs/swap-test-schema.sql has been applied. */
+async function devSafe<T>(fallback: T, fn: () => Promise<T>): Promise<T> {
+  try {
+    return await fn()
+  } catch (error) {
+    if (process.env.NODE_ENV === "production") throw error
+    swapLogError("kv.dev_fallback", { message: (error as Error).message })
+    return fallback
+  }
+}
+
 const CLASS_CODES: Record<ClassifiedSentence["cls"], string> = {
   structural: "ST",
   "distinctive-them": "TD",
@@ -201,7 +215,11 @@ export async function POST(req: NextRequest) {
   const kv = getSwapKV()
 
   // Fast sliding window per fingerprint before anything costly.
-  if (!(await slidingWindowAllow(kv, `swap:win:${fingerprint.slice(0, 24)}`, 6, 60))) {
+  if (
+    !(await devSafe(true, () =>
+      slidingWindowAllow(kv, `swap:win:${fingerprint.slice(0, 24)}`, 6, 60)
+    ))
+  ) {
     swapLog("scan_blocked", { reason: "rate" })
     return NextResponse.json({ error: "Slow down a moment.", reason: "rate" }, { status: 429 })
   }
@@ -218,14 +236,20 @@ export async function POST(req: NextRequest) {
     accountScansUsed = count ?? 0
   }
 
-  const ladder = await checkLadder({
-    kv,
-    fingerprint,
-    ipHash,
-    userId: user?.id ?? null,
-    paying,
-    accountScansUsed,
-  })
+  const ladder = await devSafe(
+    { allowed: true, ordinal: 1, tier: "anon" } as Awaited<
+      ReturnType<typeof checkLadder>
+    >,
+    () =>
+      checkLadder({
+        kv,
+        fingerprint,
+        ipHash,
+        userId: user?.id ?? null,
+        paying,
+        accountScansUsed,
+      })
+  )
 
   if (!ladder.allowed) {
     swapLog("scan_blocked", { reason: ladder.reason })
@@ -266,7 +290,7 @@ export async function POST(req: NextRequest) {
 
   // Circuit breaker: over the global daily budget the anonymous tier
   // requires hard Turnstile (Part V) — and the alert fires.
-  const globalCount = await circuitBreakerCount(kv)
+  const globalCount = await devSafe(0, () => circuitBreakerCount(kv))
   if (globalCount > dailyBudget()) {
     swapLogError("circuit_breaker", { count: globalCount, budget: dailyBudget() })
     if (ladder.tier === "anon") {
@@ -288,7 +312,7 @@ export async function POST(req: NextRequest) {
   // the LADDER is what the duplicate must not consume.
   const hash = simhash64(letter)
   const dupKey = `swap:dup:${user?.id ?? fingerprint.slice(0, 24)}`
-  const prevHex = await kv.get(dupKey)
+  const prevHex = await devSafe(null, () => kv.get(dupKey))
   const duplicate = prevHex ? isDuplicate(hash, simhashFromHex(prevHex)) : false
 
   // Segment + classify (the one LLM call).
@@ -440,8 +464,12 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    await commitScan({ kv, fingerprint, ipHash, tier: ladder.tier })
-    await kv.set(dupKey, simhashHex(hash), DUPLICATE_WINDOW_SECONDS)
+    await devSafe(undefined, () =>
+      commitScan({ kv, fingerprint, ipHash, tier: ladder.tier })
+    )
+    await devSafe(undefined, () =>
+      kv.set(dupKey, simhashHex(hash), DUPLICATE_WINDOW_SECONDS)
+    )
   }
 
   const result: ScanResult = {

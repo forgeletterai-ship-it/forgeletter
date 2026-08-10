@@ -104,19 +104,27 @@ export interface AgentResult {
 }
 
 async function callOnce(numbered: string): Promise<{ text: string; usage: AgentResult }> {
-  const response = await getClient().messages.create({
-    model: SCAN_MODEL,
-    max_tokens: MAX_OUTPUT_TOKENS,
-    temperature: 0,
-    system: [
-      {
-        type: "text",
-        text: buildAgentPrefix(),
-        cache_control: { type: "ephemeral", ttl: "1h" },
-      },
-    ],
-    messages: [{ role: "user", content: numbered }],
-  })
+  const response = await getClient().messages.create(
+    {
+      model: SCAN_MODEL,
+      max_tokens: MAX_OUTPUT_TOKENS,
+      temperature: 0,
+      system: [
+        {
+          type: "text",
+          text: buildAgentPrefix(),
+          cache_control: { type: "ephemeral", ttl: "1h" },
+        },
+      ],
+      messages: [{ role: "user", content: numbered }],
+    },
+    {
+      // The 1-hour cache TTL is beta-gated; without this header the
+      // API silently ignores cache_control entirely (verified: zero
+      // cache_creation tokens on a 3.5k-token prefix).
+      headers: { "anthropic-beta": "extended-cache-ttl-2025-04-11" },
+    }
+  )
   const block = response.content[0]
   const text = block && block.type === "text" ? block.text : ""
   const u = response.usage as unknown as {

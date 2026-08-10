@@ -105,15 +105,36 @@ LABELS:
 {"s":[{"i":0,"tm":true,"tp":["an industry leader","its innovative culture"],"f":"F03"},{"i":1,"yu":true,"f":"F06"}]}`
 
 export function buildAgentPrefix(): string {
+  // Exemplars ride along both for classification quality and to keep
+  // the prefix above Haiku's minimum cacheable length (~2,048 tokens)
+  // — below it the 1h cache_control is silently ignored and every
+  // scan pays full input price.
   const techniques = cat.techniques
-    .map((t) => `${t.id} ${t.name} — ${t.definition} TRIGGER: ${t.trigger}`)
+    .map(
+      (t) =>
+        `${t.id} ${t.name} — ${t.definition} TRIGGER: ${t.trigger} EXEMPLAR: "${t.exemplar}"`
+    )
     .join("\n")
   const failures = cat.failures
-    .map((f) => `${f.id} ${f.name} — ${f.definition} TRIGGER: ${f.trigger}`)
+    .map(
+      (f) =>
+        `${f.id} ${f.name} — ${f.definition} TRIGGER: ${f.trigger} EXEMPLAR: "${f.exemplar}"`
+    )
     .join("\n")
 
   return [
     "You are a sentence-level classifier for cover letters. You read a numbered list of sentences and label what each one is doing, using only the catalogues below. You never rewrite, never advise, never address the applicant.",
+    "",
+    "EDGE CASES — apply these consistently:",
+    "- structural: salutations (\"Dear Hiring Manager,\"), sign-offs (\"Sincerely\", \"Best regards\"), pure thanks-and-goodbye sentences (\"Thank you for your consideration, and I look forward to hearing from you.\") and bare connectives. A closing that still makes a claim about applicant or employer is NOT structural.",
+    "- aboutThem: any claim about the employer, their product, their market, their posting, or the role itself — including praise, references to their mission, and phrases like \"your team\" or \"this position\". Naming the company inside an otherwise self-focused sentence does not by itself make it aboutThem; the sentence must assert something about them.",
+    "- aboutYou: any claim about the applicant — experience, traits, achievements, education, intentions. \"I admire your platform\" asserts the applicant's feeling AND the employer's platform: mark both aboutThem and aboutYou.",
+    "- themPhrases: copy the exact noun phrases the them-claim rests on, character for character, from the sentence. Never paraphrase, never merge two phrases into one, never include the applicant's own words. One to four phrases.",
+    "- checkable: TRUE only when an interviewer could probe the claim and catch a lie: a number with a baseline or comparison, a named artefact (a product, a report, a rig, a programme), a dated or countable event. Years of experience alone, degrees alone, and team-size claims are weak but checkable. NOT checkable: self-ratings (\"data-driven\"), feelings (\"passionate\"), unquantified verbs (\"improved onboarding\"), vague comparisons (\"outperformed benchmarks\").",
+    "- technique vs failure: a sentence with a real number that still hides its baseline commits F01 rather than earning T02. When a sentence half-executes a technique and half-commits a failure, the failure wins (rule below).",
+    "- Openers: an opening sentence whose only content is excitement or intent to apply is F07 even when it names the company and role.",
+    "- Closers: a final sentence that proposes nothing concrete is F06 unless it is a pure sign-off (then structural).",
+    "- Never label the same sentence with two techniques. Never invent codes. When no catalogue entry fits, emit the booleans and phrases only.",
     "",
     "TECHNIQUE CATALOGUE (the moves that work):",
     techniques,

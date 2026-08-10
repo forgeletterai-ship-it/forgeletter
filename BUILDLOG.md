@@ -290,5 +290,30 @@ is the source text).
 - [ ] Deploy behind flag; human runs 20 varied manual scans; flip
       SWAP_TEST_ENABLED
 
-**Spend so far:** $0 API (all gate runs deferred). Build is
+**Spend so far:** ~$0.05 API (final-check live scans). Build is
 code-complete behind the flag.
+
+## Final pre-preview check (2026-08-10)
+
+- **Live E2E (real Haiku):** both Appendix A letters through the full
+  engine — generic → FILLER / anchor 0 / "Nothing was removed.";
+  targeted → TARGETED / healthy-band anchor / opener redacted.
+  Parser correctly dropped a hallucinated F09 code. Latency 2.4–3.3s.
+- **Route E2E:** validated to the agent boundary via the preview
+  server (the preview sandbox blocks outbound network — scans work
+  from a normal `npm run dev`). KV-backed gates now fail OPEN in
+  development (preview before the SQL is applied) and CLOSED in
+  production.
+- **Prefix enriched:** exemplars per catalogue entry + an edge-case
+  guidance block (~3.5k tokens); 1h-TTL beta header added
+  (`extended-cache-ttl-2025-04-11`).
+- **FLAGGED: prompt caching not engaging on this API key** — even
+  plain 5-minute cache_control reports zero creation/read tokens on
+  a 3.5k-token prefix (probed directly). Code is correct per docs;
+  check the Anthropic workspace/key settings. Until it engages,
+  scans cost ~$0.005 uncached (vs ~$0.003) and the keep-warm cron
+  warms nothing (left registered — it doubles as an hourly health
+  check and starts paying for itself the moment caching works).
+- Rule 1/2 sweep: no raw console logging in the swap stack; the only
+  letter-derived write is the consented anonymised research copy.
+- 92 tests, tsc, production build: green.
