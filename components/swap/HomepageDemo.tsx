@@ -21,7 +21,12 @@ type Phase = "idle" | "marking" | "redacting" | "scored"
 
 function classFor(s: DemoLetter["sentences"][number]): SentenceClass {
   if (s.structural) return "structural"
-  if (s.themPhrases && (s.technique === "T05" || s.technique === "T07")) return "distinctive-them"
+  if (
+    s.themPhrases &&
+    (s.technique === "T05" || s.technique === "T06" || s.technique === "T07")
+  ) {
+    return "distinctive-them"
+  }
   if (s.aboutThem) return "boilerplate-them"
   if (s.checkable) return "checkable-you"
   return "asserted-you"
@@ -30,7 +35,7 @@ function classFor(s: DemoLetter["sentences"][number]): SentenceClass {
 function scoresFor(letter: DemoLetter): { anchor: number; proof: number; passes: boolean; verdict: string } {
   return letter.id === "generic"
     ? { anchor: 0, proof: 25, passes: false, verdict: "Fails — filler" }
-    : { anchor: 24, proof: 100, passes: true, verdict: "Passes — targeted" }
+    : { anchor: 25, proof: 100, passes: true, verdict: "Passes — targeted" }
 }
 
 export default function HomepageDemo() {

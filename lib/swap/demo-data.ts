@@ -72,11 +72,42 @@ export const DEMO_LETTERS: DemoLetter[] = [
         aboutYou: true,
         failure: "F02",
       },
+      {
+        text: "Throughout my career, I have successfully managed multiple projects at once while maintaining a strong attention to detail.",
+        aboutYou: true,
+        failure: "F08",
+      },
+      {
+        text: "I thrive in fast-paced environments and always go the extra mile for my team.",
+        aboutYou: true,
+        failure: "F02",
+      },
+      {
+        text: "I have followed Chorusline's journey for a long time and have always been impressed by your innovative culture.",
+        aboutThem: true,
+        themPhrases: ["Chorusline's journey", "your innovative culture"],
+        failure: "F03",
+      },
+      {
+        text: "At my previous company I was responsible for the customer journey across several digital touchpoints.",
+        aboutYou: true,
+        failure: "F01",
+      },
+      {
+        text: "I also hold a bachelor's degree in business administration from a well-regarded university.",
+        aboutYou: true,
+        checkable: true,
+        failure: "F04",
+      },
+      {
+        text: "Thank you for your consideration, and I look forward to hearing from you soon.",
+        structural: true,
+      },
     ],
     anchorBandLine:
-      "0 of 117 words are specific to this employer. It names Chorusline three times — none survive as employer-specific.",
+      "0 of 190 words are specific to this employer. It names Chorusline four times — none survive as employer-specific.",
     proofBandLine:
-      "1 of 4 claims about you is checkable, and it's only 'six years of experience'.",
+      "2 of 8 claims about you are checkable — a degree and 'six years of experience'.",
   },
   {
     id: "targeted",
@@ -88,6 +119,12 @@ export const DEMO_LETTERS: DemoLetter[] = [
         aboutThem: true,
         themPhrases: ["move to bundle Daily Mix with the family plan"],
         technique: "T05",
+      },
+      {
+        text: "I've also read how the Daily Mix rollout landed in your app-store reviews — the family-plan complaints cluster around discovery, not price.",
+        aboutThem: true,
+        themPhrases: ["the Daily Mix rollout", "your app-store reviews"],
+        technique: "T06",
       },
       {
         text: "At my current app, I owned free-to-paid activation: 11 experiments over two quarters lifted trial starts from 6.1% to 8.4%.",
@@ -108,14 +145,33 @@ export const DEMO_LETTERS: DemoLetter[] = [
         technique: "T02",
       },
       {
+        text: "Before that, I spent 18 months running lifecycle email at a 40-person startup, where I owned the funnel from signup to renewal.",
+        aboutYou: true,
+        checkable: true,
+        technique: "T10",
+      },
+      {
+        text: "I also rebuilt our experiment review so every test ships with a pre-registered success metric — 31 tests last year, 9 wins.",
+        aboutYou: true,
+        checkable: true,
+        technique: "T11",
+      },
+      {
+        text: "My last two quarterly reviews credited the paywall work with €210k in incremental annual recurring revenue.",
+        aboutYou: true,
+        checkable: true,
+        technique: "T01",
+      },
+      {
         text: "I'd bring that same evidence-first pace to your Berlin growth team.",
         aboutThem: true,
         themPhrases: ["your Berlin growth team"],
       },
     ],
     anchorBandLine:
-      "A 21-word passage could only have been written to this employer — 24% of the letter.",
-    proofBandLine: "3 of 3 claims about you carry a number a reader could check.",
+      "Two passages — 41 words — could only have been written to this employer: 25% of the letter.",
+    proofBandLine:
+      "6 of 6 claims about you carry a number or named artefact a reader could check.",
   },
 ]
 

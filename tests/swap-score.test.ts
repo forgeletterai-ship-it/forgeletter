@@ -25,8 +25,10 @@ describe("Appendix A regression — the rubric anchor (do not weaken)", () => {
     expect(scores.anchor).toBe(0)
     expect(scores.proof).toBe(25)
     expect(scores.quadrant).toBe("FILLER")
-    expect(scores.youClaims).toBe(4)
-    expect(scores.checkableClaims).toBe(1)
+    // Letters extended at owner's request (2026-08-10) — the verified
+    // ratios hold: 2 of 8 claims checkable keeps proof at exactly 25.
+    expect(scores.youClaims).toBe(8)
+    expect(scores.checkableClaims).toBe(2)
     expect(redactionSummary(applyRedaction(sentences))).toBe(NOTHING_REMOVED)
   })
 
@@ -37,7 +39,7 @@ describe("Appendix A regression — the rubric anchor (do not weaken)", () => {
     expect(scores.proof).toBe(100)
     expect(scores.quadrant).toBe("TARGETED")
     const redacted = applyRedaction(sentences)
-    expect(redacted.filter((s) => s.removed)).toHaveLength(1)
+    expect(redacted.filter((s) => s.removed)).toHaveLength(2)
     expect(redacted.find((s) => s.removed)!.text).toContain("Daily Mix")
     expect(redactionSummary(redacted)).not.toBe(NOTHING_REMOVED)
   })
@@ -61,9 +63,10 @@ describe("fixes — deterministic priority, max 3", () => {
     expect(fixes.length).toBeLessThanOrEqual(3)
     expect(fixes[0].key).toBe("F03")
     expect(fixes[0].quotedSentence).toContain("excited to apply")
-    // Asserted you-claims fix carries the count (3 asserted claims).
+    // Asserted you-claims fix carries the count (6 asserted claims
+    // after the owner-requested extension).
     const f01 = fixes.find((f) => f.key === "F01")
-    expect(f01?.count).toBe(3)
+    expect(f01?.count).toBe(6)
   })
 
   it("a targeted letter earns no anchor-zero fix", () => {

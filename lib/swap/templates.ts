@@ -167,7 +167,7 @@ export const GOLD_INVITE =
 /** The verified single-example fallback until benchmark.json is
  *  measured (Rule 7 / Part I — never invent an average). */
 export const BENCHMARK_FALLBACK_LINE =
-  "The ForgeLetter example on this page scores Anchor 24 / Proof 100."
+  "The ForgeLetter example on this page scores Anchor 25 / Proof 100."
 
 export function benchmarkLine(
   benchmark: { medianAnchor: number; medianProof: number; n: number } | null

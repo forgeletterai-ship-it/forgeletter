@@ -65,23 +65,33 @@ function companyTokens(ctx: DistinctivenessContext): Set<string> {
 }
 
 /**
- * Infer the employer from the letter itself: a capitalized token that
- * is not a generic proper noun and recurs (≥2 mentions) is almost
- * always the company being addressed — applicants repeat the name
- * ("It names Chorusline three times"). Keeps stoplist mode honest
- * when the optional company field is left empty.
+ * Infer the employer from the letter itself: the company being
+ * addressed is the name the letter marks as an OWNER — "Chorusline's
+ * move", "Chorusline's commitment". Possessive use is the signal;
+ * repetition alone is not enough, because product names repeat too
+ * ("Daily Mix … Daily Mix") and a product mention is exactly the
+ * kind of specificity that must stay distinctive. Keeps stoplist
+ * mode honest when the optional company field is left empty.
  */
 export function inferCompanyTokens(letterText: string, stoplist: Stoplist): string[] {
   const generic = new Set(stoplist.genericProperNouns.map(normalize))
-  const counts = new Map<string, number>()
-  for (const raw of letterText.split(/\s+/)) {
-    const stripped = raw.replace(/[^A-Za-z0-9''-]/g, "")
-    if (!/^[A-Z]/.test(stripped)) continue
+  const possessive = new Set<string>()
+  const words = letterText.split(/\s+/)
+  for (let i = 0; i < words.length; i++) {
+    const stripped = words[i].replace(/[^A-Za-z0-9''-]/g, "")
+    if (!/^[A-Z]/.test(stripped) || !/['']s$/.test(stripped)) continue
     const norm = normalize(stripped)
     if (!norm || generic.has(norm)) continue
-    counts.set(norm, (counts.get(norm) ?? 0) + 1)
+    possessive.add(norm)
+    // Multi-word names ("Nordvale Group's") — the preceding
+    // capitalized token belongs to the same name.
+    const prev = (words[i - 1] ?? "").replace(/[^A-Za-z0-9''-]/g, "")
+    if (/^[A-Z]/.test(prev)) {
+      const p = normalize(prev)
+      if (p && !generic.has(p)) possessive.add(p)
+    }
   }
-  return [...counts.entries()].filter(([, n]) => n >= 2).map(([t]) => t)
+  return [...possessive]
 }
 
 /** Capitalised tokens that are not the employer and not generic. */

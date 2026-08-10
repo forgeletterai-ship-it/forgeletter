@@ -163,7 +163,7 @@ export default async function SwapTestPage() {
                 <tr>
                   <td>Anchor</td>
                   <td className="swap-num">0%</td>
-                  <td className="swap-num">24%</td>
+                  <td className="swap-num">25%</td>
                   <td>?</td>
                 </tr>
                 <tr>

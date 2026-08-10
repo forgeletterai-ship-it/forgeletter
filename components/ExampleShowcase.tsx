@@ -55,7 +55,7 @@ const examples: RoleExample[] = [
       {
         source: "Human",
         sub: "Blank-page attempt",
-        text: "Dear Hiring Manager, I am writing to apply for the Product Manager position at your company. I have always been passionate about music and technology, so this role feels like a perfect fit for me. I am hardworking, motivated, and a fast learner, and my colleagues would describe me as a real team player. In my current job I am responsible for many different projects and tasks. I believe my skills and enthusiasm would make me a valuable addition to your team. I would welcome the chance to discuss further.",
+        text: "Dear Hiring Manager, I am writing to apply for the Product Manager position at your company. I have always been passionate about music and technology, so this role feels like a perfect fit for me. I am hardworking, motivated, and a fast learner, and my colleagues would describe me as a real team player. In my current job I am responsible for many different projects and tasks. I also help organise team events and always try to keep a positive atmosphere in the office. Over the years I have gained experience with many different tools and ways of working, which I am sure will be useful in this role. I believe my skills and enthusiasm would make me a valuable addition to your team. I would welcome the chance to discuss further.",
         annotations: [
           {
             phrase: "passionate about music and technology",
@@ -83,7 +83,7 @@ const examples: RoleExample[] = [
       {
         source: "ChatGPT",
         sub: "Generic prompt, redone twice",
-        text: "Dear Hiring Manager, I'm excited to apply for the Senior Product Manager role. As a product manager with over six years of experience in consumer subscription apps, I've led cross-functional teams through discovery, experimentation, and launch. I admire how your platform has made streaming more personal, and I'd love to bring my growth mindset to your conversion challenges. In my current role I improved onboarding, strengthened retention, and partnered closely with design and engineering. I'm confident my analytical approach and collaborative style would make an immediate impact in Berlin.",
+        text: "Dear Hiring Manager, I'm excited to apply for the Senior Product Manager role. As a product manager with over six years of experience in consumer subscription apps, I've led cross-functional teams through discovery, experimentation, and launch. I admire how your platform has made streaming more personal, and I'd love to bring my growth mindset to your conversion challenges. In my current role I improved onboarding, strengthened retention, and partnered closely with design and engineering. Throughout my career, I have successfully managed multiple projects at once while maintaining strong attention to detail. I thrive in fast-paced environments and always go the extra mile for my team. I'm confident my analytical approach and collaborative style would make an immediate impact in Berlin.",
         annotations: [
           {
             phrase: "over six years of experience",
@@ -111,7 +111,7 @@ const examples: RoleExample[] = [
       {
         source: "ForgeLetter AI",
         sub: "Built from a real profile",
-        text: "Dear Hiring Manager, Chorusline's move to bundle Daily Mix with the family plan is exactly the conversion problem I've spent two years on. At my current app, I owned free-to-paid activation: 11 experiments over two quarters lifted trial starts from 6.1% to 8.4%. The first three tests failed outright — the real win came from re-ordering the paywall, not redesigning it. I also cut time-to-first-playlist from 4 days to 90 minutes, which doubled week-two retention on that cohort. I'd bring that same evidence-first pace to your Berlin growth team.",
+        text: "Dear Hiring Manager, Chorusline's move to bundle Daily Mix with the family plan is exactly the conversion problem I've spent two years on. I've also read how the Daily Mix rollout landed in your app-store reviews — the family-plan complaints cluster around discovery, not price. At my current app, I owned free-to-paid activation: 11 experiments over two quarters lifted trial starts from 6.1% to 8.4%. The first three tests failed outright — the real win came from re-ordering the paywall, not redesigning it. I also cut time-to-first-playlist from 4 days to 90 minutes, which doubled week-two retention on that cohort. Before that, I spent 18 months running lifecycle email at a 40-person startup, where I owned the funnel from signup to renewal. I also rebuilt our experiment review so every test ships with a pre-registered success metric — 31 tests last year, 9 wins. I'd bring that same evidence-first pace to your Berlin growth team.",
         annotations: [
           {
             phrase: "bundle Daily Mix with the family plan",
@@ -130,7 +130,7 @@ const examples: RoleExample[] = [
           },
         ],
         metrics: {
-          claims: "4 — all checkable",
+          claims: "7 — all checkable",
           company: "Named product decision",
           swap: "Passes — only works here",
           swapVerdict: "passes",
@@ -147,7 +147,7 @@ const examples: RoleExample[] = [
       {
         source: "Human",
         sub: "Blank-page attempt",
-        text: "Dear Hiring Manager, I would like to apply for the Marketing Manager position. Travel has always been a big passion of mine, and I love creating campaigns that inspire people. I am a creative and organised person with strong communication skills, and I work very well in teams. In my current position I manage social media, newsletters, and many other marketing activities. I am sure that my energy and fresh ideas would be a great addition to your marketing department. Thank you for considering my application, and I hope to hear from you soon.",
+        text: "Dear Hiring Manager, I would like to apply for the Marketing Manager position. Travel has always been a big passion of mine, and I love creating campaigns that inspire people. I am a creative and organised person with strong communication skills, and I work very well in teams. In my current position I manage social media, newsletters, and many other marketing activities. I have also helped with several events and campaigns that were very well received by everyone involved. I always try to stay up to date with the latest marketing trends and I am eager to keep learning. I am sure that my energy and fresh ideas would be a great addition to your marketing department. Thank you for considering my application, and I hope to hear from you soon.",
         annotations: [
           {
             phrase: "Travel has always been a big passion of mine",
@@ -175,7 +175,7 @@ const examples: RoleExample[] = [
       {
         source: "ChatGPT",
         sub: "Generic prompt, redone twice",
-        text: "Dear Hiring Manager, I'm writing to apply for the Marketing Manager role. With eight years in digital marketing, including five in lifecycle and CRM, I've built segmented campaigns across email, push, and in-app channels. Your platform's focus on effortless trip planning resonates with me, and I believe loyalty is won in the moments after the first booking. In my current role I redesigned our email program, grew engagement significantly, and launched win-back campaigns that outperformed benchmarks. I'd welcome the chance to bring this experience to Amsterdam and help deepen customer relationships.",
+        text: "Dear Hiring Manager, I'm writing to apply for the Marketing Manager role. With eight years in digital marketing, including five in lifecycle and CRM, I've built segmented campaigns across email, push, and in-app channels. Your platform's focus on effortless trip planning resonates with me, and I believe loyalty is won in the moments after the first booking. In my current role I redesigned our email program, grew engagement significantly, and launched win-back campaigns that outperformed benchmarks. I'm also experienced in A/B testing subject lines and optimising send times for different audiences. Colleagues describe me as data-driven and collaborative, and I enjoy mentoring junior team members. I'd welcome the chance to bring this experience to Amsterdam and help deepen customer relationships.",
         annotations: [
           {
             phrase: "eight years in digital marketing",
@@ -203,7 +203,7 @@ const examples: RoleExample[] = [
       {
         source: "ForgeLetter AI",
         sub: "Built from a real profile",
-        text: "Dear Hiring Manager, Fjordway's brief — raise repeat bookings without raising discount spend — is the exact problem I solved last year. I rebuilt our post-trip lifecycle across 9 markets: a three-email arc tied to the traveller's next school holiday, not our sales calendar. Repeat bookings rose 19% in six months while discount cost per booking fell 8%. My first attempt, a generic points push, flatlined for two months before I scrapped it. I also cut unsubscribe rates from 1.9% to 0.7% by capping frequency. I'd apply the same discipline to your 14 markets.",
+        text: "Dear Hiring Manager, Fjordway's brief — raise repeat bookings without raising discount spend — is the exact problem I solved last year. I rebuilt our post-trip lifecycle across 9 markets: a three-email arc tied to the traveller's next school holiday, not our sales calendar. Repeat bookings rose 19% in six months while discount cost per booking fell 8%. My first attempt, a generic points push, flatlined for two months before I scrapped it. I also cut unsubscribe rates from 1.9% to 0.7% by capping frequency. The school-holiday arc came from interviewing 14 recent repeat bookers — nearly all of them planned the next trip within ten days of getting home. I presented the programme to growth leadership monthly in a format that stuck: one metric, one lesson, one ask. I'd apply the same discipline to your 14 markets.",
         annotations: [
           {
             phrase: "raise repeat bookings without raising discount spend",
@@ -222,7 +222,7 @@ const examples: RoleExample[] = [
           },
         ],
         metrics: {
-          claims: "5 — all checkable",
+          claims: "6 — all checkable",
           company: "Quotes the actual brief",
           swap: "Passes — only works here",
           swapVerdict: "passes",
@@ -239,7 +239,7 @@ const examples: RoleExample[] = [
       {
         source: "Human",
         sub: "Blank-page attempt",
-        text: "Dear Hiring Manager, I am applying for the Software Engineer position at your company. I have always loved technology and solving difficult problems, which is why I studied computer science. I know several programming languages including Python, C++, and JavaScript, and I pick up new tools quickly. I am a hard worker, a good communicator, and I enjoy being part of a team. I am very interested in what your company does and would love the opportunity to grow as an engineer there. Please find my CV attached, and thank you for your time.",
+        text: "Dear Hiring Manager, I am applying for the Software Engineer position at your company. I have always loved technology and solving difficult problems, which is why I studied computer science. I know several programming languages including Python, C++, and JavaScript, and I pick up new tools quickly. I am a hard worker, a good communicator, and I enjoy being part of a team. I am very interested in what your company does and would love the opportunity to grow as an engineer there. During my studies I completed several group projects where I was often the one who kept everything organised and on schedule. I am confident that I could quickly become a productive member of your development team. Please find my CV attached, and thank you for your time.",
         annotations: [
           {
             phrase: "always loved technology and solving difficult problems",
@@ -267,7 +267,7 @@ const examples: RoleExample[] = [
       {
         source: "ChatGPT",
         sub: "Generic prompt, redone twice",
-        text: "Dear Hiring Manager, I'm applying for the Software Engineer position on your machine-control team. I have five years of experience writing C++ and Python for industrial applications, with a focus on reliability and clean architecture. Precision engineering demands software that behaves predictably under real-world conditions, and that standard has shaped how I test and document my work. In my current role I develop control software, collaborate with hardware teams, and contribute to code reviews. I would be glad to bring my rigour and curiosity to Eindhoven and to grow with your engineering organisation.",
+        text: "Dear Hiring Manager, I'm applying for the Software Engineer position on your machine-control team. I have five years of experience writing C++ and Python for industrial applications, with a focus on reliability and clean architecture. Precision engineering demands software that behaves predictably under real-world conditions, and that standard has shaped how I test and document my work. In my current role I develop control software, collaborate with hardware teams, and contribute to code reviews. I also have experience with unit testing, continuous integration, and modern development workflows. I stay current with best practices and enjoy learning from more experienced engineers. I would be glad to bring my rigour and curiosity to Eindhoven and to grow with your engineering organisation.",
         annotations: [
           {
             phrase: "five years of experience writing C++ and Python",
@@ -295,7 +295,7 @@ const examples: RoleExample[] = [
       {
         source: "ForgeLetter AI",
         sub: "Built from a real profile",
-        text: "Dear Hiring Manager, Aldervelt's move to in-house motion control for its interferometer line is the kind of work I want to own. On my current team I maintain a C++ stack driving 12 measurement stations: I cut positioning jitter from 40 to 9 microns by rewriting the feedback loop, then spent six weeks chasing a thermal drift bug I had initially dismissed — the fix halved our calibration rejects. My Python tooling now flags faults before operators see them, trimming unplanned stops 23%. I'd bring that lab-floor patience to Eindhoven.",
+        text: "Dear Hiring Manager, Aldervelt's move to in-house motion control for its interferometer line is the kind of work I want to own. On my current team I maintain a C++ stack driving 12 measurement stations: I cut positioning jitter from 40 to 9 microns by rewriting the feedback loop, then spent six weeks chasing a thermal drift bug I had initially dismissed — the fix halved our calibration rejects. My Python tooling now flags faults before operators see them, trimming unplanned stops 23%. The jitter work forced a proper regression rig: 4,000 automated motion profiles that now run nightly and have caught three faults before release. I've also paired weekly with our optics engineers for two years, which taught me to treat their calibration logs as the source of truth. I'd bring that lab-floor patience to Eindhoven.",
         annotations: [
           {
             phrase: "in-house motion control for its interferometer line",
@@ -314,7 +314,7 @@ const examples: RoleExample[] = [
           },
         ],
         metrics: {
-          claims: "4 — all checkable",
+          claims: "6 — all checkable",
           company: "Named product line",
           swap: "Passes — only works here",
           swapVerdict: "passes",

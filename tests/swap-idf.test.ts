@@ -62,15 +62,26 @@ describe("stoplist mode (bootstrap)", () => {
   })
 })
 
-describe("company inference", () => {
-  it("a repeated non-generic capitalized token is the employer", () => {
+describe("company inference (possessive-anchored)", () => {
+  it("a possessively-used name is the employer", () => {
     const text =
-      "I admire Chorusline deeply. Chorusline ships fast. I want to join Chorusline in Berlin."
+      "Chorusline's roadmap impressed me. I want to join Chorusline in Berlin."
     expect(inferCompanyTokens(text, stoplist)).toContain("chorusline")
     expect(inferCompanyTokens(text, stoplist)).not.toContain("berlin")
   })
 
-  it("a single mention is not inferred", () => {
+  it("a repeated PRODUCT name is never swallowed as the employer", () => {
+    const text = "I use Daily Mix every morning. Daily Mix changed how I listen."
+    expect(inferCompanyTokens(text, stoplist)).toEqual([])
+  })
+
+  it("multi-word possessives pull in the preceding name token", () => {
+    expect(
+      inferCompanyTokens("Nordvale Group's hiring push is impressive.", stoplist)
+    ).toEqual(expect.arrayContaining(["group", "nordvale"]))
+  })
+
+  it("a bare mention with no possessive is not inferred", () => {
     expect(inferCompanyTokens("I admire Chorusline a lot.", stoplist)).toEqual([])
   })
 })
