@@ -178,7 +178,11 @@
 
 /* Marked letter + tooltips */
 .swap-marked { line-height: 2.05; }
-.swap-marked button {
+/* Zero-specificity button reset (:where) — it must strip the UA
+   button chrome WITHOUT outranking the .swap-s--* colour classes,
+   which sit at (0,1,0). A plain `.swap-marked button` reset was
+   (0,1,1) and silently killed every sentence tint. */
+:where(.swap-marked button) {
   all: unset;
   cursor: help;
 }
