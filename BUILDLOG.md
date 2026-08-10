@@ -185,4 +185,39 @@ reconciles "returns the cached result without burning a scan" with
 
 ## Phase 5 — Gates: eval, injection, reliability, calibration, benchmark
 
+**Built (harnesses implemented; execution pending — see below):**
+- `data/set-i.json` — 10 authored injection letters (override, fake
+  JSON, prompt-leak, system impersonation, encoded, hidden-comment…).
+- `scripts/swap-eval-lib.ts` — shared: route-identical scan pipeline
+  (minus HTTP/persistence), median/percentile/MAD/Cohen's κ,
+  bounded-concurrency mapper.
+- `scripts/gen-set-b.ts` — 50 AI-generic letters (fictional ads ×
+  numberless 3-line profiles → Sonnet, Batch API).
+- `scripts/gen-set-f.ts` — 50 single-failure degradations of gold,
+  round-robin F01–F08, planted code = ground truth (Batch API).
+- `scripts/eval-agent.ts` — all doc gates: F-recall ≥0.85, A
+  false-failure ≤0.10/letter, technique precision ≥0.70
+  (lexical-proxy until extraction runs — noted in the report),
+  Set-I 10/10 schema-valid + zero leakage, Set-K control when the
+  human-gated export lands. Writes reports/eval-results.json,
+  exits non-zero on failure.
+- `scripts/reliability.ts` — A+B+F twice; MADs, quadrant agreement,
+  per-binary κ → config/reliability.json (FAQ renders the number).
+- `scripts/calibrate.ts` — echoHigh=P75(B echo), affectHigh=P75(B
+  affect), cvLow=P25(A cv), IQR-overlap disables a signal →
+  config/swap-thresholds.json {provisional-1}. `recalibrate.ts`
+  re-derives at ≥500 real FILLER scans and bumps the version.
+- `scripts/benchmark.ts` — median Anchor/Proof over the ~100-letter
+  export → config/benchmark.json; Wall falls back to the verified
+  single example until then.
+
+**NOT YET RUN — needs sign-off:** executing the gates costs ~$15 of
+API (gen sets via Batch, ~460 scans across eval+reliability+
+calibration) and two STOP-AND-ASK exports (Set K: 10 pipeline
+letters, one with a planted weakness; benchmark: ~100 generated
+letters). Rule 11 holds: no public link ships until these pass —
+everything stays behind SWAP_TEST_ENABLED.
+
+## Phase 6 — UI
+
 _(pending)_
