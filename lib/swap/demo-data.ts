@@ -20,7 +20,7 @@ export interface DemoSentenceSpec {
 }
 
 export interface DemoLetter {
-  id: "chatgpt" | "forgeletter"
+  id: "generic" | "targeted"
   title: string
   sentences: DemoSentenceSpec[]
   anchorBandLine: string
@@ -29,7 +29,7 @@ export interface DemoLetter {
 
 export const DEMO_LETTERS: DemoLetter[] = [
   {
-    id: "chatgpt",
+    id: "generic",
     title: "ChatGPT · generic prompt",
     sentences: [
       { text: "Dear Hiring Manager,", structural: true },
@@ -79,7 +79,7 @@ export const DEMO_LETTERS: DemoLetter[] = [
       "1 of 4 claims about you is checkable, and it's only 'six years of experience'.",
   },
   {
-    id: "forgeletter",
+    id: "targeted",
     title: "ForgeLetter · built from a real profile",
     sentences: [
       { text: "Dear Hiring Manager,", structural: true },

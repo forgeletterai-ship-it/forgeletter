@@ -8,7 +8,7 @@ import { classifySentences, quadrantFor, scoreLetter } from "@/lib/swap/score"
 
 const stoplist = stoplistJson as unknown as Stoplist
 
-function classifyDemo(id: "chatgpt" | "forgeletter") {
+function classifyDemo(id: "generic" | "targeted") {
   const letter = DEMO_LETTERS.find((l) => l.id === id)!
   const { segmented, labels, fullText } = demoFixture(letter)
   return classifySentences(segmented, labels, {
@@ -20,7 +20,7 @@ function classifyDemo(id: "chatgpt" | "forgeletter") {
 
 describe("Appendix A regression — the rubric anchor (do not weaken)", () => {
   it("ChatGPT letter scores 0 / 25 / FILLER and redacts nothing", () => {
-    const sentences = classifyDemo("chatgpt")
+    const sentences = classifyDemo("generic")
     const scores = scoreLetter(sentences)
     expect(scores.anchor).toBe(0)
     expect(scores.proof).toBe(25)
@@ -31,7 +31,7 @@ describe("Appendix A regression — the rubric anchor (do not weaken)", () => {
   })
 
   it("ForgeLetter letter scores 24±2 / 100 / TARGETED and redacts the opener", () => {
-    const sentences = classifyDemo("forgeletter")
+    const sentences = classifyDemo("targeted")
     const scores = scoreLetter(sentences)
     expect(Math.abs(scores.anchor - 24)).toBeLessThanOrEqual(2)
     expect(scores.proof).toBe(100)
@@ -55,7 +55,7 @@ describe("quadrant bands", () => {
 
 describe("fixes — deterministic priority, max 3", () => {
   it("anchor 0 with them-sentences quotes the first boilerplate one", () => {
-    const sentences = classifyDemo("chatgpt")
+    const sentences = classifyDemo("generic")
     const fixes = buildFixes(sentences, scoreLetter(sentences))
     expect(fixes.length).toBeGreaterThan(0)
     expect(fixes.length).toBeLessThanOrEqual(3)
@@ -67,7 +67,7 @@ describe("fixes — deterministic priority, max 3", () => {
   })
 
   it("a targeted letter earns no anchor-zero fix", () => {
-    const sentences = classifyDemo("forgeletter")
+    const sentences = classifyDemo("targeted")
     const fixes = buildFixes(sentences, scoreLetter(sentences))
     expect(fixes.find((f) => f.key === "F03" || f.key === "ENGAGE")).toBeUndefined()
   })

@@ -4,6 +4,9 @@ import { auth } from "@/auth"
 import { AnimatedSeparator } from "@/components/AnimatedSeparator"
 import { ExampleShowcase } from "@/components/ExampleShowcase"
 import { HowItWorksDemo } from "@/components/HowItWorksDemo"
+import HomepageDemo from "@/components/swap/HomepageDemo"
+import { DEMO_COPY } from "@/lib/swap/demo-data"
+import "@/app/swap-test/swap.css"
 import NeuralPortal from "@/components/NeuralPortal"
 import { PricingCards } from "@/components/PricingCards"
 import { PublicFooter, PublicNav } from "@/components/PublicChrome"
@@ -122,58 +125,11 @@ function EngineFeatureIcon({ name }: { name: (typeof engineFeatures)[number]["ic
 }
 
 export default async function HomePage() {
+  const swapTestEnabled = process.env.SWAP_TEST_ENABLED === "true"
   const session = await auth()
   const isLoggedIn = Boolean(session?.user)
 
-  return (
-    <>
-      <PublicNav />
-      <main className="landing-main">
-        <section className="hero">
-          <div className="container hero-grid">
-            <div className="hero-copy-col">
-              <h1>
-                Apply with letters that feel <span>specific, sharp, and yours.</span>
-              </h1>
-              <p className="hero-copy">
-                ForgeLetter uses up to a 12-agent AI pipeline to write,
-                verify and auto-improve your cover letter before you see it.
-                Every letter is quality-checked and refined in the background
-                at no extra cost.
-              </p>
-              {/* Logged-in customers already have the Workspace button
-                  in the nav — a duplicate hero CTA is noise, so the
-                  hero button only renders for visitors. */}
-              {!isLoggedIn ? (
-                <div className="hero-actions">
-                  <Link className="button hero-primary-button" href="/auth/signup">
-                    Get started
-                    <span className="hero-button-arrow" aria-hidden="true">-&gt;</span>
-                  </Link>
-                </div>
-              ) : null}
-              <div className="hero-proof" aria-label="Product highlights">
-                <div className="proof-item">
-                  <strong>Guided</strong>
-                  <span>smart prompts that extract your strongest evidence</span>
-                </div>
-                <div className="proof-item">
-                  <strong>Verified</strong>
-                  <span>every letter checked against your real experience</span>
-                </div>
-                <div className="proof-item">
-                  <strong>Ready</strong>
-                  <span>polished PDF exports in seconds</span>
-                </div>
-              </div>
-            </div>
-
-            <NeuralPortal />
-          </div>
-        </section>
-
-        <AnimatedSeparator />
-
+  const whyChooseSection = (
         <section className="section section-alt engine-compare-section" id="workspace">
           <div className="container">
             <div className="engine-compare">
@@ -271,7 +227,9 @@ export default async function HomePage() {
             </div>
           </div>
         </section>
+  )
 
+  const workflowSection = (
         <section className="workflow-visual" id="how-it-works" aria-labelledby="workflow-heading">
           <div className="decor-circle decor-circle-right" />
           <div className="decor-circle decor-circle-left" />
@@ -298,7 +256,9 @@ export default async function HomePage() {
             </div>
           </div>
         </section>
+  )
 
+  const aiEngineSection = (
         <section className="section ai-engine-section">
           <div className="container">
             <div className="ai-engine-head">
@@ -344,7 +304,9 @@ export default async function HomePage() {
             </div>
           </div>
         </section>
+  )
 
+  const examplesSection = (
         <section className="examples-luxury section" id="examples">
           <div className="container">
             <div className="examples-luxury__head">
@@ -361,6 +323,85 @@ export default async function HomePage() {
             <ExampleShowcase />
           </div>
         </section>
+  )
+
+  return (
+    <>
+      <PublicNav />
+      <main className="landing-main">
+        <section className="hero">
+          <div className="container hero-grid">
+            <div className="hero-copy-col">
+              <h1>
+                Apply with letters that feel <span>specific, sharp, and yours.</span>
+              </h1>
+              <p className="hero-copy">
+                ForgeLetter uses up to a 12-agent AI pipeline to write,
+                verify and auto-improve your cover letter before you see it.
+                Every letter is quality-checked and refined in the background
+                at no extra cost.
+              </p>
+              {/* Logged-in customers already have the Workspace button
+                  in the nav — a duplicate hero CTA is noise, so the
+                  hero button only renders for visitors. */}
+              {!isLoggedIn ? (
+                <div className="hero-actions">
+                  <Link className="button hero-primary-button" href="/auth/signup">
+                    Get started
+                    <span className="hero-button-arrow" aria-hidden="true">-&gt;</span>
+                  </Link>
+                </div>
+              ) : null}
+              <div className="hero-proof" aria-label="Product highlights">
+                <div className="proof-item">
+                  <strong>Guided</strong>
+                  <span>smart prompts that extract your strongest evidence</span>
+                </div>
+                <div className="proof-item">
+                  <strong>Verified</strong>
+                  <span>every letter checked against your real experience</span>
+                </div>
+                <div className="proof-item">
+                  <strong>Ready</strong>
+                  <span>polished PDF exports in seconds</span>
+                </div>
+              </div>
+            </div>
+
+            <NeuralPortal />
+          </div>
+        </section>
+
+        <AnimatedSeparator />
+
+        {swapTestEnabled ? (
+          <section className="section" id="swap-demo">
+            <div className="container">
+              <span className="section-kicker">The Swap Test</span>
+              <h2>{DEMO_COPY.sectionH2}</h2>
+              <HomepageDemo />
+            </div>
+          </section>
+        ) : null}
+
+        {/* Swap-test launch reorder (build doc Phase 6): demo is
+            section 2, Examples rises to 4, “Why choose” moves down.
+            Flag off = the pre-swap order, untouched. */}
+        {swapTestEnabled ? (
+          <>
+            {workflowSection}
+            {examplesSection}
+            {whyChooseSection}
+            {aiEngineSection}
+          </>
+        ) : (
+          <>
+            {whyChooseSection}
+            {workflowSection}
+            {aiEngineSection}
+            {examplesSection}
+          </>
+        )}
 
         <section className="resources-luxury section" id="roadmap">
           <div className="container">
