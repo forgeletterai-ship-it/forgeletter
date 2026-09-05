@@ -1,14 +1,14 @@
 {
-  "ranAt": "2026-09-05T10:03:54.570Z",
-  "falseFailureRate": 0.98,
-  "techniquePrecision": 0.7613636363636364,
+  "ranAt": "2026-09-05T10:21:45.324Z",
+  "falseFailureRate": 1.28,
+  "techniquePrecision": 0.7172774869109948,
   "techniquePrecisionNote": "lexical-proxy precision; refine with data/technique-extraction.json when extraction has run",
-  "plantedFailureRecall": 0.6666666666666666,
+  "plantedFailureRecall": 0.7916666666666666,
   "recallMissByCode": {
     "F02": 1,
-    "F06": 6,
-    "F08": 5,
-    "F01": 4
+    "F08": 3,
+    "F01": 4,
+    "F06": 2
   },
   "injection": {
     "schemaValid": 10,

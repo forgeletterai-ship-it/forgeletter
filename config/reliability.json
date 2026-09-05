@@ -1,14 +1,14 @@
 {
-  "ranAt": "2026-09-05T10:09:27.505Z",
+  "ranAt": "2026-09-05T10:28:03.842Z",
   "n": 148,
   "anchorMad": 0,
   "proofMad": 0,
-  "quadrantAgreement": 99.3,
+  "quadrantAgreement": 100,
   "kappa": {
-    "structural": 0.9987823957999202,
-    "aboutThem": 0.9956599855332852,
-    "aboutYou": 0.9939352440575173,
-    "checkable": 0.9947251833109085
+    "structural": 1,
+    "aboutThem": 0.9971396826739353,
+    "aboutYou": 0.9979005350249451,
+    "checkable": 0.9964528186741931
   },
   "gates": {
     "anchorMad": true,

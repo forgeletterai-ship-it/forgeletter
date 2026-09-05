@@ -1,6 +1,6 @@
 {
   "_comment": "Catalogue v0.1 — seed set from MASTER_BUILD_SWAP_TEST.md Phase 3.2; v0.1.1 sharpened F01-F04/F06 triggers after eval round 1 over-flagged reflective working-style sentences in gold letters (6.78→1.84 false failures/letter); v0.1.2 adds intrinsic criteria — failures mark FAKE evidence, positioning sentences are neither technique nor failure, validated against the corpus's own worked example (Appendix A). Trigger phrasing is what eval iteration tunes (Phase 5). PENDING HUMAN GATE review before public launch. Exemplars are anonymised: Appendix A verified letters + bracket-anonymised gold snippets only (anonymisation CI: tests/swap-anonymisation.test.ts).",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "techniques": [
     {
       "id": "T01",
@@ -92,7 +92,7 @@
       "id": "F01",
       "name": "Verb without magnitude",
       "definition": "An achievement verb with no number, baseline, or named result.",
-      "trigger": "Verbs like 'improved', 'increased', 'strengthened', 'drove', 'optimised' carrying no magnitude and no named artefact — the reader cannot size the claim. Only when the unquantified achievement IS the sentence's core claim — observations, lessons, or patterns drawn from work ('the pattern across all three was the same') are not achievement claims. Requires BOTH no number AND no named artefact or outcome — a sentence naming what was built and who used it ('models managing directors took into client meetings') has substance and is never F01. An achievement claim leaning on a vague intensifier ('significantly', 'substantially', 'greatly', 'dramatically') with no number is ALWAYS F01.",
+      "trigger": "Verbs like 'improved', 'increased', 'strengthened', 'drove', 'optimised' carrying no magnitude and no named artefact — the reader cannot size the claim. Only when the unquantified achievement IS the sentence's core claim — observations, lessons, or patterns drawn from work ('the pattern across all three was the same') are not achievement claims. Requires BOTH no number AND no named artefact or outcome — a sentence naming what was built and who used it ('models managing directors took into client meetings') has substance and is never F01. An achievement claim leaning on a vague intensifier ('significantly', 'substantially', 'greatly', 'dramatically') with no number is ALWAYS F01. A sentence explaining HOW the applicant works and WHY ('I bill honestly … because the trust…', 'I lead by building managers who can lead') is positioning, never F01.",
       "repairs": [
         "T02"
       ],
@@ -102,7 +102,7 @@
       "id": "F02",
       "name": "Self-rating",
       "definition": "A self-assigned trait with no evidence attached.",
-      "trigger": "Traits the applicant grants themselves — 'data-driven', 'passionate', 'strategic thinker', 'natural leader' — without the result or method that would earn them. F02 is a BARE adjective list ('I am hardworking, motivated, and a fast learner'). A description of concrete working practices ('I write PRDs, run discovery, test assumptions with data') or a specific reputation ('known for catching the error in the appendix') is never F02.",
+      "trigger": "Traits the applicant grants themselves — 'data-driven', 'passionate', 'strategic thinker', 'natural leader' — without the result or method that would earn them. F02 is a BARE adjective list ('I am hardworking, motivated, and a fast learner'). A description of concrete working practices ('I write PRDs, run discovery, test assumptions with data') or a specific reputation ('known for catching the error in the appendix') is never F02. Named tools, platforms, or credentials ('Figma', 'Salesforce', 'PMP', 'e-discovery platforms') make a sentence a skills inventory, never F02.",
       "repairs": [
         "T01",
         "T11"
@@ -124,7 +124,7 @@
       "id": "F04",
       "name": "Tenure as achievement",
       "definition": "Years of experience presented as the achievement itself.",
-      "trigger": "Duration offered as the substance of the claim — 'with over six years of experience' — with no scope or outcome attached to the years. Flag only when the years are offered as the proof itself. Years mentioned while describing what the work taught, built, or changed are not F04. If the same sentence also carries a number or a named outcome, it is NEVER F04 — years alongside results is context, not the claim.",
+      "trigger": "Duration offered as the substance of the claim — 'with over six years of experience' — with no scope or outcome attached to the years. Flag only when the years are offered as the proof itself. Years mentioned while describing what the work taught, built, or changed are not F04. If the same sentence also carries a number or a named outcome, it is NEVER F04 — years alongside results is context, not the claim. Years followed by a lesson or principle learned ('…and I have learned that accuracy is everything') is not F04.",
       "repairs": [
         "T10",
         "T02"
@@ -145,7 +145,7 @@
       "id": "F06",
       "name": "Close without next step",
       "definition": "A closing that requests nothing and proposes nothing.",
-      "trigger": "Sign-off sentences that end the letter without a concrete action — 'I look forward to hearing from you', 'thank you for your consideration' — when nothing before them proposed a step either. Never flag a close that proposes any step, however soft ('I would welcome a technical conversation'). Only the empty formula, with no proposal anywhere in the letter, counts.",
+      "trigger": "Sign-off sentences that end the letter without a concrete action — 'I look forward to hearing from you', 'thank you for your consideration' — when nothing before them proposed a step either. Never flag a close that proposes any step, however soft ('I would welcome a technical conversation'). Only the empty formula, with no proposal anywhere in the letter, counts. A close that names any topic or offer ('…about your people priorities', '…about the first hundred days', '…how I think through a problem') proposes a step and is never F06.",
       "repairs": [
         "T09"
       ],
