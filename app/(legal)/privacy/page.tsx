@@ -10,7 +10,7 @@ export default function PrivacyPage() {
   return (
     <LegalPage
       title="Privacy policy"
-      intro="This policy explains what data ForgeLetter collects, why, who it is shared with, how long it is kept, and the rights you have over it. It is written to satisfy the GDPR, the UK GDPR, the ePrivacy Directive, the CCPA / CPRA and the LGPD. Last updated: 2026-05-24."
+      intro="This policy explains what data ForgeLetter collects, why, who it is shared with, how long it is kept, and the rights you have over it. It is written to satisfy the GDPR, the UK GDPR, the ePrivacy Directive, the CCPA / CPRA and the LGPD. Last updated: 2026-09-05."
       sections={[
         {
           title: "1. Who we are (data controller)",
@@ -209,27 +209,38 @@ export default function PrivacyPage() {
           body: "Email forgeletterai@gmail.com from the email address on your account, or submit a request via the contact page. We may ask for additional information to verify your identity before acting on the request. We do not charge a fee unless the request is manifestly unfounded or excessive, in line with Article 12(5) GDPR.",
         },
         {
-          title: "12. Sign in with Google — limited use disclosure",
+          title: "12. The Swap Test (free letter scan)",
+          body: "The Swap Test at /swap-test analyses a cover letter you paste and returns scores. Your letter is not stored: it is analysed in memory and discarded — nothing is written to a database and nothing is used to train any model. We keep only numbers about the scan (scores, sentence counts, category labels), which contain none of your text. The processing connected to the Swap Test:",
+          points: [
+            "Share card — Contract (Art. 6(1)(b)): if you click \"Share result\" we store the scores — never the letter — for 30 days to render the share image.",
+            "Job-ad word counts — Legitimate interest (Art. 6(1)(f)): if you paste a job advert we keep word counts from it, never its text; these contain no personal data by design.",
+            "Optional research copy — Consent (Art. 6(1)(a)): an unticked checkbox lets us keep a copy of your letter to improve the tool. Before storage, names, employers, dates and figures are automatically replaced with placeholders. Consent is logged and you can request deletion at any time at forgeletterai@gmail.com.",
+            "Optional outcome email — Consent (Art. 6(1)(a)): an unticked checkbox lets us send one email about 30 days after your scan asking whether the letter led to an interview. Your address is held in a send queue only until that email goes out and is deleted the moment it is sent. Every such email contains an unsubscribe link; unsubscribing revokes the consent permanently.",
+            "Fraud prevention — Legitimate interest (Art. 6(1)(f)): to enforce the free-scan limit without requiring an account we compute a salted, irreversible hash from your IP address, browser type, platform and timezone. It cannot be turned back into those values, is used solely to prevent abuse of the free tier, and expires after 30 days.",
+          ],
+        },
+        {
+          title: "13. Sign in with Google — limited use disclosure",
           body: "ForgeLetter's use and transfer of information received from Google APIs adheres to the Google API Services User Data Policy, including the Limited Use requirements. We request only the scopes needed to authenticate you (email and basic profile). We do not use Google user data to develop, improve, or train generalised AI models; we do not transfer Google user data to third parties for advertising; we do not allow humans to read your Google user data unless we have your specific consent, it is necessary for security investigations, or as required by law. You can revoke ForgeLetter's access at any time from https://myaccount.google.com/permissions.",
         },
         {
-          title: "13. Sign in with Facebook",
+          title: "14. Sign in with Facebook",
           body: "When you choose Sign in with Facebook, Meta passes us your name, email address, and Facebook user ID under your direction. We use this only to create or look up your ForgeLetter account. We do not post to Facebook on your behalf and do not run a Meta Pixel on the site. You can revoke ForgeLetter's access from your Facebook Settings → Business integrations.",
         },
         {
-          title: "14. Cookies",
+          title: "15. Cookies",
           body: "For the full list of cookies set, why each exists, and how to change your choices, see the Cookie policy. You can re-open the consent banner from the Cookie preferences link in the footer or sidebar at any time.",
         },
         {
-          title: "15. Children",
+          title: "16. Children",
           body: "ForgeLetter is not directed at children under 16 and we do not knowingly collect their data. If you believe a child has signed up, contact us at forgeletterai@gmail.com and we will delete the account. In jurisdictions where the digital-consent age is higher (e.g. 13 under US COPPA, 16 in most of the EU), the local minimum applies.",
         },
         {
-          title: "16. Changes to this policy",
+          title: "17. Changes to this policy",
           body: "We will post any material change here, update the revision number, and — if the change touches consent — re-prompt you in the cookie banner. Minor wording fixes will not trigger a re-prompt. The current version is always available at this URL; previous versions are kept for two years and available on request.",
         },
         {
-          title: "17. Contact",
+          title: "18. Contact",
           body: "Privacy questions and rights requests can be sent to forgeletterai@gmail.com or via the contact page. We aim to respond within one working week and at the latest within 30 days as required by the GDPR.",
         },
       ]}

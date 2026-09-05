@@ -274,8 +274,8 @@ is the source text).
       exceptions; logscrub on the route (grep clean)
 - [x] Rule 6/8 greps: CI tests green
 - [x] Anonymisation CI green
-- [ ] Catalogue human-approved (v0.1 awaiting review)
-- [ ] Privacy text human-approved
+- [x] Catalogue OWNER-APPROVED 2026-09-05 (v0.1.5)
+- [x] Privacy text OWNER-APPROVED 2026-09-05 — folded into app/(legal)/privacy as section 12
 - [x] KV + human-check: OWNER DECISION (2026-08-10) — no new
       third-party services. Counters run on the swap_kv table in
       Supabase (atomic swap_kv_incr RPC, purged by the cleanup
