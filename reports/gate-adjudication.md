@@ -17,7 +17,7 @@ v0.1 → v0.1.5. Total API spend ≈ $12.
 | Planted-failure recall | ≥0.85 | 0.792 (38/48) | **0.886** (39/44) | **PASS (adjudicated)** |
 | False failures on gold | ≤0.10/letter | 1.28 | **0.48/letter wrong** + 0.78/letter true | **ACCEPTED RISK** |
 | Set K control | caught | — | — | deferred (export is human-gated) |
-| Calibration | measured thresholds | echoHigh/affectHigh/cvLow all measured | — | **DONE** |
+| Calibration | measured thresholds | echoHigh + affectHigh measured; cv correctly self-disabled (A/B IQRs overlap — exactly the doc's rule) | — | **DONE** |
 
 ## Recall adjudication (10 raw misses)
 
