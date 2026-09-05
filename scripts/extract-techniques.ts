@@ -96,7 +96,6 @@ async function main() {
       params: {
         model: EXTRACT_MODEL,
         max_tokens: 1024,
-        temperature: 0,
         messages: [
           {
             role: "user" as const,

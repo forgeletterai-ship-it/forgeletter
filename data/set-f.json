@@ -1,0 +1,304 @@
+{
+  "letters": [
+    {
+      "id": "setf-24-F01",
+      "sourceNumber": 25,
+      "plantedFailure": "F01",
+      "body": ""
+    },
+    {
+      "id": "setf-36-F05",
+      "sourceNumber": 37,
+      "plantedFailure": "F05",
+      "body": ""
+    },
+    {
+      "id": "setf-41-F02",
+      "sourceNumber": 42,
+      "plantedFailure": "F02",
+      "body": ""
+    },
+    {
+      "id": "setf-39-F08",
+      "sourceNumber": 40,
+      "plantedFailure": "F08",
+      "body": ""
+    },
+    {
+      "id": "setf-38-F07",
+      "sourceNumber": 39,
+      "plantedFailure": "F07",
+      "body": ""
+    },
+    {
+      "id": "setf-45-F06",
+      "sourceNumber": 46,
+      "plantedFailure": "F06",
+      "body": ""
+    },
+    {
+      "id": "setf-7-F08",
+      "sourceNumber": 8,
+      "plantedFailure": "F08",
+      "body": ""
+    },
+    {
+      "id": "setf-9-F02",
+      "sourceNumber": 10,
+      "plantedFailure": "F02",
+      "body": ""
+    },
+    {
+      "id": "setf-20-F05",
+      "sourceNumber": 21,
+      "plantedFailure": "F05",
+      "body": ""
+    },
+    {
+      "id": "setf-33-F02",
+      "sourceNumber": 34,
+      "plantedFailure": "F02",
+      "body": ""
+    },
+    {
+      "id": "setf-0-F01",
+      "sourceNumber": 1,
+      "plantedFailure": "F01",
+      "body": ""
+    },
+    {
+      "id": "setf-8-F01",
+      "sourceNumber": 9,
+      "plantedFailure": "F01",
+      "body": ""
+    },
+    {
+      "id": "setf-4-F05",
+      "sourceNumber": 5,
+      "plantedFailure": "F05",
+      "body": ""
+    },
+    {
+      "id": "setf-46-F07",
+      "sourceNumber": 47,
+      "plantedFailure": "F07",
+      "body": ""
+    },
+    {
+      "id": "setf-6-F07",
+      "sourceNumber": 7,
+      "plantedFailure": "F07",
+      "body": ""
+    },
+    {
+      "id": "setf-15-F08",
+      "sourceNumber": 16,
+      "plantedFailure": "F08",
+      "body": ""
+    },
+    {
+      "id": "setf-27-F04",
+      "sourceNumber": 28,
+      "plantedFailure": "F04",
+      "body": ""
+    },
+    {
+      "id": "setf-31-F08",
+      "sourceNumber": 32,
+      "plantedFailure": "F08",
+      "body": ""
+    },
+    {
+      "id": "setf-34-F03",
+      "sourceNumber": 35,
+      "plantedFailure": "F03",
+      "body": ""
+    },
+    {
+      "id": "setf-12-F05",
+      "sourceNumber": 13,
+      "plantedFailure": "F05",
+      "body": ""
+    },
+    {
+      "id": "setf-3-F04",
+      "sourceNumber": 4,
+      "plantedFailure": "F04",
+      "body": ""
+    },
+    {
+      "id": "setf-44-F05",
+      "sourceNumber": 45,
+      "plantedFailure": "F05",
+      "body": ""
+    },
+    {
+      "id": "setf-21-F06",
+      "sourceNumber": 22,
+      "plantedFailure": "F06",
+      "body": ""
+    },
+    {
+      "id": "setf-40-F01",
+      "sourceNumber": 41,
+      "plantedFailure": "F01",
+      "body": ""
+    },
+    {
+      "id": "setf-32-F01",
+      "sourceNumber": 33,
+      "plantedFailure": "F01",
+      "body": ""
+    },
+    {
+      "id": "setf-17-F02",
+      "sourceNumber": 18,
+      "plantedFailure": "F02",
+      "body": ""
+    },
+    {
+      "id": "setf-42-F03",
+      "sourceNumber": 43,
+      "plantedFailure": "F03",
+      "body": ""
+    },
+    {
+      "id": "setf-16-F01",
+      "sourceNumber": 17,
+      "plantedFailure": "F01",
+      "body": ""
+    },
+    {
+      "id": "setf-28-F05",
+      "sourceNumber": 29,
+      "plantedFailure": "F05",
+      "body": ""
+    },
+    {
+      "id": "setf-48-F01",
+      "sourceNumber": 49,
+      "plantedFailure": "F01",
+      "body": ""
+    },
+    {
+      "id": "setf-22-F07",
+      "sourceNumber": 23,
+      "plantedFailure": "F07",
+      "body": ""
+    },
+    {
+      "id": "setf-49-F02",
+      "sourceNumber": 50,
+      "plantedFailure": "F02",
+      "body": ""
+    },
+    {
+      "id": "setf-18-F03",
+      "sourceNumber": 19,
+      "plantedFailure": "F03",
+      "body": ""
+    },
+    {
+      "id": "setf-13-F06",
+      "sourceNumber": 14,
+      "plantedFailure": "F06",
+      "body": ""
+    },
+    {
+      "id": "setf-10-F03",
+      "sourceNumber": 11,
+      "plantedFailure": "F03",
+      "body": ""
+    },
+    {
+      "id": "setf-26-F03",
+      "sourceNumber": 27,
+      "plantedFailure": "F03",
+      "body": ""
+    },
+    {
+      "id": "setf-19-F04",
+      "sourceNumber": 20,
+      "plantedFailure": "F04",
+      "body": ""
+    },
+    {
+      "id": "setf-30-F07",
+      "sourceNumber": 31,
+      "plantedFailure": "F07",
+      "body": ""
+    },
+    {
+      "id": "setf-25-F02",
+      "sourceNumber": 26,
+      "plantedFailure": "F02",
+      "body": ""
+    },
+    {
+      "id": "setf-1-F02",
+      "sourceNumber": 2,
+      "plantedFailure": "F02",
+      "body": ""
+    },
+    {
+      "id": "setf-47-F08",
+      "sourceNumber": 48,
+      "plantedFailure": "F08",
+      "body": ""
+    },
+    {
+      "id": "setf-5-F06",
+      "sourceNumber": 6,
+      "plantedFailure": "F06",
+      "body": ""
+    },
+    {
+      "id": "setf-14-F07",
+      "sourceNumber": 15,
+      "plantedFailure": "F07",
+      "body": ""
+    },
+    {
+      "id": "setf-35-F04",
+      "sourceNumber": 36,
+      "plantedFailure": "F04",
+      "body": ""
+    },
+    {
+      "id": "setf-29-F06",
+      "sourceNumber": 30,
+      "plantedFailure": "F06",
+      "body": ""
+    },
+    {
+      "id": "setf-43-F04",
+      "sourceNumber": 44,
+      "plantedFailure": "F04",
+      "body": ""
+    },
+    {
+      "id": "setf-11-F04",
+      "sourceNumber": 12,
+      "plantedFailure": "F04",
+      "body": ""
+    },
+    {
+      "id": "setf-2-F03",
+      "sourceNumber": 3,
+      "plantedFailure": "F03",
+      "body": ""
+    },
+    {
+      "id": "setf-37-F06",
+      "sourceNumber": 38,
+      "plantedFailure": "F06",
+      "body": ""
+    },
+    {
+      "id": "setf-23-F08",
+      "sourceNumber": 24,
+      "plantedFailure": "F08",
+      "body": ""
+    }
+  ]
+}

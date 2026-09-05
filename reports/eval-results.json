@@ -1,0 +1,13 @@
+{
+  "ranAt": "2026-09-05T09:38:50.898Z",
+  "falseFailureRate": 6.78,
+  "techniquePrecision": 0.6871508379888268,
+  "techniquePrecisionNote": "lexical-proxy precision; refine with data/technique-extraction.json when extraction has run",
+  "plantedFailureRecall": null,
+  "injection": {
+    "schemaValid": 10,
+    "total": 10,
+    "leaks": 0
+  },
+  "controlCaught": null
+}

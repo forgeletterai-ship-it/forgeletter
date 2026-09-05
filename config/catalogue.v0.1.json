@@ -1,6 +1,6 @@
 {
-  "_comment": "Catalogue v0.1 — seed set from MASTER_BUILD_SWAP_TEST.md Phase 3.2, validated against the corpus's own worked example (Appendix A). Trigger phrasing is what eval iteration tunes (Phase 5). PENDING HUMAN GATE review before public launch. Exemplars are anonymised: Appendix A verified letters + bracket-anonymised gold snippets only (anonymisation CI: tests/swap-anonymisation.test.ts).",
-  "version": "0.1",
+  "_comment": "Catalogue v0.1 — seed set from MASTER_BUILD_SWAP_TEST.md Phase 3.2; v0.1.1 sharpened F01-F04/F06 triggers after eval round 1 over-flagged reflective working-style sentences in gold letters (6.78 false failures/letter), validated against the corpus's own worked example (Appendix A). Trigger phrasing is what eval iteration tunes (Phase 5). PENDING HUMAN GATE review before public launch. Exemplars are anonymised: Appendix A verified letters + bracket-anonymised gold snippets only (anonymisation CI: tests/swap-anonymisation.test.ts).",
+  "version": "0.1.1",
   "techniques": [
     {
       "id": "T01",
@@ -92,32 +92,43 @@
       "id": "F01",
       "name": "Verb without magnitude",
       "definition": "An achievement verb with no number, baseline, or named result.",
-      "trigger": "Verbs like 'improved', 'increased', 'strengthened', 'drove', 'optimised' carrying no magnitude and no named artefact — the reader cannot size the claim.",
-      "repairs": ["T02"],
+      "trigger": "Verbs like 'improved', 'increased', 'strengthened', 'drove', 'optimised' carrying no magnitude and no named artefact — the reader cannot size the claim. Only when the unquantified achievement IS the sentence's core claim — observations, lessons, or patterns drawn from work ('the pattern across all three was the same') are not achievement claims.",
+      "repairs": [
+        "T02"
+      ],
       "exemplar": "In my current role I improved onboarding, strengthened retention, and partnered closely with design and engineering."
     },
     {
       "id": "F02",
       "name": "Self-rating",
       "definition": "A self-assigned trait with no evidence attached.",
-      "trigger": "Traits the applicant grants themselves — 'data-driven', 'passionate', 'strategic thinker', 'natural leader' — without the result or method that would earn them.",
-      "repairs": ["T01", "T11"],
+      "trigger": "Traits the applicant grants themselves — 'data-driven', 'passionate', 'strategic thinker', 'natural leader' — without the result or method that would earn them. Flag only when the trait stands IN PLACE of evidence. A statement of working style, values, or what the applicant enjoys, in a letter that carries concrete results elsewhere, is not F02 — it is neither a technique nor a failure.",
+      "repairs": [
+        "T01",
+        "T11"
+      ],
       "exemplar": "I'm a data-driven leader with a genuine passion for music and technology."
     },
     {
       "id": "F03",
       "name": "Category praise",
       "definition": "Praise that fits every company in the category.",
-      "trigger": "Compliments that would survive unchanged at any competitor — mission admiration, 'commitment to innovation', 'industry leader'. If swapping the company name breaks nothing, it is F03.",
-      "repairs": ["T05", "T06"],
+      "trigger": "Compliments that would survive unchanged at any competitor — mission admiration, 'commitment to innovation', 'industry leader'. If swapping the company name breaks nothing, it is F03. Flag only praise doing the work of research. A sentence about the applicant's own preferences or fit that happens to reference the team or company is not F03.",
+      "repairs": [
+        "T05",
+        "T06"
+      ],
       "exemplar": "Chorusline's commitment to putting artists first is something I deeply believe in."
     },
     {
       "id": "F04",
       "name": "Tenure as achievement",
       "definition": "Years of experience presented as the achievement itself.",
-      "trigger": "Duration offered as the substance of the claim — 'with over six years of experience' — with no scope or outcome attached to the years.",
-      "repairs": ["T10", "T02"],
+      "trigger": "Duration offered as the substance of the claim — 'with over six years of experience' — with no scope or outcome attached to the years. Flag only when the years are offered as the proof itself. Years mentioned while describing what the work taught, built, or changed are not F04.",
+      "repairs": [
+        "T10",
+        "T02"
+      ],
       "exemplar": "As a product manager with over six years of experience in consumer subscription apps, I've led cross-functional teams through discovery, experimentation, and launch."
     },
     {
@@ -125,15 +136,19 @@
       "name": "Requirement restated",
       "definition": "A posting requirement repeated back as a qualification.",
       "trigger": "The ad's own language mirrored back — 'you need X; I have X' — adding nothing the posting didn't already say.",
-      "repairs": ["T08"],
+      "repairs": [
+        "T08"
+      ],
       "exemplar": "I have extensive experience with cross-functional stakeholder management, as your posting requires"
     },
     {
       "id": "F06",
       "name": "Close without next step",
       "definition": "A closing that requests nothing and proposes nothing.",
-      "trigger": "Sign-off sentences that end the letter without a concrete action — 'I look forward to hearing from you', 'thank you for your consideration' — when nothing before them proposed a step either.",
-      "repairs": ["T09"],
+      "trigger": "Sign-off sentences that end the letter without a concrete action — 'I look forward to hearing from you', 'thank you for your consideration' — when nothing before them proposed a step either. Never flag a close that proposes any step, however soft ('I would welcome a technical conversation'). Only the empty formula, with no proposal anywhere in the letter, counts.",
+      "repairs": [
+        "T09"
+      ],
       "exemplar": "I look forward to hearing from you and hope to discuss this opportunity further"
     },
     {
@@ -141,7 +156,10 @@
       "name": "Excitement opener",
       "definition": "An opening whose only content is enthusiasm.",
       "trigger": "First live sentence built on 'excited to apply', 'thrilled to see', or equivalent — enthusiasm about the role with no information about employer or applicant.",
-      "repairs": ["T05", "T01"],
+      "repairs": [
+        "T05",
+        "T01"
+      ],
       "exemplar": "I'm excited to apply for the Senior Product Manager role at Chorusline."
     },
     {
@@ -149,7 +167,9 @@
       "name": "Unbroken success narrative",
       "definition": "Wins stacked with no failure, obstacle, or trade-off anywhere.",
       "trigger": "A sentence stacking multiple unqualified wins as part of an all-wins narrative — no attempt named that didn't work, no constraint, no cost.",
-      "repairs": ["T03"],
+      "repairs": [
+        "T03"
+      ],
       "exemplar": "I consistently exceeded every target, delivered every launch on time, and earned top ratings across all my roles"
     }
   ]

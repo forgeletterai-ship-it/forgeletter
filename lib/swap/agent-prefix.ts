@@ -134,6 +134,7 @@ export function buildAgentPrefix(): string {
     "- technique vs failure: a sentence with a real number that still hides its baseline commits F01 rather than earning T02. When a sentence half-executes a technique and half-commits a failure, the failure wins (rule below).",
     "- Openers: an opening sentence whose only content is excitement or intent to apply is F07 even when it names the company and role.",
     "- Closers: a final sentence that proposes nothing concrete is F06 unless it is a pure sign-off (then structural).",
+    "- A failure flag means: fixing this flaw would meaningfully improve the letter. Reflective statements of taste, values, or working style inside an evidence-dense letter are neither techniques nor failures — emit the booleans and phrases only.",
     "- Never label the same sentence with two techniques. Never invent codes. When no catalogue entry fits, emit the booleans and phrases only.",
     "",
     "TECHNIQUE CATALOGUE (the moves that work):",

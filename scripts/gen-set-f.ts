@@ -72,7 +72,6 @@ async function main() {
       params: {
         model: GEN_MODEL,
         max_tokens: 900,
-        temperature: 0,
         messages: [
           {
             role: "user" as const,
