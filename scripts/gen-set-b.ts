@@ -51,8 +51,9 @@ async function main() {
     const letters: { id: string; jd: string; body: string }[] = []
     for await (const entry of await client.messages.batches.results(pollId)) {
       if (entry.result.type !== "succeeded") continue
-      const block = entry.result.message.content[0]
-      const body = block?.type === "text" ? block.text.trim() : ""
+      const block = entry.result.message.content.find((b) => b.type === "text")
+      const body = block && block.type === "text" ? block.text.trim() : ""
+      if (!body) continue
       const i = Number(entry.custom_id.replace("setb-", ""))
       const role = ROLES[i % ROLES.length]
       const company = COMPANIES[i % COMPANIES.length]

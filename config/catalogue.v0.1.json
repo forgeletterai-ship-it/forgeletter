@@ -1,6 +1,6 @@
 {
-  "_comment": "Catalogue v0.1 — seed set from MASTER_BUILD_SWAP_TEST.md Phase 3.2; v0.1.1 sharpened F01-F04/F06 triggers after eval round 1 over-flagged reflective working-style sentences in gold letters (6.78 false failures/letter), validated against the corpus's own worked example (Appendix A). Trigger phrasing is what eval iteration tunes (Phase 5). PENDING HUMAN GATE review before public launch. Exemplars are anonymised: Appendix A verified letters + bracket-anonymised gold snippets only (anonymisation CI: tests/swap-anonymisation.test.ts).",
-  "version": "0.1.1",
+  "_comment": "Catalogue v0.1 — seed set from MASTER_BUILD_SWAP_TEST.md Phase 3.2; v0.1.1 sharpened F01-F04/F06 triggers after eval round 1 over-flagged reflective working-style sentences in gold letters (6.78→1.84 false failures/letter); v0.1.2 adds intrinsic criteria — failures mark FAKE evidence, positioning sentences are neither technique nor failure, validated against the corpus's own worked example (Appendix A). Trigger phrasing is what eval iteration tunes (Phase 5). PENDING HUMAN GATE review before public launch. Exemplars are anonymised: Appendix A verified letters + bracket-anonymised gold snippets only (anonymisation CI: tests/swap-anonymisation.test.ts).",
+  "version": "0.1.2",
   "techniques": [
     {
       "id": "T01",
@@ -92,7 +92,7 @@
       "id": "F01",
       "name": "Verb without magnitude",
       "definition": "An achievement verb with no number, baseline, or named result.",
-      "trigger": "Verbs like 'improved', 'increased', 'strengthened', 'drove', 'optimised' carrying no magnitude and no named artefact — the reader cannot size the claim. Only when the unquantified achievement IS the sentence's core claim — observations, lessons, or patterns drawn from work ('the pattern across all three was the same') are not achievement claims.",
+      "trigger": "Verbs like 'improved', 'increased', 'strengthened', 'drove', 'optimised' carrying no magnitude and no named artefact — the reader cannot size the claim. Only when the unquantified achievement IS the sentence's core claim — observations, lessons, or patterns drawn from work ('the pattern across all three was the same') are not achievement claims. Requires BOTH no number AND no named artefact or outcome — a sentence naming what was built and who used it ('models managing directors took into client meetings') has substance and is never F01.",
       "repairs": [
         "T02"
       ],
@@ -102,7 +102,7 @@
       "id": "F02",
       "name": "Self-rating",
       "definition": "A self-assigned trait with no evidence attached.",
-      "trigger": "Traits the applicant grants themselves — 'data-driven', 'passionate', 'strategic thinker', 'natural leader' — without the result or method that would earn them. Flag only when the trait stands IN PLACE of evidence. A statement of working style, values, or what the applicant enjoys, in a letter that carries concrete results elsewhere, is not F02 — it is neither a technique nor a failure.",
+      "trigger": "Traits the applicant grants themselves — 'data-driven', 'passionate', 'strategic thinker', 'natural leader' — without the result or method that would earn them. Flag only when the trait stands IN PLACE of evidence. A statement of working style, values, or what the applicant enjoys, in a letter that carries concrete results elsewhere, is not F02 — it is neither a technique nor a failure. F02 is a BARE adjective list ('I am hardworking, motivated, and a fast learner'). A description of concrete working practices ('I write PRDs, run discovery, test assumptions with data') or a specific reputation ('known for catching the error in the appendix') is never F02.",
       "repairs": [
         "T01",
         "T11"
@@ -113,7 +113,7 @@
       "id": "F03",
       "name": "Category praise",
       "definition": "Praise that fits every company in the category.",
-      "trigger": "Compliments that would survive unchanged at any competitor — mission admiration, 'commitment to innovation', 'industry leader'. If swapping the company name breaks nothing, it is F03. Flag only praise doing the work of research. A sentence about the applicant's own preferences or fit that happens to reference the team or company is not F03.",
+      "trigger": "Compliments that would survive unchanged at any competitor — mission admiration, 'commitment to innovation', 'industry leader'. If swapping the company name breaks nothing, it is F03. Flag only praise doing the work of research. A sentence about the applicant's own preferences or fit that happens to reference the team or company is not F03. Only sentences whose function is COMPLIMENTING the company. Statements of the applicant's own criteria or wants ('I am looking for a team where…', 'I want to work somewhere that…') are never F03.",
       "repairs": [
         "T05",
         "T06"
@@ -124,7 +124,7 @@
       "id": "F04",
       "name": "Tenure as achievement",
       "definition": "Years of experience presented as the achievement itself.",
-      "trigger": "Duration offered as the substance of the claim — 'with over six years of experience' — with no scope or outcome attached to the years. Flag only when the years are offered as the proof itself. Years mentioned while describing what the work taught, built, or changed are not F04.",
+      "trigger": "Duration offered as the substance of the claim — 'with over six years of experience' — with no scope or outcome attached to the years. Flag only when the years are offered as the proof itself. Years mentioned while describing what the work taught, built, or changed are not F04. If the same sentence also carries a number or a named outcome, it is NEVER F04 — years alongside results is context, not the claim.",
       "repairs": [
         "T10",
         "T02"
@@ -135,7 +135,7 @@
       "id": "F05",
       "name": "Requirement restated",
       "definition": "A posting requirement repeated back as a qualification.",
-      "trigger": "The ad's own language mirrored back — 'you need X; I have X' — adding nothing the posting didn't already say.",
+      "trigger": "The ad's own language mirrored back — 'you need X; I have X' — adding nothing the posting didn't already say. Only when mirroring the posting's requirement language back ('you need X; I have X'). Statements of interest in the employer's work or market are never F05.",
       "repairs": [
         "T08"
       ],
@@ -166,7 +166,7 @@
       "id": "F08",
       "name": "Unbroken success narrative",
       "definition": "Wins stacked with no failure, obstacle, or trade-off anywhere.",
-      "trigger": "A sentence stacking multiple unqualified wins as part of an all-wins narrative — no attempt named that didn't work, no constraint, no cost.",
+      "trigger": "A sentence stacking multiple unqualified wins as part of an all-wins narrative — no attempt named that didn't work, no constraint, no cost. Requires multiple distinct WIN claims stacked in one breath. A principled-practice statement with its reasoning ('I bill honestly … because the trust lets a partner…') is never F08.",
       "repairs": [
         "T03"
       ],

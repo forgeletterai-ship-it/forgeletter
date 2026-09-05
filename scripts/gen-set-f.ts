@@ -45,8 +45,10 @@ async function main() {
     }[] = []
     for await (const entry of await client.messages.batches.results(pollId)) {
       if (entry.result.type !== "succeeded") continue
-      const block = entry.result.message.content[0]
-      const body = block?.type === "text" ? block.text.trim() : ""
+      if (entry.result.message.stop_reason === "max_tokens") continue
+      const block = entry.result.message.content.find((b) => b.type === "text")
+      const body = block && block.type === "text" ? block.text.trim() : ""
+      if (!body) continue
       const [, idxStr, code] = entry.custom_id.split("-") // setf-<i>-<F0x>
       const i = Number(idxStr)
       letters.push({
@@ -71,7 +73,7 @@ async function main() {
       custom_id: `setf-${i}-${failure.id}`,
       params: {
         model: GEN_MODEL,
-        max_tokens: 900,
+        max_tokens: 2000,
         messages: [
           {
             role: "user" as const,

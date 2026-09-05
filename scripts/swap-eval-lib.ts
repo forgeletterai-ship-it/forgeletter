@@ -29,8 +29,21 @@ export interface EvalScan {
   techniques: string[]
 }
 
+const EMPTY_SCAN: EvalScan = {
+  sentences: [],
+  scores: {
+    anchor: 0, proof: 0, quadrant: "FILLER",
+    nonStructuralWords: 0, distinctiveWords: 0, youClaims: 0, checkableClaims: 0,
+  },
+  echo: null, affectRatio: 0, cv: null, failures: [], techniques: [],
+}
+
 export async function scanLetter(letter: string, jd?: string | null): Promise<EvalScan> {
+  // A batch entry can succeed with empty text; an empty message would
+  // 400 the API and kill the whole harness run.
+  if (!letter || !letter.trim()) return EMPTY_SCAN
   const segmented = segmentSentences(letter)
+  if (segmented.length === 0) return EMPTY_SCAN
   const agent = await classifyWithAgent(segmented)
   const classified = classifySentences(segmented, agent.labels, {
     corpusSize: 0,

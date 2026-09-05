@@ -65,8 +65,8 @@ async function main() {
     const results: Record<string, unknown> = {}
     for await (const entry of await client.messages.batches.results(pollId)) {
       if (entry.result.type === "succeeded") {
-        const content = entry.result.message.content[0]
-        const text = content.type === "text" ? content.text : ""
+        const content = entry.result.message.content.find((b) => b.type === "text")
+        const text = content && content.type === "text" ? content.text : ""
         try {
           results[entry.custom_id] = JSON.parse(text)
         } catch {
