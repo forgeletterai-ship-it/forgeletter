@@ -285,6 +285,8 @@ is the source text).
       drop-in via env vars. Resend already configured. DEV-ONLY
       memory KV asserts NODE_ENV — unreachable in prod builds.
 - [x] Crons registered in vercel.json (warm/outcomes/cleanup/vocab-purge)
+- [x] CRON_SECRET + FINGERPRINT_SALT set in Vercel Production —
+      owner confirmed 2026-09-05; take effect on the next deploy
 - [x] Analytics events firing (dataLayer)
 - [x] TODO-POSTLAUNCH.md complete
 - [ ] Deploy behind flag; human runs 20 varied manual scans; flip
