@@ -1,0 +1,507 @@
+/* ── Swap Test — styled in the SITE's design language ────────────
+   The build doc's Part III design system is mapped onto the site's
+   existing tokens per its own "map to existing tokens" instruction
+   (noted in BUILDLOG): cream canvas/paper, gold-amber buttons, teal
+   accents, warm kickers. Only the FUNCTIONAL colours survive from
+   the doc verbatim: the four sentence-class fills + underline styles
+   (colour-blind-safe, WCAG AA) and the out-of-band alarm role, which
+   maps to the site's red. */
+
+.swap-scope {
+  --swap-alarm: var(--red);
+  /* Class tints aligned with the Examples section's language:
+     strengths in site teal/green, weaknesses in the Examples' rust
+     flaw tint and neutral grey. (The doc's amber for weak claims
+     collided with the site's gold-means-win convention.) */
+  --cls-them-d: var(--teal-soft);
+  --cls-you-c: rgba(40, 120, 94, 0.14);
+  --cls-them-b: #ebede9;
+  --cls-you-a: rgba(176, 86, 60, 0.13);
+  --swap-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+/* ── Sentence classes: colour + a UNIQUE underline style per class,
+   so the four stay distinguishable under any colour vision:
+   solid = employer-specific · double = checkable proof ·
+   none = inert boilerplate · dashed = unbacked claim. ── */
+.swap-s {
+  padding: 1px 3px;
+  border-radius: 3px;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+.swap-s--structural { color: var(--muted); }
+.swap-s--distinctive-them {
+  background: var(--cls-them-d);
+  text-decoration: underline solid var(--teal);
+}
+.swap-s--checkable-you {
+  background: var(--cls-you-c);
+  text-decoration: underline double var(--green);
+  text-decoration-thickness: 1.5px;
+}
+.swap-s--boilerplate-them { background: var(--cls-them-b); }
+.swap-s--asserted-you {
+  background: var(--cls-you-a);
+  text-decoration: underline dashed #a04b32;
+}
+
+/* ── Tool ── */
+.swap-tool { display: grid; gap: 14px; }
+.swap-tool textarea {
+  width: 100%;
+  min-height: 220px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 253, 247, 0.9);
+  color: var(--ink);
+  font: inherit;
+  line-height: 1.6;
+  resize: vertical;
+  box-shadow: 0 8px 20px rgba(75, 48, 22, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+.swap-tool textarea:focus-visible {
+  outline: none;
+  border-color: rgba(36, 107, 111, 0.52);
+  box-shadow: 0 0 0 3px rgba(36, 107, 111, 0.1), 0 8px 20px rgba(75, 48, 22, 0.06);
+}
+.swap-tool--jd textarea { min-height: 120px; }
+.swap-field-label { font-weight: 800; font-size: 14px; color: var(--ink); }
+.swap-disclosure { font-size: 12.5px; line-height: 1.55; color: var(--muted); }
+.swap-privacy-line { font-size: 12.5px; color: var(--muted); }
+.swap-company-input {
+  width: 100%;
+  max-width: 360px;
+  padding: 11px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 253, 247, 0.9);
+  font: inherit;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+.swap-submit {
+  justify-self: start;
+  padding: 13px 26px;
+  border: 1px solid rgba(184, 118, 31, 0.72);
+  border-radius: 9px;
+  background: linear-gradient(135deg, var(--gold), var(--amber));
+  color: #ffffff;
+  font-weight: 850;
+  font-size: 15px;
+  cursor: pointer;
+  box-shadow: 0 14px 30px rgba(199, 154, 54, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  transition: transform 140ms ease;
+}
+.swap-submit:hover:not(:disabled) { transform: translateY(-1px); }
+.swap-submit:disabled { opacity: 0.55; cursor: default; }
+.swap-error { color: var(--swap-alarm); font-size: 14px; }
+
+/* ── Results flow ── */
+.swap-results { display: grid; gap: 26px; margin-top: 30px; }
+.swap-block {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 253, 248, 0.74);
+  padding: 20px;
+  box-shadow:
+    0 18px 40px rgba(72, 50, 21, 0.07),
+    inset 0 1px 0 rgba(255, 255, 255, 0.84);
+}
+.swap-block h3 {
+  margin: 0 0 12px;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: #8f5b22;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.58);
+}
+
+/* Redaction beat */
+.swap-redaction p { margin: 0 0 6px; line-height: 1.75; }
+.swap-redaction .swap-s--removed {
+  display: inline-block;
+  background: var(--cls-them-d);
+  text-decoration: line-through solid var(--teal);
+  animation: swap-lift 600ms ease forwards;
+}
+@keyframes swap-lift {
+  to { opacity: 0.25; transform: translateY(-4px); }
+}
+.swap-redaction-verdict {
+  margin-top: 10px;
+  font-family: var(--swap-mono);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+/* Scores */
+.swap-scores { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.swap-score-num {
+  font-family: var(--swap-mono);
+  font-size: 44px;
+  font-weight: 700;
+  line-height: 1;
+}
+.swap-score--good .swap-score-num { color: var(--teal); }
+.swap-score--alarm .swap-score-num { color: var(--swap-alarm); }
+.swap-score-name {
+  font-weight: 900;
+  font-size: 12px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: #8f5b22;
+}
+.swap-band-line { margin-top: 8px; font-size: 13.5px; line-height: 1.5; color: var(--muted); }
+
+/* Quadrant */
+.swap-quadrant { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.swap-quadrant div {
+  padding: 14px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 253, 248, 0.6);
+  font-family: var(--swap-mono);
+  font-size: 12.5px;
+  text-align: center;
+  color: var(--muted);
+}
+.swap-quadrant .swap-quadrant--active {
+  background: var(--teal);
+  border-color: var(--teal);
+  color: #f2faf8;
+  font-weight: 700;
+  box-shadow: 0 14px 30px rgba(36, 107, 111, 0.22);
+}
+
+/* Marked letter + tooltips */
+.swap-marked { line-height: 2.05; }
+/* Zero-specificity button reset (:where) — it must strip the UA
+   button chrome WITHOUT outranking the .swap-s--* colour classes,
+   which sit at (0,1,0). A plain `.swap-marked button` reset was
+   (0,1,1) and silently killed every sentence tint. */
+/* Click/tap opens the explanation — nothing happens on hover
+   (owner preference); pointer cursor signals the click affordance. */
+:where(.swap-marked button) {
+  all: unset;
+  cursor: pointer;
+}
+.swap-marked button:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+.swap-tip { position: relative; display: inline; }
+.swap-tip [role="tooltip"] {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 6px);
+  z-index: 5;
+  width: max-content;
+  max-width: 260px;
+  padding: 8px 11px;
+  border-radius: var(--radius);
+  background: var(--ink);
+  color: #fffdf8;
+  font-size: 12.5px;
+  line-height: 1.45;
+  box-shadow: var(--shadow-soft);
+}
+
+/* Profile + fixes */
+.swap-profile h4 {
+  margin: 0 0 8px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 600;
+  font-size: 22px;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+.swap-profile p { margin: 0 0 10px; line-height: 1.65; color: var(--muted-strong); }
+.swap-profile .swap-reduced { font-style: italic; color: var(--muted); }
+.swap-fix { border-left: 3px solid var(--gold); padding: 4px 0 4px 14px; margin-bottom: 16px; }
+.swap-fix h4 {
+  margin: 0 0 6px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 600;
+  font-size: 17px;
+  color: var(--ink);
+}
+.swap-fix blockquote {
+  margin: 8px 0;
+  padding: 7px 11px;
+  border-radius: 6px;
+  background: var(--cls-them-b);
+  font-size: 13.5px;
+  color: var(--ink-soft);
+}
+.swap-fix .swap-gold {
+  font-family: var(--swap-mono);
+  font-size: 12.5px;
+  color: var(--gold-deep);
+}
+.swap-fix .swap-ask { font-weight: 700; color: var(--ink); }
+.swap-banner {
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  border: 1px solid rgba(199, 154, 54, 0.42);
+  background: var(--gold-soft);
+  color: var(--gold-deep);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* Wall */
+.swap-wall { text-align: left; }
+.swap-wall .swap-trajectory {
+  font-family: var(--swap-mono);
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 10px 0;
+}
+.swap-cta {
+  display: inline-block;
+  padding: 13px 26px;
+  border: 1px solid rgba(184, 118, 31, 0.72);
+  border-radius: 9px;
+  background: linear-gradient(135deg, var(--gold), var(--amber));
+  color: #ffffff;
+  font-weight: 850;
+  text-decoration: none;
+  box-shadow: 0 14px 30px rgba(199, 154, 54, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  transition: transform 140ms ease;
+}
+.swap-cta:hover { transform: translateY(-1px); }
+.swap-cta-sub { margin-left: 10px; font-size: 13px; color: var(--muted); }
+
+/* Account gate */
+.swap-gate input[type="email"], .swap-gate input[type="password"] {
+  width: 100%;
+  max-width: 380px;
+  padding: 11px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 253, 247, 0.9);
+  font: inherit;
+  display: block;
+  margin-bottom: 10px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+.swap-gate label.swap-check {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--muted-strong);
+  margin: 8px 0;
+}
+.swap-gate label.swap-check input { margin-top: 3px; accent-color: var(--teal); }
+
+/* Class legend cards + band table + comparison */
+.swap-legend { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+.swap-legend .swap-block { padding: 14px 16px; }
+.swap-band-table, .swap-compare { width: 100%; border-collapse: collapse; font-size: 14px; }
+.swap-band-table td, .swap-band-table th,
+.swap-compare td, .swap-compare th {
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  text-align: left;
+  background: rgba(255, 253, 248, 0.6);
+}
+.swap-band-table th, .swap-compare th {
+  background: var(--gold-soft);
+  color: var(--gold-deep);
+  font-weight: 800;
+}
+.swap-band-table .swap-band--healthy td,
+.swap-band-table .swap-band--healthy { background: var(--cls-them-d); font-weight: 700; }
+.swap-compare .swap-num { font-family: var(--swap-mono); font-weight: 700; color: var(--teal); }
+
+/* Validity + FAQ */
+.swap-validity p, .swap-faq p { line-height: 1.7; color: var(--muted-strong); }
+.swap-validity strong, .swap-faq strong { color: var(--ink); }
+.swap-faq h4 {
+  margin: 18px 0 6px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 600;
+  font-size: 17px;
+  color: var(--ink);
+}
+
+/* ── Homepage demo: a product surface, not a widget. Left: the
+   letter on a white document sheet with a scan pass. Right: the
+   results rail — gold-lined stat tiles (the proof-card treatment),
+   the pass/fail verdict chip (Examples-section language), CTA. ── */
+
+.swap-demo-head { max-width: 760px; }
+.swap-demo-head p {
+  margin: 10px 0 0;
+  color: var(--muted-strong);
+  font-size: 16.5px;
+  line-height: 1.7;
+}
+
+.swap-demo-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(300px, 1fr);
+  gap: 22px;
+  align-items: start;
+  margin-top: 30px;
+}
+
+/* The document sheet */
+.swap-demo-doc {
+  position: relative;
+  background: var(--paper-strong);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: var(--shadow-soft), inset 0 1px 0 #ffffff;
+  overflow: hidden;
+}
+.swap-demo-doc__bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 18px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(246, 243, 235, 0.72);
+  font-family: var(--swap-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted-strong);
+  white-space: nowrap;
+}
+.swap-demo-doc__bar span:last-child { overflow: hidden; text-overflow: ellipsis; }
+.swap-demo-doc__body { padding: 24px 26px 26px; }
+.swap-demo-letter {
+  line-height: 2.05;
+  min-height: 220px;
+  color: var(--ink-soft);
+  font-size: 15px;
+}
+
+/* Scan pass while the classifier "reads" */
+.swap-demo-doc.is-scanning::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(36, 107, 111, 0.09) 46%,
+    rgba(36, 107, 111, 0.16) 50%,
+    rgba(36, 107, 111, 0.09) 54%,
+    transparent 100%
+  );
+  background-size: 100% 220%;
+  animation: swap-scan 1.4s ease-in-out 1;
+}
+@keyframes swap-scan {
+  from { background-position: 0 -120%; }
+  to { background-position: 0 120%; }
+}
+
+/* The results rail */
+.swap-demo-rail { display: grid; gap: 12px; align-content: start; }
+
+.swap-demo-toggle {
+  display: flex;
+  padding: 4px;
+  gap: 4px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 253, 248, 0.85);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+.swap-demo-toggle button {
+  flex: 1;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  font-size: 12.5px;
+  font-weight: 750;
+  cursor: pointer;
+  color: var(--muted-strong);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.swap-demo-toggle button[aria-pressed="true"] {
+  background: var(--teal);
+  color: #f2faf8;
+  box-shadow: 0 8px 18px rgba(36, 107, 111, 0.24);
+}
+
+.swap-stat {
+  border: 1px solid rgba(199, 154, 54, 0.42);
+  border-radius: var(--radius);
+  padding: 14px 16px 13px;
+  background:
+    radial-gradient(circle at 52% 0, rgba(255, 255, 255, 0.78), transparent 46%),
+    rgba(255, 253, 248, 0.72);
+  box-shadow:
+    0 18px 40px rgba(72, 50, 21, 0.07),
+    inset 0 1px 0 rgba(255, 255, 255, 0.84),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.38);
+  opacity: 0.65;
+  transition: opacity 300ms ease;
+}
+.swap-stat.is-in { opacity: 1; }
+.swap-stat .swap-score-num { font-size: 38px; margin: 2px 0 4px; color: var(--muted); }
+.swap-stat.is-in .swap-num--good { color: var(--teal); }
+.swap-stat.is-in .swap-num--alarm { color: var(--swap-alarm); }
+
+.swap-demo-verdict { display: grid; gap: 8px; }
+.swap-verdict-chip {
+  justify-self: start;
+  display: inline-block;
+  padding: 7px 14px;
+  border-radius: 999px;
+  font-family: var(--swap-mono);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.swap-verdict-chip--fail {
+  background: rgba(176, 86, 60, 0.13);
+  border: 1px solid rgba(176, 86, 60, 0.38);
+  color: #8c3d28;
+}
+.swap-verdict-chip--pass {
+  background: var(--teal-soft);
+  border: 1px solid rgba(36, 107, 111, 0.38);
+  color: var(--teal);
+}
+
+.swap-demo-cta-row { display: grid; gap: 8px; justify-items: start; margin-top: 4px; }
+.swap-demo-micro { font-size: 12px; color: var(--muted); }
+.swap-demo-replay {
+  background: none;
+  border: 0;
+  color: var(--teal);
+  font-weight: 800;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 0;
+}
+
+@media (max-width: 900px) {
+  .swap-demo-shell { grid-template-columns: 1fr; }
+}
+
+/* Staggered class colouring + count-up run under the motion flag */
+.swap-anim .swap-s { transition: background-color 180ms ease; }
+
+@media (max-width: 700px) {
+  .swap-scores { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .swap-redaction .swap-s--removed { animation: none; opacity: 0.25; transform: none; }
+  .swap-anim .swap-s { transition: none; }
+}

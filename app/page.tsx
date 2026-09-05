@@ -1,10 +1,13 @@
 import type { Metadata } from "next"
-import Image from "next/image"
 import Link from "next/link"
 import { auth } from "@/auth"
 import { AnimatedSeparator } from "@/components/AnimatedSeparator"
 import { ExampleShowcase } from "@/components/ExampleShowcase"
 import { HowItWorksDemo } from "@/components/HowItWorksDemo"
+import HomepageDemo from "@/components/swap/HomepageDemo"
+import { DEMO_COPY } from "@/lib/swap/demo-data"
+import "@/app/swap-test/swap.css"
+import NeuralPortal from "@/components/NeuralPortal"
 import { PricingCards } from "@/components/PricingCards"
 import { PublicFooter, PublicNav } from "@/components/PublicChrome"
 import { ProductRoadmap } from "@/components/ProductRoadmap"
@@ -121,132 +124,12 @@ function EngineFeatureIcon({ name }: { name: (typeof engineFeatures)[number]["ic
   )
 }
 
-function HeroIcon({ type }: { type: "check" | "compass" | "shield" | "lock" | "pause" }) {
-  if (type === "check") {
-    return (
-      <svg viewBox="0 0 32 32" aria-hidden="true">
-        <path d="M8.5 16.7 13.5 21.7 24 10.8" />
-      </svg>
-    )
-  }
-
-  if (type === "compass") {
-    return (
-      <svg viewBox="0 0 32 32" aria-hidden="true">
-        <circle cx="16" cy="16" r="9.5" />
-        <path d="m19.6 9.2-2.3 8.1-5 5.5 2.3-8.1 5-5.5Z" />
-        <path d="M16 4.5v3M16 24.5v3M4.5 16h3M24.5 16h3" />
-      </svg>
-    )
-  }
-
-  if (type === "shield") {
-    return (
-      <svg viewBox="0 0 32 32" aria-hidden="true">
-        <path d="M16 4.6 25 8v6.6c0 5.9-3.6 10.1-9 12.8-5.4-2.7-9-6.9-9-12.8V8l9-3.4Z" />
-        <path d="m12.4 16 2.5 2.5 5.3-5.9" />
-      </svg>
-    )
-  }
-
-  if (type === "pause") {
-    return (
-      <svg viewBox="0 0 32 32" aria-hidden="true">
-        <circle cx="16" cy="16" r="10" />
-        <path d="M13 11.5v9M19 11.5v9" />
-      </svg>
-    )
-  }
-
-  return (
-    <svg viewBox="0 0 32 32" aria-hidden="true">
-      <rect x="8" y="14" width="16" height="12" rx="2.2" />
-      <path d="M11.5 14v-3.1a4.5 4.5 0 0 1 9 0V14" />
-      <path d="M16 18.2v3.4" />
-    </svg>
-  )
-}
-
 export default async function HomePage() {
+  const swapTestEnabled = process.env.SWAP_TEST_ENABLED === "true"
   const session = await auth()
   const isLoggedIn = Boolean(session?.user)
 
-  return (
-    <>
-      <PublicNav />
-      <main className="landing-main">
-        <section className="hero">
-          <div className="container hero-grid">
-            <div>
-              <h1>
-                Apply with letters that feel <span>specific, sharp, and yours.</span>
-              </h1>
-              <p className="hero-copy">
-                ForgeLetter uses up to a 12-agent AI pipeline to write,
-                verify and auto-improve your cover letter before you see it.
-                Every letter is quality-checked and refined in the background
-                at no extra cost.
-              </p>
-              {/* Logged-in customers already have the Workspace button
-                  in the nav — a duplicate hero CTA is noise, so the
-                  hero button only renders for visitors. */}
-              {!isLoggedIn ? (
-                <div className="hero-actions">
-                  <Link className="button hero-primary-button" href="/auth/signup">
-                    Get started
-                    <span className="hero-button-arrow" aria-hidden="true">-&gt;</span>
-                  </Link>
-                </div>
-              ) : null}
-              <div className="hero-proof" aria-label="Product highlights">
-                <div className="proof-item">
-                  <strong>Guided</strong>
-                  <span>smart prompts that extract your strongest evidence</span>
-                </div>
-                <div className="proof-item">
-                  <strong>Verified</strong>
-                  <span>every letter checked against your real experience</span>
-                </div>
-                <div className="proof-item">
-                  <strong>Ready</strong>
-                  <span>polished PDF exports in seconds</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="hero-media">
-              <div className="hero-image-frame">
-                <Image
-                  src="/hero-image-transparent.png"
-                  alt="ForgeLetter brain workspace illustration"
-                  width={1254}
-                  height={1254}
-                  priority
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 600px"
-                />
-              </div>
-              <div className="mini-metrics">
-                <div className="mini-metric">
-                  <span className="mini-metric-icon"><HeroIcon type="lock" /></span>
-                  <div>
-                    <span>Workspace</span>
-                    <strong>Private</strong>
-                  </div>
-                </div>
-                <div className="mini-metric">
-                  <span className="mini-metric-icon"><HeroIcon type="check" /></span>
-                  <div>
-                    <span>Status</span>
-                    <strong>Live</strong>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <AnimatedSeparator />
-
+  const whyChooseSection = (
         <section className="section section-alt engine-compare-section" id="workspace">
           <div className="container">
             <div className="engine-compare">
@@ -344,7 +227,9 @@ export default async function HomePage() {
             </div>
           </div>
         </section>
+  )
 
+  const workflowSection = (
         <section className="workflow-visual" id="how-it-works" aria-labelledby="workflow-heading">
           <div className="decor-circle decor-circle-right" />
           <div className="decor-circle decor-circle-left" />
@@ -371,7 +256,9 @@ export default async function HomePage() {
             </div>
           </div>
         </section>
+  )
 
+  const aiEngineSection = (
         <section className="section ai-engine-section">
           <div className="container">
             <div className="ai-engine-head">
@@ -417,7 +304,9 @@ export default async function HomePage() {
             </div>
           </div>
         </section>
+  )
 
+  const examplesSection = (
         <section className="examples-luxury section" id="examples">
           <div className="container">
             <div className="examples-luxury__head">
@@ -434,6 +323,88 @@ export default async function HomePage() {
             <ExampleShowcase />
           </div>
         </section>
+  )
+
+  return (
+    <>
+      <PublicNav />
+      <main className="landing-main">
+        <section className="hero">
+          <div className="container hero-grid">
+            <div className="hero-copy-col">
+              <h1>
+                Apply with letters that feel <span>specific, sharp, and yours.</span>
+              </h1>
+              <p className="hero-copy">
+                ForgeLetter uses up to a 12-agent AI pipeline to write,
+                verify and auto-improve your cover letter before you see it.
+                Every letter is quality-checked and refined in the background
+                at no extra cost.
+              </p>
+              {/* Logged-in customers already have the Workspace button
+                  in the nav — a duplicate hero CTA is noise, so the
+                  hero button only renders for visitors. */}
+              {!isLoggedIn ? (
+                <div className="hero-actions">
+                  <Link className="button hero-primary-button" href="/auth/signup">
+                    Get started
+                    <span className="hero-button-arrow" aria-hidden="true">-&gt;</span>
+                  </Link>
+                </div>
+              ) : null}
+              <div className="hero-proof" aria-label="Product highlights">
+                <div className="proof-item">
+                  <strong>Guided</strong>
+                  <span>smart prompts that extract your strongest evidence</span>
+                </div>
+                <div className="proof-item">
+                  <strong>Verified</strong>
+                  <span>every letter checked against your real experience</span>
+                </div>
+                <div className="proof-item">
+                  <strong>Ready</strong>
+                  <span>polished PDF exports in seconds</span>
+                </div>
+              </div>
+            </div>
+
+            <NeuralPortal />
+          </div>
+        </section>
+
+        <AnimatedSeparator />
+
+        {swapTestEnabled ? (
+          <section className="section" id="swap-demo">
+            <div className="container">
+              <div className="swap-scope swap-demo-head">
+                <span className="section-kicker">The Swap Test</span>
+                <h2>{DEMO_COPY.sectionH2}</h2>
+                <p>{DEMO_COPY.heroSub}</p>
+              </div>
+              <HomepageDemo />
+            </div>
+          </section>
+        ) : null}
+
+        {/* Swap-test launch reorder (build doc Phase 6): demo is
+            section 2, Examples rises to 4, “Why choose” moves down.
+            Flag off = the pre-swap order, untouched. */}
+        {swapTestEnabled ? (
+          <>
+            {workflowSection}
+            {examplesSection}
+            {whyChooseSection}
+            {aiEngineSection}
+          </>
+        ) : (
+          <>
+            {whyChooseSection}
+            {workflowSection}
+            {aiEngineSection}
+            {examplesSection}
+          </>
+        )}
 
         <section className="resources-luxury section" id="roadmap">
           <div className="container">

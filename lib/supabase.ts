@@ -14,7 +14,25 @@ const clientOptions = {
   },
 }
 
-let browserClient: SupabaseClient | null = null
+/**
+ * SERVICE ROLE ONLY, SERVER SIDE ONLY.
+ *
+ * ForgeLetter does not use Supabase Auth — sessions come from
+ * NextAuth — so there is no signed-in Supabase user whose identity
+ * RLS could key off. Every query therefore runs with the service
+ * role from server code that has already authorised the caller via
+ * getCurrentAppUser().
+ *
+ * An anon client used to be exported here. It was never imported
+ * anywhere, and it was a footgun: anything reaching for it would
+ * have bypassed our own authorisation checks and depended on RLS
+ * policies that deliberately do not exist. Removed.
+ *
+ * The public schema has RLS enabled with no policies (see
+ * docs/supabase-rls-lockdown.sql), which closes the anon REST
+ * surface entirely. If Supabase Auth is ever introduced, that file
+ * documents what has to change.
+ */
 let adminClient: SupabaseClient | null = null
 
 function requireEnv(name: string) {
@@ -27,7 +45,7 @@ function requireEnv(name: string) {
   return value
 }
 
-function createSupabaseClient(keyName: "NEXT_PUBLIC_SUPABASE_ANON_KEY" | "SUPABASE_SERVICE_ROLE_KEY") {
+function createSupabaseClient(keyName: "SUPABASE_SERVICE_ROLE_KEY") {
   return createClient(
     requireEnv("NEXT_PUBLIC_SUPABASE_URL"),
     requireEnv(keyName),
@@ -43,11 +61,6 @@ function proxyClient(getClient: () => SupabaseClient) {
       return typeof value === "function" ? value.bind(client) : value
     },
   })
-}
-
-export function getSupabaseClient() {
-  browserClient ||= createSupabaseClient("NEXT_PUBLIC_SUPABASE_ANON_KEY")
-  return browserClient
 }
 
 export function getSupabaseAdminClient() {
@@ -70,5 +83,4 @@ export function customerSafeSupabaseError(error: unknown) {
   return "We could not complete that workspace action. Please try again or contact support."
 }
 
-export const supabase = proxyClient(getSupabaseClient)
 export const supabaseAdmin = proxyClient(getSupabaseAdminClient)

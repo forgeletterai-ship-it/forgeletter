@@ -1,0 +1,11 @@
+{
+  "version": "provisional-1",
+  "basis": "A-vs-B pre-launch",
+  "ranAt": "2026-09-05T10:29:29.018Z",
+  "echoHigh": 0.009346400986564548,
+  "affectHigh": 3,
+  "cvLow": null,
+  "notes": [
+    "cv disabled: A/B IQRs overlap"
+  ]
+}
