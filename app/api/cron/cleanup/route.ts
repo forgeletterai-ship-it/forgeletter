@@ -24,5 +24,17 @@ export async function GET(req: NextRequest) {
     "purge_expired_swap_kv"
   )
   if (kvError) swapLogError("cron.cleanup.kv", { message: kvError.message })
-  return NextResponse.json({ shares: shares ?? 0, kv: kvRows ?? 0 })
+  // Vocab k-anonymity purge folded in here: Vercel Hobby allows only
+  // two daily crons, so the weekly job runs daily instead (the purge
+  // is idempotent and cheap). /api/cron/vocab-purge stays for manual
+  // runs; the warm cron is unregistered until prompt caching engages.
+  const { data: vocabRows, error: vocabError } = await supabaseAdmin.rpc(
+    "purge_swap_vocab"
+  )
+  if (vocabError) swapLogError("cron.cleanup.vocab", { message: vocabError.message })
+  return NextResponse.json({
+    shares: shares ?? 0,
+    kv: kvRows ?? 0,
+    vocab: vocabRows ?? 0,
+  })
 }
