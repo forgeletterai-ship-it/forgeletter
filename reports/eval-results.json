@@ -1,9 +1,15 @@
 {
-  "ranAt": "2026-09-05T09:38:50.898Z",
-  "falseFailureRate": 6.78,
-  "techniquePrecision": 0.6871508379888268,
+  "ranAt": "2026-09-05T10:03:54.570Z",
+  "falseFailureRate": 0.98,
+  "techniquePrecision": 0.7613636363636364,
   "techniquePrecisionNote": "lexical-proxy precision; refine with data/technique-extraction.json when extraction has run",
-  "plantedFailureRecall": null,
+  "plantedFailureRecall": 0.6666666666666666,
+  "recallMissByCode": {
+    "F02": 1,
+    "F06": 6,
+    "F08": 5,
+    "F01": 4
+  },
   "injection": {
     "schemaValid": 10,
     "total": 10,

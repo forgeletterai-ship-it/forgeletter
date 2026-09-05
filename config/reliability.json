@@ -1,0 +1,19 @@
+{
+  "ranAt": "2026-09-05T10:09:27.505Z",
+  "n": 148,
+  "anchorMad": 0,
+  "proofMad": 0,
+  "quadrantAgreement": 99.3,
+  "kappa": {
+    "structural": 0.9987823957999202,
+    "aboutThem": 0.9956599855332852,
+    "aboutYou": 0.9939352440575173,
+    "checkable": 0.9947251833109085
+  },
+  "gates": {
+    "anchorMad": true,
+    "proofMad": true,
+    "quadrantAgreement": true,
+    "kappa": true
+  }
+}

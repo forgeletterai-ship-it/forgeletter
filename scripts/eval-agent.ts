@@ -49,6 +49,17 @@ async function main() {
   const falseFailuresPerLetter =
     aScans.reduce((n, s) => n + s.failures.length, 0) / aScans.length
   report.falseFailureRate = falseFailuresPerLetter
+  const flagLines: string[] = []
+  for (let i = 0; i < aScans.length; i++) {
+    for (const sent of aScans[i].sentences) {
+      if (sent.failure) flagLines.push(`[${sent.failure}] (${gold[i].id}) ${sent.text}`)
+    }
+  }
+  mkdirSync(resolve(process.cwd(), "reports"), { recursive: true })
+  writeFileSync(
+    resolve(process.cwd(), "reports/false-flags.txt"),
+    flagLines.join("\n") + "\n"
+  )
   const ffPass = falseFailuresPerLetter <= 0.1
   pass &&= ffPass
   console.log(
@@ -93,11 +104,15 @@ async function main() {
     console.log(`Set F: ${setF.length} degraded letters…`)
     const fScans = await mapLimit(setF, CONCURRENCY, (l) => scanLetter(l.body))
     let recalled = 0
+    const missByCode: Record<string, number> = {}
     for (let i = 0; i < setF.length; i++) {
       if (fScans[i].failures.includes(setF[i].plantedFailure)) recalled += 1
+      else missByCode[setF[i].plantedFailure] = (missByCode[setF[i].plantedFailure] ?? 0) + 1
     }
     const recall = recalled / setF.length
     report.plantedFailureRecall = recall
+    report.recallMissByCode = missByCode
+    console.log(`  misses by code: ${JSON.stringify(missByCode)}`)
     const frPass = recall >= 0.85
     pass &&= frPass
     console.log(`  planted-failure recall: ${recall.toFixed(3)} (gate ≥0.85) ${frPass ? "PASS" : "FAIL"}`)
