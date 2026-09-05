@@ -2,5 +2,13 @@
   "crons": [
     { "path": "/api/cron/outcomes", "schedule": "15 9 * * *" },
     { "path": "/api/cron/cleanup", "schedule": "45 3 * * *" }
+  ],
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "forgeletter.vercel.app" }],
+      "destination": "https://forgeletter.com/:path*",
+      "permanent": true
+    }
   ]
 }
