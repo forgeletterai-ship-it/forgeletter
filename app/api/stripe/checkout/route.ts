@@ -90,6 +90,15 @@ export async function POST(req: NextRequest) {
     //     STRIPE_TOS_CONSENT=1 after configuring that (ops runbook).
     const collectTosConsent = process.env.STRIPE_TOS_CONSENT === "1"
 
+    // Stripe Tax: prices are tax-INCLUSIVE, so enabling this never
+    // changes what the customer pays — it only makes Stripe compute
+    // the VAT portion from the billing address and print the breakdown
+    // on invoices. Requires Stripe Tax to be activated in the
+    // Dashboard (Settings → Tax) with an origin address, otherwise
+    // session creation errors — hence the env flag. Until a VAT
+    // registration is added there, calculated tax is simply €0.00.
+    const automaticTax = process.env.STRIPE_AUTOMATIC_TAX === "1"
+
     const checkoutSession = await stripe.checkout.sessions.create({
       mode: "subscription",
       line_items: [getCheckoutLineItem(plan, period)],
@@ -98,7 +107,17 @@ export async function POST(req: NextRequest) {
       success_url: `${appUrl}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${appUrl}/dashboard/billing?checkout=cancelled`,
       allow_promotion_codes: true,
-      billing_address_collection: "auto",
+      // "required" (not "auto"): the billing address is the EU VAT
+      // place-of-supply evidence. Card country + billing address are
+      // the two non-contradictory pieces Art. 24b of the VAT
+      // Implementing Regulation asks for, and renewals reuse the
+      // address saved on the customer here.
+      billing_address_collection: "required",
+      // Lets business buyers add their VAT number at checkout; it is
+      // validated by Stripe and printed on their invoices (reverse
+      // charge applies automatically once Stripe Tax is registered).
+      tax_id_collection: { enabled: true },
+      ...(automaticTax ? { automatic_tax: { enabled: true } } : {}),
       ...(collectTosConsent
         ? {
             consent_collection: {
