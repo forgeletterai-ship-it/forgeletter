@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { createHash, randomBytes } from "crypto"
 import { dataErrorMessage } from "@/lib/app-data"
 import { checkRateLimit, clientIpFrom, rateLimitKey } from "@/lib/rate-limit"
+import { buildResetEmail } from "@/lib/reset-email"
+import { getSiteUrl } from "@/lib/site-url"
 import { supabaseAdmin } from "@/lib/supabase"
 
 function hashToken(token: string) {
@@ -9,11 +11,12 @@ function hashToken(token: string) {
 }
 
 function appUrl(origin: string) {
-  return (
-    process.env.NEXT_PUBLIC_APP_URL ||
-    process.env.NEXTAUTH_URL ||
-    origin
-  ).replace(/\/$/, "")
+  // Production: ALWAYS the canonical domain — same hardening as
+  // lib/site-url. A stale NEXT_PUBLIC_APP_URL must never steer reset
+  // links to vercel.app. Locally NEXTAUTH_URL/origin keep links on
+  // localhost.
+  if (process.env.VERCEL_ENV === "production") return getSiteUrl()
+  return (process.env.NEXTAUTH_URL || origin).replace(/\/$/, "")
 }
 
 /**
@@ -31,6 +34,7 @@ async function sendResetEmail(email: string, resetUrl: string): Promise<boolean>
   }
 
   try {
+    const message = buildResetEmail(getSiteUrl(), resetUrl)
     const response = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -40,8 +44,9 @@ async function sendResetEmail(email: string, resetUrl: string): Promise<boolean>
       body: JSON.stringify({
         from: process.env.RESEND_FROM_EMAIL,
         to: email,
-        subject: "Reset your ForgeLetter password",
-        text: `Use this secure link to reset your ForgeLetter password:\n\n${resetUrl}\n\nThis link expires in 45 minutes.`,
+        subject: message.subject,
+        text: message.text,
+        html: message.html,
       }),
     })
     if (!response.ok) {
