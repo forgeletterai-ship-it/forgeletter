@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { hash } from 'bcryptjs'
 import { dataErrorMessage } from '@/lib/app-data'
 import { checkRateLimit, clientIpFrom, rateLimitKey } from '@/lib/rate-limit'
+import { isPrelaunch } from '@/lib/launch'
 import { isDisposableEmail } from '@/lib/swap/disposable-domains'
 import { supabaseAdmin } from '@/lib/supabase'
 
@@ -11,6 +12,14 @@ const MAX_PASSWORD_LENGTH = 72
 const EMAIL_SHAPE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export async function POST(req: NextRequest) {
+  // Pre-launch: the signup page already redirects home, but a direct
+  // POST must refuse too — the gate opens by itself at LAUNCH_AT.
+  if (isPrelaunch()) {
+    return NextResponse.json(
+      { error: 'Account creation opens at launch. Check back soon.' },
+      { status: 403 }
+    )
+  }
   const { email, password, name, outcomeOptin, researchOptin } = (await req
     .json()
     .catch(() => ({}))) as {

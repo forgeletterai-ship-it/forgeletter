@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { sendLaunchNotifications } from "@/lib/launch-notify"
 import { swapLogError } from "@/lib/swap/logscrub"
 import { supabaseAdmin } from "@/lib/supabase"
 
@@ -32,9 +33,16 @@ export async function GET(req: NextRequest) {
     "purge_swap_vocab"
   )
   if (vocabError) swapLogError("cron.cleanup.vocab", { message: vocabError.message })
+  // Post-launch waitlist drain: no-op while isPrelaunch() and once
+  // everyone is notified, so it costs nothing on ordinary days.
+  const launch = await sendLaunchNotifications().catch(() => ({
+    sent: 0,
+    remaining: 0,
+  }))
   return NextResponse.json({
     shares: shares ?? 0,
     kv: kvRows ?? 0,
     vocab: vocabRows ?? 0,
+    launchEmails: launch.sent,
   })
 }

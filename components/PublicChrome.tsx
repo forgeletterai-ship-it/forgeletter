@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { auth, signOut } from "@/auth"
+import { isPrelaunch } from "@/lib/launch"
 import { Brand } from "./Brand"
 import { CookiePreferencesLink } from "./CookiePreferencesLink"
 import { PublicAccountMenu } from "./PublicAccountMenu"
@@ -53,9 +54,10 @@ export async function PublicNav() {
               initials={getInitials(displayName)}
               logoutAction={logoutAction}
             />
-          ) : (
+          ) : isPrelaunch() ? null : (
             /* One auth entry point only — Login and Get started led to
-               the same flow, so the duplicate button is gone. */
+               the same flow, so the duplicate button is gone. Hidden
+               entirely pre-launch (auth pages redirect home anyway). */
             <Link className="button" href="/auth/login">
               Login
             </Link>
@@ -90,11 +92,15 @@ export function PublicFooter() {
           />
           <FooterColumn
             title="Account"
-            links={[
-              { href: "/auth/signup", label: "Create an account" },
-              { href: "/auth/login", label: "Sign in" },
-              { href: "/dashboard", label: "Dashboard" },
-            ]}
+            links={
+              isPrelaunch()
+                ? [{ href: "/dashboard", label: "Dashboard" }]
+                : [
+                    { href: "/auth/signup", label: "Create an account" },
+                    { href: "/auth/login", label: "Sign in" },
+                    { href: "/dashboard", label: "Dashboard" },
+                  ]
+            }
           />
           <FooterColumn
             title="Legal"

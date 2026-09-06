@@ -8,6 +8,9 @@ import HomepageDemo from "@/components/swap/HomepageDemo"
 import { DEMO_COPY } from "@/lib/swap/demo-data"
 import "@/app/swap-test/swap.css"
 import NeuralPortal from "@/components/NeuralPortal"
+import { LaunchCountdown } from "@/components/LaunchCountdown"
+import { LaunchSignup } from "@/components/LaunchSignup"
+import { LAUNCH_AT, isPrelaunch } from "@/lib/launch"
 import { PricingCards } from "@/components/PricingCards"
 import { PublicFooter, PublicNav } from "@/components/PublicChrome"
 import { ProductRoadmap } from "@/components/ProductRoadmap"
@@ -128,6 +131,9 @@ export default async function HomePage() {
   const swapTestEnabled = process.env.SWAP_TEST_ENABLED === "true"
   const session = await auth()
   const isLoggedIn = Boolean(session?.user)
+  // Pre-launch: countdown on the splash, and every signup/login entry
+  // point hidden (the /auth pages + signup API are gated separately).
+  const prelaunch = isPrelaunch()
 
   const whyChooseSection = (
         <section className="section section-alt engine-compare-section" id="workspace">
@@ -310,7 +316,35 @@ export default async function HomePage() {
     <>
       <PublicNav />
       <main className="landing-main">
-        <section className="hero">
+        {/* Pre-launch splash (Instagram soft-launch): full-viewport
+            statement in the portal's dark-teal world, then the real
+            site scrolls right below it. Remove at official launch. */}
+        <section className="launch-splash" aria-label="Launch announcement">
+          <div className="container launch-splash__inner">
+            <span className="eyebrow launch-splash__eyebrow">
+              <span className="eyebrow-dot" />
+              Early access
+            </span>
+            <h1 className="launch-splash__title">
+              Launching <em>soon.</em>
+            </h1>
+            <p className="launch-splash__sub">
+              ForgeLetter is opening its doors. You found us early. Look
+              around, try it, and tell us what you think before everyone
+              else arrives.
+            </p>
+            <LaunchCountdown launchAtMs={LAUNCH_AT.getTime()} />
+            <LaunchSignup />
+          </div>
+          <a className="launch-splash__scroll" href="#explore">
+            <span className="launch-splash__scroll-label">Sneak peek</span>
+            <span className="launch-splash__scroll-arrow" aria-hidden="true">
+              ↓
+            </span>
+          </a>
+        </section>
+
+        <section className="hero" id="explore">
           <div className="container hero-grid">
             <div className="hero-copy-col">
               <h1>
@@ -325,7 +359,7 @@ export default async function HomePage() {
               {/* Logged-in customers already have the Workspace button
                   in the nav — a duplicate hero CTA is noise, so the
                   hero button only renders for visitors. */}
-              {!isLoggedIn ? (
+              {!isLoggedIn && !prelaunch ? (
                 <div className="hero-actions">
                   <Link className="button hero-primary-button" href="/auth/signup">
                     Get started
@@ -469,9 +503,15 @@ export default async function HomePage() {
               more specific cover letters. One focused workflow takes you from
               job posting to send-ready letter.
             </p>
-            <Link className="button" href={isLoggedIn ? "/dashboard" : "/auth/signup"}>
-              {isLoggedIn ? "Open your workspace" : "Create your account"}
-            </Link>
+            {isLoggedIn || !prelaunch ? (
+              <Link className="button" href={isLoggedIn ? "/dashboard" : "/auth/signup"}>
+                {isLoggedIn ? "Open your workspace" : "Create your account"}
+              </Link>
+            ) : (
+              <p className="cta-band__prelaunch">
+                Account creation opens at launch.
+              </p>
+            )}
           </div>
         </section>
       </main>
