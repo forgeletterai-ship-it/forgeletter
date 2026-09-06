@@ -300,6 +300,29 @@ body:has(.command-palette-fab) .back-to-top {
   }
 }
 
+/* Narrow phones (320-374): four tiles must still share one row —
+   the uppercase labels push tiles past their nominal width and
+   strand Seconds alone. Empirically 375+ fits the larger tiles. */
+@media (max-width: 374px) {
+  .launch-countdown {
+    gap: 6px;
+  }
+
+  .launch-countdown__tile {
+    min-width: 60px;
+    padding: 10px 4px 8px;
+  }
+
+  .launch-countdown__tile strong {
+    font-size: 26px;
+  }
+
+  .launch-countdown__tile span {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+  }
+}
+
 /* Visually hidden but screen-reader-accessible (form labels). */
 .sr-only {
   position: absolute;
@@ -5364,12 +5387,17 @@ button.tone-chip:hover {
     grid-row: 1;
   }
 
+  /* Centered flex-wrap, NOT a fixed column grid: the pill has FIVE
+     links, and a repeat(4) grid strands the fifth on a ragged second
+     row. Flex either fits them on one row (wider phones) or wraps
+     them centered (3+2), which reads as intentional. */
   .nav-links {
     grid-column: 1 / -1;
     grid-row: 2;
     width: 100%;
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
     gap: 2px;
     overflow: hidden;
     border: 1px solid rgba(229, 222, 210, 0.9);
@@ -5385,6 +5413,8 @@ button.tone-chip:hover {
     place-items: center;
     border-radius: 999px;
     text-align: center;
+    padding: 0 9px;
+    white-space: nowrap;
   }
 
   .nav-actions {
@@ -5394,6 +5424,7 @@ button.tone-chip:hover {
     justify-self: end;
     gap: 6px;
   }
+
 
   .nav-actions .button,
   .nav-actions .button-ghost {
@@ -9343,15 +9374,12 @@ button.tone-chip:hover {
   .nav-links {
     min-width: 0;
     max-width: 100%;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   .nav-links a {
     min-width: 0;
-    padding: 0 2px;
-    overflow: hidden;
+    padding: 0 9px;
     font-size: 11.5px;
-    text-overflow: ellipsis;
     white-space: nowrap;
   }
 
@@ -11524,7 +11552,12 @@ button.tone-chip:hover {
 
   position: relative;
   width: 100%;
-  height: min(76vh, 740px);
+  /* Height follows the column width (8:9, owner-tuned) so a narrow
+     tablet column never renders a 740px tower; the cap keeps wide
+     desktop columns close to the original height. */
+  height: auto;
+  aspect-ratio: 8 / 9;
+  max-height: min(72vh, 700px);
   border-radius: 2px;
 }
 
@@ -11857,8 +11890,9 @@ button.tone-chip:hover {
 }
 
 @media (max-width: 900px) {
-  /* Stack: copy first (source order), then the portal full width —
-     the design file's mobile padding, 24px clamp(16px,4vw,24px). */
+  /* Stack: the quantum brain leads (owner request — overrides the
+     design file's copy-first source order), then headline/copy/cards
+     full width. Mobile padding clamp(16px,4vw,24px) per the file. */
   .hero {
     padding-top: 24px;
   }
@@ -11871,6 +11905,11 @@ button.tone-chip:hover {
     grid-template-columns: minmax(0, 1fr);
     gap: 0;
     text-align: left;
+  }
+
+  .hero-grid .hero-portal {
+    order: -1;
+    margin-bottom: 26px;
   }
 
   .hero-copy-col {
@@ -18453,5 +18492,31 @@ button.tone-chip:hover {
   .demo-tab {
     flex: 1 1 100%;
     padding: 9px 14px;
+  }
+}
+
+/* Small-phone nav: all five links compress onto ONE row (no wrap, no
+   orphan). Sits at the end of the file so it outranks the earlier
+   responsive-hardening blocks that set larger padding/font. */
+@media (max-width: 389px) {
+  .nav-links {
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    gap: 0;
+    font-size: 11px;
+  }
+
+  .nav-links a {
+    padding: 0 5px;
+  }
+}
+
+@media (max-width: 330px) {
+  .nav-links {
+    font-size: 10.5px;
+  }
+
+  .nav-links a {
+    padding: 0 4px;
   }
 }
