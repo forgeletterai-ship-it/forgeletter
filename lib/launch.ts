@@ -18,3 +18,18 @@ export const LAUNCH_AT = new Date("2026-09-26T21:00:00+03:00")
 export function isPrelaunch(): boolean {
   return Date.now() < LAUNCH_AT.getTime()
 }
+
+/**
+ * Accounts allowed to sign in DURING prelaunch (owners, via Google).
+ * Two layers: /owner-access sets the cookie that lets the /auth pages
+ * render, and the NextAuth signIn callback — the real lock — rejects
+ * any other email until LAUNCH_AT. Meaningless after launch.
+ */
+const OWNER_EMAILS = ["godji9581@gmail.com", "sophia.t.atanasova@gmail.com"]
+
+export function isOwnerEmail(email: string | null | undefined): boolean {
+  return !!email && OWNER_EMAILS.includes(email.trim().toLowerCase())
+}
+
+/** Cookie set by /owner-access that unhides the /auth pages. */
+export const OWNER_DOOR_COOKIE = "fl_owner_door"

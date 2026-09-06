@@ -4,6 +4,7 @@ import Credentials from "next-auth/providers/credentials"
 import Google from "next-auth/providers/google"
 import Facebook from "next-auth/providers/facebook"
 import { compare, hashSync } from "bcryptjs"
+import { isOwnerEmail, isPrelaunch } from "./lib/launch"
 import { checkRateLimit, rateLimitKey } from "./lib/rate-limit"
 import { supabaseAdmin } from "./lib/supabase"
 
@@ -337,6 +338,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
   callbacks: {
     async signIn({ user, account }) {
+      // Pre-launch lock: only the owner accounts may complete a
+      // sign-in (any provider) until LAUNCH_AT — hiding the pages is
+      // cosmetic, THIS is the gate. Opens by itself at launch.
+      if (isPrelaunch() && !isOwnerEmail(user.email)) {
+        return false
+      }
       if (account?.provider === "google" || account?.provider === "facebook") {
         const email = (
           user.email || `${account.provider}_${account.providerAccountId}@no-email.local`
