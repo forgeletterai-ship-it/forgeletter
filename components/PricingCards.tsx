@@ -278,7 +278,7 @@ export function PricingCards({
                 <div className="plux-price">
                   <span className="plux-price__cur">EUR</span>
                   <strong>{formatPrice(price)}</strong>
-                  <em>{cadence} · excl. VAT</em>
+                  <em>{cadence} · incl. VAT</em>
                 </div>
                 <div className="plux-teaser__meta">
                   {lettersForPeriod} letters / {periodNoun} | tap to open
@@ -336,7 +336,7 @@ export function PricingCards({
                 <span className="plux-price__cur">EUR</span>
                 <strong>{formatPrice(price)}</strong>
                 <em>
-                  {cadence} · excl. VAT
+                  {cadence} · incl. VAT
                   {period === "annual" ? " · billed annually, 25% off" : ""}
                 </em>
               </div>
