@@ -1,3 +1,4 @@
+import { buildLaunchEmail } from "@/lib/launch-email"
 import { getSiteUrl } from "@/lib/site-url"
 import { isPrelaunch } from "@/lib/launch"
 import { supabaseAdmin } from "@/lib/supabase"
@@ -31,7 +32,7 @@ export async function sendLaunchNotifications(): Promise<{
 
   if (error || !data || data.length === 0) return { sent: 0, remaining: 0 }
 
-  const siteUrl = getSiteUrl()
+  const email = buildLaunchEmail(getSiteUrl())
   let sent = 0
   for (const row of data) {
     const res = await fetch("https://api.resend.com/emails", {
@@ -43,20 +44,9 @@ export async function sendLaunchNotifications(): Promise<{
       body: JSON.stringify({
         from: process.env.RESEND_FROM_EMAIL,
         to: row.email,
-        subject: "ForgeLetter is live",
-        text: [
-          "The doors are open.",
-          "",
-          "ForgeLetter — AI cover letters written, verified and refined by a 12-agent pipeline — is officially live. You asked to be first to know, so here it is:",
-          "",
-          siteUrl,
-          "",
-          "Create your account, generate your first letter, and tell us what you think.",
-          "",
-          "— The ForgeLetter team",
-          "",
-          "You're receiving this one-time email because you asked to be notified about the ForgeLetter launch. There's nothing to unsubscribe from — this is the only email this list will ever send.",
-        ].join("\n"),
+        subject: email.subject,
+        text: email.text,
+        html: email.html,
       }),
     }).catch(() => null)
 
