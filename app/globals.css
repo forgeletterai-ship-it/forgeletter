@@ -11305,9 +11305,11 @@ button.tone-chip:hover {
   width: var(--w);
 }
 
-/* Bronze frame profile: inset by --w, each member --f deep, mitred
-   at 45°. Every member opens with a 1px shadow gap where the metal
-   seats into the plaster. Bottom member brightest, top darkest. */
+/* Dark teal metal frame (owner request; earlier iterations: bronze,
+   titanium, teal, teal+gold iridescent). Deep-teal ramp around the
+   scene's shadow tones. Inset by --w, each member --f deep, mitred
+   at 45°; 1px seat-shadow gap; bottom member brightest, top
+   darkest. */
 .hero-portal .wall2 {
   position: absolute;
   pointer-events: none;
@@ -11321,8 +11323,8 @@ button.tone-chip:hover {
   height: var(--f);
   clip-path: polygon(0 0, 100% 0, calc(100% - var(--f)) 100%, var(--f) 100%);
   background:
-    linear-gradient(180deg, rgba(40, 28, 14, 0.55) 0, rgba(40, 28, 14, 0.55) 1px, transparent 1px),
-    linear-gradient(180deg, #c2925a 0%, #8a5c2d 22%, #5f3d1d 58%, #452c13 86%, #35210e 100%);
+    linear-gradient(180deg, rgba(4, 26, 26, 0.55) 0, rgba(4, 26, 26, 0.55) 1px, transparent 1px),
+    linear-gradient(180deg, #11605a 0%, #0b4540 26%, #083230 58%, #062624 86%, #051f1e 100%);
 }
 
 .hero-portal .wall2.wb {
@@ -11332,8 +11334,8 @@ button.tone-chip:hover {
   height: var(--f);
   clip-path: polygon(var(--f) 0, calc(100% - var(--f)) 0, 100% 100%, 0 100%);
   background:
-    linear-gradient(0deg, rgba(40, 28, 14, 0.55) 0, rgba(40, 28, 14, 0.55) 1px, transparent 1px),
-    linear-gradient(0deg, #d0a465 0%, #a1703a 34%, #7a5227 72%, #64411d 100%);
+    linear-gradient(0deg, rgba(4, 26, 26, 0.55) 0, rgba(4, 26, 26, 0.55) 1px, transparent 1px),
+    linear-gradient(0deg, #1e8a7f 0%, #12655e 34%, #0b4a45 72%, #083733 100%);
 }
 
 .hero-portal .wall2.wl {
@@ -11343,8 +11345,8 @@ button.tone-chip:hover {
   width: var(--f);
   clip-path: polygon(0 0, 100% var(--f), 100% calc(100% - var(--f)), 0 100%);
   background:
-    linear-gradient(90deg, rgba(40, 28, 14, 0.55) 0, rgba(40, 28, 14, 0.55) 1px, transparent 1px),
-    linear-gradient(90deg, #b08148 0%, #7e5429 40%, #5c3b1c 78%, #483015 100%);
+    linear-gradient(90deg, rgba(4, 26, 26, 0.55) 0, rgba(4, 26, 26, 0.55) 1px, transparent 1px),
+    linear-gradient(90deg, #17726a 0%, #0d514b 40%, #093a37 78%, #072c2a 100%);
 }
 
 .hero-portal .wall2.wr {
@@ -11354,8 +11356,8 @@ button.tone-chip:hover {
   width: var(--f);
   clip-path: polygon(0 var(--f), 100% 0, 100% 100%, 0 calc(100% - var(--f)));
   background:
-    linear-gradient(270deg, rgba(40, 28, 14, 0.55) 0, rgba(40, 28, 14, 0.55) 1px, transparent 1px),
-    linear-gradient(270deg, #a77a42 0%, #764e26 40%, #563819 78%, #442d14 100%);
+    linear-gradient(270deg, rgba(4, 26, 26, 0.55) 0, rgba(4, 26, 26, 0.55) 1px, transparent 1px),
+    linear-gradient(270deg, #14685f 0%, #0c4a44 40%, #083431 78%, #062725 100%);
 }
 
 /* The aperture: fills the whole frame (the walls overlay its edges).
