@@ -203,14 +203,18 @@ body:has(.command-palette-fab) .back-to-top {
   color: #f7f4ee;
 }
 
+/* Fluid vertical rhythm: every size scales with viewport height via
+   clamp(), so laptops at 600px CSS height (Windows scaling), Nest
+   Hub, phones and tall desktops all get the SAME rules — no binary
+   "compact mode" that snaps real laptops to shrunken sizing. */
 .launch-splash__inner {
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 24px;
-  padding-top: 84px;
-  padding-bottom: 96px;
+  gap: clamp(10px, 2.4vh, 24px);
+  padding-top: clamp(20px, 5vh, 84px);
+  padding-bottom: clamp(30px, 7vh, 96px);
 }
 
 .launch-splash__eyebrow {
@@ -222,7 +226,7 @@ body:has(.command-palette-fab) .back-to-top {
   margin: 0;
   font-family: Georgia, "Times New Roman", serif;
   font-weight: 500;
-  font-size: clamp(64px, 11vw, 148px);
+  font-size: clamp(44px, min(11vw, 14vh), 148px);
   line-height: 0.95;
   letter-spacing: -0.05em;
   color: #fffdf6;
@@ -237,8 +241,8 @@ body:has(.command-palette-fab) .back-to-top {
 .launch-splash__sub {
   margin: 0;
   max-width: 560px;
-  font-size: 17.5px;
-  line-height: 1.75;
+  font-size: clamp(14.5px, 2.2vh, 17.5px);
+  line-height: 1.7;
   color: rgba(247, 244, 238, 0.78);
 }
 
@@ -251,7 +255,7 @@ body:has(.command-palette-fab) .back-to-top {
 
 .launch-countdown {
   display: flex;
-  gap: 14px;
+  gap: clamp(6px, 1.4vh, 14px);
   justify-content: center;
   flex-wrap: wrap;
   margin-top: 6px;
@@ -262,8 +266,8 @@ body:has(.command-palette-fab) .back-to-top {
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  min-width: 92px;
-  padding: 16px 12px 12px;
+  min-width: clamp(60px, 10vh, 92px);
+  padding: clamp(8px, 1.8vh, 16px) clamp(5px, 1.4vh, 12px) clamp(7px, 1.5vh, 12px);
   border: 1px solid rgba(248, 199, 106, 0.28);
   border-radius: 6px;
   background: rgba(248, 199, 106, 0.05);
@@ -272,16 +276,16 @@ body:has(.command-palette-fab) .back-to-top {
 .launch-countdown__tile strong {
   font-family: Georgia, "Times New Roman", serif;
   font-weight: 500;
-  font-size: clamp(34px, 4.6vw, 52px);
+  font-size: clamp(24px, min(4.6vw, 5.2vh), 52px);
   line-height: 1;
   color: #f8c76a;
   font-variant-numeric: tabular-nums;
 }
 
 .launch-countdown__tile span {
-  font-size: 11.5px;
+  font-size: clamp(9.5px, 1.4vh, 11.5px);
   font-weight: 800;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: rgba(247, 244, 238, 0.62);
 }
@@ -304,26 +308,16 @@ body:has(.command-palette-fab) .back-to-top {
   }
 }
 
-/* Narrow phones (320-374): four tiles must still share one row —
-   the uppercase labels push tiles past their nominal width and
-   strand Seconds alone. Empirically 375+ fits the larger tiles. */
+/* Narrow phones (320-374): tiles tighten further so all four always
+   share one row despite the uppercase labels. */
 @media (max-width: 374px) {
   .launch-countdown {
     gap: 6px;
   }
 
   .launch-countdown__tile {
-    min-width: 60px;
-    padding: 10px 4px 8px;
-  }
-
-  .launch-countdown__tile strong {
-    font-size: 26px;
-  }
-
-  .launch-countdown__tile span {
-    font-size: 10px;
-    letter-spacing: 0.12em;
+    min-width: 56px;
+    padding: 9px 4px 8px;
   }
 }
 
@@ -360,7 +354,7 @@ body:has(.command-palette-fab) .back-to-top {
 
 .launch-signup__row input {
   flex: 1 1 260px;
-  min-height: 52px;
+  min-height: clamp(44px, 6.5vh, 52px);
   padding: 0 18px;
   border-radius: 8px;
   border: 1px solid rgba(248, 199, 106, 0.35);
@@ -464,53 +458,15 @@ body:has(.command-palette-fab) .back-to-top {
 }
 
 @media (max-width: 760px) {
+  /* Only the nav-height offset differs on stacked-nav widths; all
+     sizing stays fluid via the base clamps. */
   .launch-splash {
     min-height: calc(100vh - 110px);
     min-height: calc(100svh - 110px);
   }
 
-  /* Compact so the whole splash genuinely fits one phone screenful
-     (owner: exactly as big as the page, not more not less). */
-  .launch-splash__inner {
-    gap: 12px;
-    padding-top: 26px;
-    padding-bottom: 46px;
-  }
-
-  .launch-splash__title {
-    font-size: clamp(44px, 12vw, 64px);
-  }
-
-  .launch-splash__sub {
-    font-size: 14.5px;
-    line-height: 1.55;
-  }
-
-  .launch-countdown {
-    gap: 6px;
-  }
-
   .launch-countdown__tile {
-    min-width: 64px;
-    padding: 8px 6px 7px;
-  }
-
-  .launch-countdown__tile strong {
-    font-size: 24px;
-  }
-
-  .launch-countdown__tile span {
-    font-size: 10px;
-    letter-spacing: 0.12em;
-  }
-
-  .launch-signup__row input,
-  .launch-signup__row .button {
-    min-height: 44px;
-  }
-
-  .launch-splash__scroll {
-    bottom: 8px;
+    min-width: clamp(58px, 9vh, 72px);
   }
 }
 
@@ -521,50 +477,11 @@ body:has(.command-palette-fab) .back-to-top {
   }
 }
 
-/* Short viewports (Nest Hub class, small laptops at 600-700px tall):
-   the tall-screen sizing pushes the email box below the fold. Compact
-   everything so the whole splash fits one screenful under the sticky
-   nav, and put the sneak-peek cue back in flow so it can't overlap. */
-@media (max-height: 700px) and (min-width: 641px) {
-  .launch-splash {
-    min-height: calc(100vh - 73px);
-    min-height: calc(100svh - 73px);
-  }
-
-  .launch-splash__inner {
-    gap: 12px;
-    padding-top: 36px;
-    padding-bottom: 30px;
-  }
-
-  .launch-splash__title {
-    font-size: clamp(44px, 7vw, 72px);
-  }
-
-  .launch-splash__sub {
-    font-size: 15px;
-    line-height: 1.55;
-  }
-
-  .launch-countdown__tile {
-    min-width: 70px;
-    padding: 10px 8px 8px;
-  }
-
-  .launch-countdown__tile strong {
-    font-size: 28px;
-  }
-
-  .launch-signup {
-    margin-top: 2px;
-  }
-
-  .launch-signup__row input {
-    min-height: 46px;
-  }
-
+/* Short viewports: the sneak-peek cue hugs the bottom edge closer so
+   it never collides with the form; sizing itself is fluid above. */
+@media (max-height: 700px) {
   .launch-splash__scroll {
-    bottom: 10px;
+    bottom: 8px;
     animation: none;
   }
 }
