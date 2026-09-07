@@ -39,7 +39,13 @@ const COLUMNS: RoadmapColumn[] = [
     title: "Now",
     sub: "In progress",
     chip: "In progress",
-    items: [],
+    items: [
+      {
+        icon: "upload",
+        title: "CV import",
+        body: "Build your profile in one step by importing your CV. You review, we structure.",
+      },
+    ],
   },
   {
     key: "next",
@@ -51,11 +57,6 @@ const COLUMNS: RoadmapColumn[] = [
         icon: "layers",
         title: "More premium templates",
         body: "New PDF designs to choose from, every one rendered with the same exact preview.",
-      },
-      {
-        icon: "upload",
-        title: "CV import",
-        body: "Build your profile in one step by importing your CV — you review, we structure.",
       },
       {
         icon: "scan",
@@ -83,7 +84,7 @@ const COLUMNS: RoadmapColumn[] = [
       {
         icon: "puzzle",
         title: "Browser extension",
-        body: "Generate straight from the job posting page — no copy-paste.",
+        body: "Generate straight from the job posting page, with no copy-paste.",
       },
       {
         icon: "users",
@@ -214,7 +215,7 @@ export function ProductRoadmap() {
                     </svg>
                   </span>
                   <p>
-                    Nothing in flight right now — the next builds move in from
+                    Nothing in flight right now. The next builds move in from
                     the <b>Next</b> column.
                   </p>
                 </div>

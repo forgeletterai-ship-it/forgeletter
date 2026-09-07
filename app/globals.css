@@ -187,7 +187,11 @@ body:has(.command-palette-fab) .back-to-top {
    real site scrolls right below (#explore). Remove at launch. */
 .launch-splash {
   position: relative;
-  min-height: min(92vh, 900px);
+  /* Exactly one screenful: viewport minus the nav above (73px
+     desktop, 110px where the nav stacks — overridden below). svh
+     keeps mobile browser chrome honest; vh line is the fallback. */
+  min-height: calc(100vh - 73px);
+  min-height: calc(100svh - 73px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -459,14 +463,109 @@ body:has(.command-palette-fab) .back-to-top {
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 760px) {
   .launch-splash {
-    min-height: 86vh;
+    min-height: calc(100vh - 110px);
+    min-height: calc(100svh - 110px);
+  }
+
+  /* Compact so the whole splash genuinely fits one phone screenful
+     (owner: exactly as big as the page, not more not less). */
+  .launch-splash__inner {
+    gap: 12px;
+    padding-top: 26px;
+    padding-bottom: 46px;
+  }
+
+  .launch-splash__title {
+    font-size: clamp(44px, 12vw, 64px);
   }
 
   .launch-splash__sub {
+    font-size: 14.5px;
+    line-height: 1.55;
+  }
+
+  .launch-countdown {
+    gap: 6px;
+  }
+
+  .launch-countdown__tile {
+    min-width: 64px;
+    padding: 8px 6px 7px;
+  }
+
+  .launch-countdown__tile strong {
+    font-size: 24px;
+  }
+
+  .launch-countdown__tile span {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+  }
+
+  .launch-signup__row input,
+  .launch-signup__row .button {
+    min-height: 44px;
+  }
+
+  .launch-splash__scroll {
+    bottom: 8px;
+  }
+}
+
+@media (max-width: 640px) {
+  .launch-splash__sub {
     font-size: 16px;
     padding: 0 8px;
+  }
+}
+
+/* Short viewports (Nest Hub class, small laptops at 600-700px tall):
+   the tall-screen sizing pushes the email box below the fold. Compact
+   everything so the whole splash fits one screenful under the sticky
+   nav, and put the sneak-peek cue back in flow so it can't overlap. */
+@media (max-height: 700px) and (min-width: 641px) {
+  .launch-splash {
+    min-height: calc(100vh - 73px);
+    min-height: calc(100svh - 73px);
+  }
+
+  .launch-splash__inner {
+    gap: 12px;
+    padding-top: 36px;
+    padding-bottom: 30px;
+  }
+
+  .launch-splash__title {
+    font-size: clamp(44px, 7vw, 72px);
+  }
+
+  .launch-splash__sub {
+    font-size: 15px;
+    line-height: 1.55;
+  }
+
+  .launch-countdown__tile {
+    min-width: 70px;
+    padding: 10px 8px 8px;
+  }
+
+  .launch-countdown__tile strong {
+    font-size: 28px;
+  }
+
+  .launch-signup {
+    margin-top: 2px;
+  }
+
+  .launch-signup__row input {
+    min-height: 46px;
+  }
+
+  .launch-splash__scroll {
+    bottom: 10px;
+    animation: none;
   }
 }
 
@@ -3898,6 +3997,19 @@ button.tone-chip:hover {
     align-items: stretch;
   }
 
+  /* In column direction the desktop flex-basis (300px) becomes
+     HEIGHT — each footer line ballooned to 300px tall, adding ~700px
+     of dead space between the last card and the CTA. */
+  .roadmap-foot__item {
+    flex: 0 0 auto;
+  }
+
+  /* The top-left white radial reads as a half-page colour seam on a
+     tall stacked board — keep only the flat paper gradient. */
+  .roadmap-board {
+    background: linear-gradient(180deg, rgba(255, 253, 248, 0.94), rgba(252, 246, 236, 0.92));
+  }
+
   .roadmap-cta {
     justify-content: center;
   }
@@ -5456,7 +5568,6 @@ button.tone-chip:hover {
   }
 
   .hero-actions,
-  .hero-proof,
   .grid-4,
   .grid-3,
   .steps-grid,
@@ -11967,28 +12078,32 @@ button.tone-chip:hover {
     min-height: 52px;
   }
 
+  /* Owner request: the three proof cards stay HORIZONTAL and compact
+     at every resolution — never stacked full-width. */
   .hero-proof {
-    grid-template-columns: 1fr;
-    gap: 10px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+    gap: 8px;
     margin-top: 22px;
   }
 
   .proof-item {
-    min-height: 104px;
+    min-height: 76px;
     display: grid;
     grid-template-rows: auto 1fr;
-    row-gap: 14px;
+    row-gap: 8px;
     align-items: start;
-    padding: 14px;
+    padding: 10px 10px 9px;
   }
 
   .proof-item strong {
-    font-size: 22px;
+    font-size: 15px;
   }
 
   .proof-item span {
     margin-top: 0;
-    font-size: 13px;
+    font-size: 10px;
+    line-height: 1.35;
   }
 }
 
