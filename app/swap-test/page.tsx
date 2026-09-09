@@ -82,11 +82,11 @@ export default async function SwapTestPage() {
         />
         <section className="section">
           <div className="container" style={{ maxWidth: 860 }}>
-            <h1>Remove everything about the employer. What&apos;s left?</h1>
+            <h1>Would your cover letter work for any company?</h1>
             <p className="swap-disclosure" style={{ fontSize: 16, lineHeight: 1.7 }}>
               Paste a cover letter. One scan redacts every passage that could
               only have been written to this employer, then scores what
-              remains — no account needed for the first one.
+              remains. No account needed for the first one.
             </p>
 
             <ResultsFlow isLoggedIn={Boolean(session?.user)} benchmark={benchmark} />

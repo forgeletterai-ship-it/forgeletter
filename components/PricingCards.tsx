@@ -47,7 +47,7 @@ const plans = [
     features: [
       "ATS score",
       "1 tone rewrite included",
-      "Everything in Starter",
+      "All features from the Starter plan",
     ],
     agents: [
       "Profile Analyst",
@@ -75,7 +75,7 @@ const plans = [
     features: [
       "All 12 agents",
       "3 tone rewrites included",
-      "Everything in Pro",
+      "All features from the Pro plan",
     ],
     agents: [
       "Input Cleaner",

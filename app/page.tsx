@@ -206,7 +206,7 @@ export default async function HomePage() {
                     </li>
                     <li className="engine-compare__item">
                       <span className="engine-compare__mark engine-compare__mark--good" aria-hidden="true" />
-                      <span>Reusable workflow for faster applications</span>
+                      <span>Your saved profile makes every next letter faster</span>
                     </li>
                   </ul>
                 </article>
@@ -233,7 +233,7 @@ export default async function HomePage() {
               </h2>
               <p>
                 A guided AI workflow that helps you move from job description
-                <br className="desktop" />
+                <br className="desktop" />{" "}
                 to polished final letter with clarity, speed, and premium presentation.
               </p>
             </div>
@@ -277,13 +277,12 @@ export default async function HomePage() {
                   <div className="ai-engine-rule" aria-hidden="true" />
                   <h3>{feature.title}</h3>
                   <p>{feature.body}</p>
-                  {/* Decorative arrow only — previously a <button> that
-                      did nothing, a dead interactive element for
-                      keyboard and screen-reader users. */}
+                  {/* Decorative spark (non-directional on purpose: a
+                      right-arrow implied a next step, which confused
+                      when the cards stack vertically on phones). */}
                   <span className="ai-engine-arrow" aria-hidden="true">
                     <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M5 12h13" />
-                      <path d="M13 7l5 5-5 5" />
+                      <path d="M12 4.5 L13.8 10.2 L19.5 12 L13.8 13.8 L12 19.5 L10.2 13.8 L4.5 12 L10.2 10.2 Z" />
                     </svg>
                   </span>
                 </article>
@@ -351,7 +350,7 @@ export default async function HomePage() {
                 Apply with letters that feel <span>specific, sharp, and yours.</span>
               </h1>
               <p className="hero-copy">
-                ForgeLetter uses up to a 12-agent AI pipeline to write,
+                ForgeLetter uses up to 12 AI agents in one pipeline to write,
                 verify and auto-improve your cover letter before you see it.
                 Every letter is quality-checked and refined in the background
                 at no extra cost.
@@ -370,15 +369,15 @@ export default async function HomePage() {
               <div className="hero-proof" aria-label="Product highlights">
                 <div className="proof-item">
                   <strong>Guided</strong>
-                  <span>smart prompts that extract your strongest evidence</span>
+                  <span>Smart prompts that extract your strongest evidence</span>
                 </div>
                 <div className="proof-item">
                   <strong>Verified</strong>
-                  <span>every letter checked against your real experience</span>
+                  <span>Every letter checked against your real experience</span>
                 </div>
                 <div className="proof-item">
                   <strong>Ready</strong>
-                  <span>polished PDF exports in seconds</span>
+                  <span>Polished PDF exports in seconds</span>
                 </div>
               </div>
             </div>

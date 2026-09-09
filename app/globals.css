@@ -1299,11 +1299,11 @@ body:has(.command-palette-fab) .back-to-top {
 }
 
 .ai-engine-arrow svg {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
   stroke: currentColor;
-  stroke-width: 1.8;
-  stroke-linecap: round;
+  stroke-width: 1;
   stroke-linejoin: round;
 }
 
@@ -1657,9 +1657,9 @@ button.tone-chip:hover {
   grid-template-columns: 20px minmax(0, 1fr);
   gap: 10px;
   align-items: center;
-  color: rgba(247, 244, 238, 0.78);
-  font-size: 18px;
-  font-weight: 750;
+  color: rgba(247, 244, 238, 0.82);
+  font-size: 16.5px;
+  font-weight: 600;
   line-height: 1.45;
 }
 

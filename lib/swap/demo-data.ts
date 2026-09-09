@@ -179,8 +179,8 @@ export const DEMO_LETTERS: DemoLetter[] = [
 export const DEMO_COPY = {
   heroHeadline: "Letters a hiring manager can't send to anyone else.",
   heroSub:
-    "Most cover letters — human or AI — work just as well at a competitor. That's how a reader knows it wasn't written for them.",
-  sectionH2: "Remove everything about the employer. What's left?",
+    "Most cover letters, written by people or by AI, could be sent to any company without changing a word. Hiring managers can tell. The Swap Test measures exactly how generic your letter is.",
+  sectionH2: "Would your cover letter work for any company?",
 }
 
 /** Expand a demo letter into the (segmented, labels) pair the
