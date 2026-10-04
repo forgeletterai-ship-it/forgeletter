@@ -10,6 +10,7 @@ import "@/app/swap-test/swap.css"
 import NeuralPortal from "@/components/NeuralPortal"
 import { LaunchCountdown } from "@/components/LaunchCountdown"
 import { LaunchSignup } from "@/components/LaunchSignup"
+import { ScrollToTopOnLoad } from "@/components/ScrollToTopOnLoad"
 import { LAUNCH_AT, isPrelaunch } from "@/lib/launch"
 import { PricingCards } from "@/components/PricingCards"
 import { PublicFooter, PublicNav } from "@/components/PublicChrome"
@@ -318,6 +319,7 @@ export default async function HomePage() {
         {/* Pre-launch splash (Instagram soft-launch): full-viewport
             statement in the portal's dark-teal world, then the real
             site scrolls right below it. Remove at official launch. */}
+        <ScrollToTopOnLoad />
         <section className="launch-splash" aria-label="Launch announcement">
           <div className="container launch-splash__inner">
             <span className="eyebrow launch-splash__eyebrow">

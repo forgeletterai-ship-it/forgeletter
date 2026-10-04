@@ -11,11 +11,12 @@
  * this one constant.
  *
  * Originally 2026-09-26 (a round 20-day countdown from 2026-09-06);
- * owner pushed the launch out by 10 days on 2026-09-25. The waitlist
- * "we're live" email drain checks isPrelaunch(), so it follows this
- * date automatically.
+ * extended to 2026-10-06 on 2026-09-25, then by 12 more days on
+ * 2026-10-04. The waitlist "we're live" email drain checks
+ * isPrelaunch(), so it follows this date automatically — no email
+ * sends before this instant.
  */
-export const LAUNCH_AT = new Date("2026-10-06T21:00:00+03:00")
+export const LAUNCH_AT = new Date("2026-10-18T21:00:00+03:00")
 
 export function isPrelaunch(): boolean {
   return Date.now() < LAUNCH_AT.getTime()
