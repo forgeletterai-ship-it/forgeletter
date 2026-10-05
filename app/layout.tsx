@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next"
 import { Plus_Jakarta_Sans } from "next/font/google"
+import { Analytics } from "@vercel/analytics/next"
 import { BackToTopButton } from "@/components/BackToTopButton"
 import { CookieConsentProvider } from "@/components/CookieConsent"
 import { getSiteUrl } from "@/lib/site-url"
@@ -114,6 +115,7 @@ export default function RootLayout({
         {children}
         <BackToTopButton />
         <CookieConsentProvider />
+        <Analytics />
       </body>
     </html>
   )
