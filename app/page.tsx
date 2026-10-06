@@ -135,6 +135,13 @@ export default async function HomePage() {
   // Pre-launch: countdown on the splash, and every signup/login entry
   // point hidden (the /auth pages + signup API are gated separately).
   const prelaunch = isPrelaunch()
+  // Derived from LAUNCH_AT so the splash copy can never drift from the
+  // real launch moment when the date moves again.
+  const launchDayLabel = LAUNCH_AT.toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    timeZone: "Europe/Sofia",
+  })
 
   const whyChooseSection = (
         <section className="section section-alt engine-compare-section" id="workspace">
@@ -316,27 +323,57 @@ export default async function HomePage() {
     <>
       <PublicNav />
       <main className="landing-main">
-        {/* Pre-launch splash (Instagram soft-launch): full-viewport
-            statement in the portal's dark-teal world, then the real
-            site scrolls right below it. Remove at official launch. */}
+        {/* Pre-launch splash (Instagram soft-launch): split layout —
+            product story on the left, countdown + waitlist on the
+            right, both in the portal's dark-teal world. On phones the
+            action panel fills the first screen exactly (the layout
+            tuned across the phone matrix) and the story stacks below
+            it as the sneak-peek arrow's first stop. Remove at
+            official launch. */}
         <ScrollToTopOnLoad />
         <section className="launch-splash" aria-label="Launch announcement">
-          <div className="container launch-splash__inner">
-            <span className="eyebrow launch-splash__eyebrow">
-              <span className="eyebrow-dot" />
-              Early access
-            </span>
-            <h1 className="launch-splash__title">
-              Launching <em>soon.</em>
-            </h1>
-            <p className="launch-splash__sub">
-              ForgeLetter is opening its doors. You found us early. Look
-              around, try it, and tell us what you think before everyone
-              else arrives.
-            </p>
-            <LaunchCountdown launchAtMs={LAUNCH_AT.getTime()} />
-            <LaunchSignup />
+          <div className="launch-splash__grid">
+            {/* Desktop-only story column; on phones the same message
+                collapses into the gold lead line + proof row inside
+                the action column so nothing needs a scroll. */}
+            <div className="launch-splash__story">
+              <div className="launch-splash__story-in">
+                <span className="eyebrow launch-splash__eyebrow">
+                  <span className="eyebrow-dot" />
+                  AI cover letter engine
+                </span>
+                <h2 className="launch-splash__story-title">
+                  Cover letters written for your <em>success.</em>
+                </h2>
+                <p className="launch-splash__story-sub">
+                  Paste the job ad, add your experience, and ForgeLetter
+                  writes a letter for that exact role.
+                </p>
+                <span className="launch-splash__rule" aria-hidden="true" />
+              </div>
+            </div>
+
+            <div className="launch-splash__action">
+              <div className="container launch-splash__inner">
+                <h1 className="launch-splash__title">
+                  Launching <em>soon.</em>
+                </h1>
+                <p className="launch-splash__sub launch-splash__sub--desktop">
+                  Doors open {launchDayLabel}. You found us early.
+                </p>
+                <p className="launch-splash__sub launch-splash__sub--mobile">
+                  <strong>Cover letters written for your success.</strong>{" "}
+                  Paste the job ad, add your experience, and ForgeLetter
+                  writes a letter for that exact role.
+                </p>
+                <LaunchCountdown launchAtMs={LAUNCH_AT.getTime()} />
+                <LaunchSignup />
+              </div>
+            </div>
           </div>
+          {/* One cue for every size, centered on the page: the whole
+              pitch is already on screen, so the arrow's only job is
+              revealing the site below. */}
           <a className="launch-splash__scroll" href="#explore">
             <span className="launch-splash__scroll-label">Sneak peek</span>
             <span className="launch-splash__scroll-arrow" aria-hidden="true">
