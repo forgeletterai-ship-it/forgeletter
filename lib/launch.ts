@@ -11,12 +11,15 @@
  * this one constant.
  *
  * Originally 2026-09-26 (a round 20-day countdown from 2026-09-06);
- * extended to 2026-10-06 on 2026-09-25, then by 12 more days on
- * 2026-10-04. The waitlist "we're live" email drain checks
- * isPrelaunch(), so it follows this date automatically — no email
- * sends before this instant.
+ * extended to 2026-10-06 on 2026-09-25, by 12 more days on
+ * 2026-10-04, then by 10 more on 2026-10-18. The waitlist "we're
+ * live" email drain checks isPrelaunch(), so it follows this date
+ * automatically — no email sends before this instant.
+ *
+ * Offset note: EU summer time ends 2026-10-25, so 21:00 Sofia after
+ * that date is +02:00 (it was +03:00 for the earlier dates).
  */
-export const LAUNCH_AT = new Date("2026-10-18T21:00:00+03:00")
+export const LAUNCH_AT = new Date("2026-10-28T21:00:00+02:00")
 
 export function isPrelaunch(): boolean {
   return Date.now() < LAUNCH_AT.getTime()
